@@ -2,7 +2,7 @@
 Useful things for plotting GeoClaw results.
 """
 
-from pyclaw.plotters import colormaps
+from visclaw.plotters import colormaps
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run

@@ -363,7 +363,7 @@ class ClawPlotData(Data):
         import os
         import numpy as np
         from matplotlib.mlab import find
-        from pyclaw.plotters import gaugetools
+        from visclaw.plotters import gaugetools
         from StringIO import StringIO
     
         fname = outdir + '/fort.gauge'
@@ -422,11 +422,11 @@ class ClawPlotData(Data):
 
 
     def plotframe(self, frameno):
-        from pyclaw.plotters import frametools
+        from visclaw.plotters import frametools
         frametools.plotframe(frameno, self)
         
     def printframes(self, verbose=True):
-        #from pyclaw.plotters import frametools
+        #from visclaw.plotters import frametools
         #frametools.printframes(self, verbose)
         print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
         print "*** for added capabilities."
@@ -851,7 +851,7 @@ class ClawPlotItem(Data):
             if plot_type == '2d_pcolor':
                 # from pylab import cm
                 # self.add_attribute('pcolor_cmap',cm.RdYlBu,True)
-                from pyclaw.plotters import colormaps
+                from visclaw.plotters import colormaps
                 self.add_attribute('pcolor_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('pcolor_cmin',None)
                 self.add_attribute('pcolor_cmax',None)
@@ -860,7 +860,7 @@ class ClawPlotItem(Data):
             elif plot_type == '2d_imshow':
                 # from pylab import cm
                 # self.add_attribute('pcolor_cmap',cm.RdYlBu,True)
-                from pyclaw.plotters import colormaps
+                from visclaw.plotters import colormaps
                 self.add_attribute('imshow_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('imshow_cmin',None)
                 self.add_attribute('imshow_cmax',None)
@@ -878,7 +878,7 @@ class ClawPlotItem(Data):
                 self.add_attribute('add_colorbar',False)
 
             elif plot_type == '2d_schlieren':
-                from pyclaw.plotters import colormaps
+                from visclaw.plotters import colormaps
                 self.add_attribute('schlieren_cmap',colormaps.schlieren_grays)
                 self.add_attribute('schlieren_cmin',None)
                 self.add_attribute('schlieren_cmax',None)

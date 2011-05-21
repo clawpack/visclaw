@@ -9,8 +9,8 @@ import traceback
 
 
 from pyclaw.data import Data
-from pyclaw.plotters import plotpages
-from pyclaw.plotters.frametools import set_show
+from visclaw.plotters import plotpages
+from visclaw.plotters.frametools import set_show
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
@@ -540,7 +540,7 @@ def printgauges(plotdata=None, verbose=True):
     """
 
     import glob
-    from pyclaw.plotters.data import ClawPlotData
+    from visclaw.plotters.data import ClawPlotData
 
 
 
