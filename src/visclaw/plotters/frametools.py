@@ -756,9 +756,17 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         # not a masked array, so certainly not all masked:
         var_all_masked = False
 
+    # pcolormesh is much faster but cannot be used with masked coordinate arrays
+    if ma.isMaskedArray(X_edge) or ma.isMaskedArray(Y_edge):
+        pc_cmd = 'pcolor'
+        pc_mth = pylab.pcolor
+    else:
+        pc_cmd = 'pcolormesh'
+        pc_mth = pylab.pcolormesh
+
     if pp_plot_type == '2d_pcolor':
 
-        pcolor_cmd = "pobj = pylab.pcolor(X_edge, Y_edge, var, \
+        pcolor_cmd = "pobj = pylab."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp_pcolor_cmap"
 
         if pp_gridlines_show:
@@ -823,10 +831,10 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
 
         if pp_gridlines_show:
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color)
         elif pp_grid_bgcolor is not 'w': 
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors='None')
         pylab.hold(True)
 
@@ -854,11 +862,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     elif pp_plot_type == '2d_grid':
         # plot only the grids, no data:
         if pp_gridlines_show:
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color,\
                     shading='faceted')
         else: 
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, shading='flat')
 
 
