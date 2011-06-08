@@ -211,12 +211,14 @@ def plotframe(frameno, plotdata, verbose=False):
                 # loop over grids:
                 # ----------------
     
-                for gridno in range(len(framesoln.grids)):
-                    #print '+++ gridno = ',gridno
-                    grid = framesoln.grids[gridno]
+                for stateno,state in enumerate(framesoln.states):
+                    #print '+++ stateno = ',stateno
+                    state = framesoln.states[stateno]
+                    grid = state.grid
+
                     current_data.grid = grid
-                    current_data.q = grid.q
-                    current_data.aux = grid.aux
+                    current_data.q = state.q
+                    current_data.aux = state.aux
                     current_data.xlower = grid.dimensions[0].lower
                     current_data.xupper = grid.dimensions[0].upper
     
@@ -245,14 +247,14 @@ def plotframe(frameno, plotdata, verbose=False):
                         # option to suppress printing some levels:
                         try:
                             pp_amr_data_show = plotitem.amr_data_show
-                            i = min(len(pp_amr_data_show), grid.level) - 1
+                            i = min(len(pp_amr_data_show), state.level) - 1
                             show_this_level = pp_amr_data_show[i]
                         except:
                             show_this_level = True
 
                         if plotitem._show and show_this_level:
                             cmd = 'output = plotitem%s(framesoln,plotitem,\
-                                    current_data,gridno)'  % ndim
+                                    current_data,stateno)'  % ndim
     
                             try:
                                 exec(cmd)
@@ -373,7 +375,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
     
 #==================================================================
-def plotitem1(framesoln, plotitem, current_data, gridno):
+def plotitem1(framesoln, plotitem, current_data, stateno):
 #==================================================================
     """
     Make a 1d plot for a single plot item for the solution in framesoln.
@@ -409,10 +411,11 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         # if this item does not have a mapping, check for a global mapping:
         pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
-    grid = framesoln.grids[gridno]
+    state = framesoln.states[stateno]
+    grid = state.grid
     current_data.grid = grid
-    current_data.q = grid.q
-    current_data.aux = grid.aux
+    current_data.q = state.q
+    current_data.aux = state.aux
 
     t = framesoln.t
 
@@ -443,7 +446,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         pp_plot_type = '1d_plot'  # '1d' is deprecated
     
     if pp_plot_type in ['1d_plot', '1d_semilogy']:
-        thisgridvar = get_gridvar(grid,pp_plot_var,1,current_data)
+        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
         xc_center = thisgridvar.xc_center   # cell centers
         xc_edge = thisgridvar.xc_edge       # cell edges
         var = thisgridvar.var               # variable to be plotted
@@ -456,8 +459,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             print "*** This version of pylab is missing fill_between"
             print "*** Reverting to 1d_plot"
             pp_plot_type = '1d_plot'
-        thisgridvar = get_gridvar(grid,pp_plot_var,1,current_data)
-        thisgridvar2 = get_gridvar(grid,pp_plot_var2,1,current_data)
+        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
+        thisgridvar2 = get_gridvar(state,pp_plot_var2,1,current_data)
         xc_center = thisgridvar.xc_center   # cell centers
         xc_edge = thisgridvar.xc_edge       # cell edges
         var = thisgridvar.var               # variable to be plotted
@@ -474,7 +477,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             raise
             return
         try:
-            thisgridvar = get_gridvar(grid,pp_plot_var,2,current_data)
+            thisgridvar = get_gridvar(state,pp_plot_var,2,current_data)
             xc_center = thisgridvar.xc_center   # cell centers
             yc_center = thisgridvar.yc_center
             xc_edge = thisgridvar.xc_edge   # cell edge
@@ -504,7 +507,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     elif pp_plot_type == '1d_empty':
         pp_plot_var = 0  # shouldn't be used but needed below *FIX*
-        thisgridvar = get_gridvar(grid,pp_plot_var,1,current_data)
+        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
         xc_center = thisgridvar.xc_center   # cell centers
         xc_edge = thisgridvar.xc_edge       # cell edges
 
@@ -632,7 +635,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     
 
 #==================================================================
-def plotitem2(framesoln, plotitem, current_data, gridno):
+def plotitem2(framesoln, plotitem, current_data, stateno):
 #==================================================================
     """
     Make a 2d plot for a single plot item for the solution in framesoln.
@@ -670,12 +673,13 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         # if this item does not have a mapping, check for a global mapping:
         pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
-    grid = framesoln.grids[gridno]
+    state = framesoln.states[stateno]
+    grid = state.grid
     level = grid.level
 
     current_data.grid = grid
-    current_data.q = grid.q
-    current_data.aux = grid.aux
+    current_data.q = state.q
+    current_data.aux = state.aux
     current_data.level = level
 
     t = framesoln.t
@@ -718,7 +722,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     pp_grid_bgcolormap = colormaps.make_colormap({0.: pp_grid_bgcolor, \
                                              1.: pp_grid_bgcolor})
     
-    thisgridvar = get_gridvar(grid,pp_plot_var,2,current_data)
+    thisgridvar = get_gridvar(state,pp_plot_var,2,current_data)
 
     xc_center = thisgridvar.xc_center   # cell centers (on mapped grid)
     yc_center = thisgridvar.yc_center
@@ -756,9 +760,17 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         # not a masked array, so certainly not all masked:
         var_all_masked = False
 
+    # pcolormesh is much faster but cannot be used with masked coordinate arrays
+    if ma.isMaskedArray(X_edge) or ma.isMaskedArray(Y_edge):
+        pc_cmd = 'pcolor'
+        pc_mth = pylab.pcolor
+    else:
+        pc_cmd = 'pcolormesh'
+        pc_mth = pylab.pcolormesh
+
     if pp_plot_type == '2d_pcolor':
 
-        pcolor_cmd = "pobj = pylab.pcolor(X_edge, Y_edge, var, \
+        pcolor_cmd = "pobj = pylab."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp_pcolor_cmap"
 
         if pp_gridlines_show:
@@ -823,10 +835,10 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
 
         if pp_gridlines_show:
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color)
         elif pp_grid_bgcolor is not 'w': 
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors='None')
         pylab.hold(True)
 
@@ -854,11 +866,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     elif pp_plot_type == '2d_grid':
         # plot only the grids, no data:
         if pp_gridlines_show:
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color,\
                     shading='faceted')
         else: 
-            pobj = pylab.pcolor(X_edge, Y_edge, pylab.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, shading='flat')
 
 
@@ -886,8 +898,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     elif pp_plot_type == '2d_quiver':
         if pp_quiver_coarsening > 0:
-            var_x = get_gridvar(grid,pp_quiver_var_x,2,current_data).var
-            var_y = get_gridvar(grid,pp_quiver_var_y,2,current_data).var
+            var_x = get_gridvar(state,pp_quiver_var_x,2,current_data).var
+            var_y = get_gridvar(state,pp_quiver_var_y,2,current_data).var
             Q = pylab.quiver(X_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
                              Y_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
                              var_x[::pp_quiver_coarsening,::pp_quiver_coarsening],
@@ -967,16 +979,15 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
 
 #--------------------------------------
-def get_gridvar(grid, plot_var, ndim, current_data):
+def get_gridvar(state, plot_var, ndim, current_data):
 #--------------------------------------
     """
     Return arrays for spatial variable(s) (on mapped grid if necessary)
     and variable to be plotted on a single grid in ndim space dimensions.
     """
 
-    #grid.compute_physical_coordinates()
-    #grid.compute_computational_coordinates()
-    
+    grid = state.grid
+
     if ndim == 1:
     
         # +++ until bug in solution.py fixed.
@@ -989,10 +1000,10 @@ def get_gridvar(grid, plot_var, ndim, current_data):
 
     
         if isinstance(plot_var, int):
-            var = grid.q[plot_var,:]
+            var = state.q[plot_var,:]
         else:
             try:
-                #var = plot_var(grid.q, xc_center, grid.t)
+                #var = plot_var(state.q, xc_center, state.t)
                 var = plot_var(current_data)
             except:
                 print '*** Error applying function plot_var = ',plot_var
@@ -1019,7 +1030,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
         current_data.dy = grid.d[1]
 
         if isinstance(plot_var, int):
-            var = grid.q[plot_var,:,:]
+            var = state.q[plot_var,:,:]
         else:
             try:
                 var = plot_var(current_data)
@@ -1411,29 +1422,29 @@ def var_minmax(plotdata,framenos,vars):
         solution = plotdata.getframe(frameno, plotdata.outdir)
         ndim = solution.ndim
 
-        for igrid in range(len(solution.grids)):
-            grid = solution.grids[igrid]
+        for state in solution.states:
+            grid = state.grid
             for var in vars:
                 if isinstance(var,int):
                     if ndim == 1:
-                        qvar = grid.q[var,:]
+                        qvar = state.q[var,:]
                     elif ndim == 2:
-                        qvar = grid.q[var,:,:]
+                        qvar = state.q[var,:,:]
                     elif ndim == 3:
-                        qvar = grid.q[var,:,:,:]
+                        qvar = state.q[var,:,:,:]
                 else:
                     t = solution.t
                     #grid.compute_physical_coordinates()
                     if ndim == 1:
                         X_center = grid.p_center[0]
-                        qvar = var(grid.q, X_center, t)
+                        qvar = var(state.q, X_center, t)
                     elif ndim == 2:
                         X_center, Y_center = grid.p_center
-                        qvar = var(grid.q, X_center, \
+                        qvar = var(state.q, X_center, \
                                    Y_center, t)
                     elif ndim == 3:
                         X_center, Y_center, Z_center = grid.p_center
-                        qvar = var(grid.q, X_center, \
+                        qvar = var(state.q, X_center, \
                                    Y_center, Z_center, t)
                 varmin[var][frameno] = min(varmin[var][frameno], qvar.min())
                 varmax[var][frameno] = max(varmax[var][frameno], qvar.max())
@@ -1627,18 +1638,17 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
     qint = {}
 
     errmax = 0.
-    for gridno in range(len(solution.grids)):
-        grid = solution.grids[gridno]
+    for stateno,state in enumerate(solution.states):
+        grid = state.grid
 
-        #grid.compute_physical_coordinates()
         X_center, Y_center = grid.p_center
         X_edge, Y_edge = grid.p_center
     
         if isinstance(var_2d, int):
-            q = grid.q[var_2d,:,:]
+            q = state.q[var_2d,:,:]
         else:
             try:
-                q = var_2d(grid.q, X_center, Y_center, t)
+                q = var_2d(state.q, X_center, Y_center, t)
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
@@ -1646,36 +1656,33 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
         
         xs1, qs1 = map_2d_to_1d(q, X_center, Y_center, t)
 
-        if hasattr(reference,'grids'):
-            if len(reference.grids) > 1:
+        if hasattr(reference,'states'):
+            if len(reference.states) > 1:
                 print '*** Warning in errors_2d_vs_1d: reference solution'
                 print '*** has more than one grid -- only using grid[0]'
-            refgrid = reference.grids[0]
+            refstate = reference.states[0]
         else:
-            refgrid = reference   # assume this contains true solution or
+            refstate = reference   # assume this contains true solution or
                                   # something set separately rather than
                                   # a framesoln
 
-        #refgrid.compute_physical_coordinates()
         xref = grid.p_center[0]
         if isinstance(var_1d, int):
-            qref = refgrid.q[var_1d,:].T
+            qref = refstate.q[var_1d,:].T
         else:
             try:
-                qref = var_1d(refgrid.q, xref, t)
+                qref = var_1d(refstate.q, xref, t)
             except:
                 print '*** Error applying function var_1d'
                 return 
             
         qint1 = interp(xs1, xref, qref)
 
-        xs[gridno] = xs1
-        qs[gridno] = qs1
-        qint[gridno] = qint1
+        xs[stateno] = xs1
+        qs[stateno] = qs1
+        qint[stateno] = qint1
         errabs = abs(qs1 - qint1)
         errmax = max(errmax, errabs.max())
-        #import pdb
-        #pdb.set_trace()
 
     return errmax, xs, qs, qint
         
