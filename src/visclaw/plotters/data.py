@@ -216,23 +216,12 @@ class ClawPlotData(Data):
         key = (frameno, outdir)
 
         if self.refresh_frames or (not framesoln_dict.has_key(key)):
-            thisdir = os.getcwd()
             try:
-                os.chdir(outdir)
-            except:
-                print '*** Error in getframe: cannot move to outdir = ',\
-                       outdir
-                print '*** thisdir = ',thisdir
-                raise
-                return
-            try:
-                framesoln = solution.Solution(frameno,format=self.format)
+                framesoln = solution.Solution(frameno,path=outdir,format=self.format)
             except:
                 print '*** Error reading frame in ClawPlotData.getframe'
-                os.chdir(thisdir)
                 raise
                 return
-            os.chdir(thisdir)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
@@ -312,25 +301,14 @@ class ClawPlotData(Data):
         key = (gaugeno, outdir)
 
         if self.refresh_gauges or (not gaugesoln_dict.has_key(key)):
-            thisdir = os.getcwd()
-            try:
-                os.chdir(outdir)
-            except:
-                print '*** Error in getgauge: cannot move to outdir = ',\
-                       outdir
-                print '*** thisdir = ',thisdir
-                raise
-                return
             try:
                 gauges = self.read_gauges(outdir)
             except:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
                 print '*** outdir = ', outdir
                 print '*** thisdir = ', thisdir
-                os.chdir(thisdir)
                 raise
                 return
-            os.chdir(thisdir)
 
             try:
                 for (k,v) in gauges.iteritems():

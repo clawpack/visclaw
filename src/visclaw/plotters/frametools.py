@@ -71,6 +71,7 @@ def plotframe(frameno, plotdata, verbose=False):
     except IOError:
         print '*** Cannot find frame number ',frameno
         print '*** looking in directory ', plotdata.outdir
+        print '*** looking for format ', plotdata.format
         return None
 
     t = framesoln.t
@@ -230,7 +231,6 @@ def plotframe(frameno, plotdata, verbose=False):
                         plotitem = plotaxes.plotitem_dict[itemname]
                         #print '+++ %s: %s' % (itemname,plotitem.outdir)
 
-                        #import pdb; pdb.set_trace()
                         item_outdir = plotitem.outdir
                         if not plotitem.outdir:
                             item_outdir = plotdata.outdir
@@ -876,10 +876,13 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     elif pp_plot_type == '2d_schlieren':
         # plot 2-norm of gradient of variable var:
+        
+        # No idea why this next line is needed...maybe a 64/32 bit incompatibility issue?
+        var = pylab.array(var)
         (vx,vy) = pylab.gradient(var)
         vs = pylab.sqrt(vx**2 + vy**2)
 
-        pcolor_cmd = "pobj = pylab.pcolor(X_edge, Y_edge, vs, \
+        pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
         if pp_gridlines_show:
