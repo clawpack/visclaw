@@ -877,7 +877,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     elif pp_plot_type == '2d_schlieren':
         # plot 2-norm of gradient of variable var:
         
-        # No idea why this next line is needed...maybe a 64/32 bit incompatibility issue?
+        # No idea why this next line is needed...maybe a 64-/32-bit incompatibility issue?
         var = pylab.array(var)
         (vx,vy) = pylab.gradient(var)
         vs = pylab.sqrt(vx**2 + vy**2)

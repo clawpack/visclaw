@@ -86,7 +86,7 @@ def schlieren_colormap(color=[0,0,0]):
     s  = linspace(0,1,20)
     colors = {}
     for key in s:
-        colors[key] = array([1,1,1]) - key**10 * color
+        colors[key] = array([1,1,1]) - key**0.1 * color
     schlieren_colors = make_colormap(colors)
     return schlieren_colors
 
