@@ -1576,6 +1576,12 @@ def call_setplot(setplot, plotdata, verbose=True):
             # make sure setplot from current directory is used:
             reload(SetPlot)
             setplot = SetPlot.setplot   # should be a function
+        except ImportError:
+            print 'WARNING: setplot.py not found in current directory'
+            print '         Using visclaw.setplot_default() instead'
+            import visclaw.setplot_default as SetPlot
+            reload(SetPlot)
+            setplot = SetPlot.setplot   # should be a function
         except:
             print """*** Error in call_setplot: 
                   Problem importing from %s.py in directory %s""" \
