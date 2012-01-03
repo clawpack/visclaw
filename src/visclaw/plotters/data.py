@@ -239,10 +239,13 @@ class ClawPlotData(Data):
     def gettime(self,frameno,outdir='./',format='ascii'):
         r"""Fetch time from solution corresponding to frame number in outdir
         
-        This method only works for ascii formatted files
+        This method only works for ascii and petsc formatted files
         """
 
-        format_module = __import__('pyclaw.io.%s' % format, fromlist=['pyclaw','io'])
+        if format=='petsc':
+            format_module = __import__('petclaw.io.%s' % format, fromlist=['petclaw','io'])
+        else:
+            format_module = __import__('pyclaw.io.%s' % format, fromlist=['pyclaw','io'])
         format_read_t = getattr(format_module, 'read_%s_t' % format)
         t,meqn,ngrids,maux,ndim = format_read_t(frameno,path=outdir)
         return t
