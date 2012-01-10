@@ -1569,9 +1569,10 @@ def call_setplot(setplot, plotdata, verbose=True):
     elif isinstance(setplot,str):
         # assume setplot specifies module containing setplot function
         # strip off the .py if it is there:
-        setplotmod = os.path.splitext(setplot)[0]
+        setplotmod = os.path.splitext(os.path.basename(setplot))[0]
         try:
             sys.path.insert(0,os.getcwd())
+            # import pdb; pdb.set_trace()
             exec('import %s as SetPlot' % setplotmod)
             # make sure setplot from current directory is used:
             reload(SetPlot)
