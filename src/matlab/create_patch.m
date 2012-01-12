@@ -93,7 +93,7 @@ end;
 % Contour lines.
 userdata.contourLines = [];
 if (~isempty(contourlevels))
-  c = contourc(yc_like,zc_like,qcm2,contourlevels,'k');
+  c = contourc(yc_like,zc_like,qcm2,contourlevels);
   userdata.contourLines = create_clines(c,sval,sdir,mappedgrid,manifold);
 end;
 
