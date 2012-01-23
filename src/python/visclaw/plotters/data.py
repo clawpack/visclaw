@@ -16,7 +16,7 @@ import os
 import copy
 import re
 import logging
-from pyclaw.data import Data
+from clawdata import Data, ClawData
 
 
 # ============================================================================
@@ -45,7 +45,7 @@ class ClawPlotData(Data):
                            'plotitem_dict', 'html_movies', 'params']
 
         # Initialize the data object and read the data files
-        super(ClawPlotData,self).__init__(data_files,plot_attrs)
+        super(ClawPlotData,self).__init__(plot_attrs)
 
         # default values of attributes:
 
@@ -737,7 +737,7 @@ class ClawPlotAxes(Data):
 # ============================================================================
 #  Subclass ClawPlotItem containing data for plotting a single object
 # ============================================================================
-class ClawPlotItem(Data):
+class ClawPlotItem(ClawData):
     """
     
     Data subclass containing plot data needed to plot a single object.
@@ -757,7 +757,7 @@ class ClawPlotItem(Data):
                            'MappedGrid', 'mapc2p', \
                            'figno', 'handle', 'params', \
                            'aftergrid','afteritem','framesoln_dict', \
-                           '_pobjs']  
+                           '_pobjs','name','plot_type','plot_show','user','show']  
 
         super(ClawPlotItem, self).__init__(attributes = attributes)    
 
