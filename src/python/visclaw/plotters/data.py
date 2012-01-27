@@ -809,6 +809,9 @@ class ClawPlotItem(ClawData):
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
+            amr_attributes = """show color kwargs""".split()
+            for a in amr_attributes:
+                self.add_attribute('amr_%s' % a, [])
 
             if plot_type == '1d_fill_between':
                 zero_function = lambda current_data: 0.
@@ -828,10 +831,12 @@ class ClawPlotItem(ClawData):
             self.add_attribute('gridedges_show',0)
             self.add_attribute('gridedges_color','k')
             self.add_attribute('kwargs',{})
+            amr_attributes = """gridlines_show gridlines_color grid_bgcolor
+                     gridedges_show gridedges_color kwargs""".split()
+            for a in amr_attributes:
+                self.add_attribute('amr_%s' % a, [])
 
             if plot_type == '2d_pcolor':
-                # from pylab import cm
-                # self.add_attribute('pcolor_cmap',cm.RdYlBu,True)
                 from visclaw.plotters import colormaps
                 self.add_attribute('pcolor_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('pcolor_cmin',None)
@@ -839,8 +844,6 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('add_colorbar',True)
 
             elif plot_type == '2d_imshow':
-                # from pylab import cm
-                # self.add_attribute('pcolor_cmap',cm.RdYlBu,True)
                 from visclaw.plotters import colormaps
                 self.add_attribute('imshow_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('imshow_cmin',None)
@@ -854,9 +857,12 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('contour_min',None)
                 self.add_attribute('contour_max',None)
                 self.add_attribute('contour_show',1)
-                self.add_attribute('contour_color','k')
+                self.add_attribute('contour_colors','k')
                 self.add_attribute('contour_cmap',None)
                 self.add_attribute('add_colorbar',False)
+                amr_attributes = """show colors cmap""".split()
+                for a in amr_attributes:
+                    self.add_attribute('amr_contour_%s' % a, [])
 
             elif plot_type == '2d_schlieren':
                 from visclaw.plotters import colormaps
@@ -879,9 +885,14 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('quiver_key_units','')
                 self.add_attribute('quiver_key_scale',None)
                 self.add_attribute('quiver_key_kwargs',{})
+                amr_attributes = """coarsening key_show key_label_x key_label_y
+                         key_scale key_kwargs""".split()
+                for a in amr_attributes:
+                    self.add_attribute('amr_quiver_%s' % a, [])
 
             else:
                  print '*** Warning 2d plot type %s not recognized' % plot_type
+
 
         elif ndim == 3:
             print '*** Warning- ClawPlotItem not yet set up for ndim = 3'
@@ -929,491 +940,6 @@ class ClawPlotItem(ClawData):
 
         return gaugesoln
 
-#-----------------------------------------------------------------------
-# New classes and functions for dealing with data in setrun function.
-
-class ClawInputData(Data):
-    """
-    Object that will be written out to claw.data.
-    """
-    def __init__(self, ndim):
-        super(ClawInputData,self).__init__()
-        self.add_attribute('ndim',ndim)
-        
-        # Set default values:
-        if ndim == 1:
-            self.add_attribute('mx',100)
-            self.add_attribute('nout',5)
-            self.add_attribute('outstyle',1)
-            self.add_attribute('tfinal',1.0)
-            self.add_attribute('dt_initial',1.e-5)
-            self.add_attribute('dt_max',1.e99)
-            self.add_attribute('cfl_desired',0.9)
-            self.add_attribute('cfl_max',1.0)
-            self.add_attribute('max_steps',5000)
-            self.add_attribute('dt_variable',1)
-            self.add_attribute('order',2)
-            self.add_attribute('order_trans',0)
-            self.add_attribute('verbosity',0)
-            self.add_attribute('src_split',0)
-            self.add_attribute('mcapa',0)
-            self.add_attribute('maux',0)
-            self.add_attribute('meqn',1)
-            self.add_attribute('mwaves',1)
-            self.add_attribute('mthlim',[4])
-            self.add_attribute('t0',0.)
-            self.add_attribute('xlower',0.)
-            self.add_attribute('xupper',1.)
-            self.add_attribute('mbc',2)
-            self.add_attribute('mthbc_xlower',1)
-            self.add_attribute('mthbc_xupper',1)
-            self.add_attribute('restart',0)
-            self.add_attribute('N_restart',0)
-
-
-        elif ndim == 2:
-            self.add_attribute('mx',100)
-            self.add_attribute('my',100)
-            self.add_attribute('nout',5)
-            self.add_attribute('outstyle',1)
-            self.add_attribute('tfinal',1.0)
-            self.add_attribute('dt_initial',1.e-5)
-            self.add_attribute('dt_max',1.e99)
-            self.add_attribute('cfl_desired',0.9)
-            self.add_attribute('cfl_max',1.0)
-            self.add_attribute('max_steps',5000)
-            self.add_attribute('dt_variable',1)
-            self.add_attribute('order',2)
-            self.add_attribute('order_trans',2)
-            self.add_attribute('verbosity',0)
-            self.add_attribute('src_split',0)
-            self.add_attribute('mcapa',0)
-            self.add_attribute('maux',0)
-            self.add_attribute('meqn',1)
-            self.add_attribute('mwaves',1)
-            self.add_attribute('mthlim',[4])
-            self.add_attribute('t0',0.)
-            self.add_attribute('xlower',0.)
-            self.add_attribute('xupper',1.)
-            self.add_attribute('ylower',0.)
-            self.add_attribute('yupper',1.)
-            self.add_attribute('mbc',2)
-            self.add_attribute('mthbc_xlower',1)
-            self.add_attribute('mthbc_xupper',1)
-            self.add_attribute('mthbc_ylower',1)
-            self.add_attribute('mthbc_yupper',1)
-            self.add_attribute('restart',0)
-            self.add_attribute('N_restart',0)
-
-        else:
-            print '*** Error: only ndim=1 or 2 supported so far ***'
-            raise()
-
-    def write(self):
-        print 'Creating data file claw.data for use with xclaw'
-        make_clawdatafile(self)   
-
-
-
-class AmrclawInputData(Data):
-    """
-    Object that will be written out to amr2ez.data.
-    """
-    def __init__(self, ndim):
-        super(AmrclawInputData,self).__init__()
-        self.add_attribute('ndim',ndim)
-        
-        # Set default values:
-        if ndim == 1:
-            self.add_attribute('mx',100)
-            self.add_attribute('nout',5)
-            self.add_attribute('outstyle',1)
-            self.add_attribute('tfinal',1.0)
-            self.add_attribute('dt_initial',1.e-5)
-            self.add_attribute('dt_max',1.e99)
-            self.add_attribute('cfl_desired',0.9)
-            self.add_attribute('cfl_max',1.0)
-            self.add_attribute('max_steps',5000)
-            self.add_attribute('dt_variable',1)
-            self.add_attribute('order',2)
-            self.add_attribute('order_trans',0)
-            self.add_attribute('verbosity',0)
-            self.add_attribute('src_split',0)
-            self.add_attribute('mcapa',0)
-            self.add_attribute('maux',0)
-            self.add_attribute('meqn',1)
-            self.add_attribute('mwaves',1)
-            self.add_attribute('mthlim',[4])
-            self.add_attribute('t0',0.)
-            self.add_attribute('xlower',0.)
-            self.add_attribute('xupper',1.)
-            self.add_attribute('mbc',2)
-            self.add_attribute('mthbc_xlower',1)
-            self.add_attribute('mthbc_xupper',1)
-            self.add_attribute('restart',0)
-            self.add_attribute('N_restart',0)
-
-            # attributes need only since AMR is done using 2d amrclaw:
-            self.add_attribute('my',1)
-            self.add_attribute('ylower',0.)
-            self.add_attribute('yupper',1.)
-            self.add_attribute('mthbc_ylower',1)
-            self.add_attribute('mthbc_yupper',1)
-            self.add_attribute('inraty',[1,1,1,1,1,1])
-
-        elif ndim == 2:
-            self.add_attribute('mx',100)
-            self.add_attribute('my',100)
-            self.add_attribute('nout',5)
-            self.add_attribute('outstyle',1)
-            self.add_attribute('tfinal',1.0)
-            self.add_attribute('dt_initial',1.e-5)
-            self.add_attribute('dt_max',1.e99)
-            self.add_attribute('cfl_desired',0.9)
-            self.add_attribute('cfl_max',1.0)
-            self.add_attribute('max_steps',5000)
-            self.add_attribute('dt_variable',1)
-            self.add_attribute('order',2)
-            self.add_attribute('order_trans',2)
-            self.add_attribute('verbosity',0)
-            self.add_attribute('src_split',0)
-            self.add_attribute('mcapa',0)
-            self.add_attribute('maux',0)
-            self.add_attribute('meqn',1)
-            self.add_attribute('mwaves',1)
-            self.add_attribute('mthlim',[4])
-            self.add_attribute('t0',0.)
-            self.add_attribute('xlower',0.)
-            self.add_attribute('xupper',1.)
-            self.add_attribute('ylower',0.)
-            self.add_attribute('yupper',1.)
-            self.add_attribute('mbc',2)
-            self.add_attribute('mthbc_xlower',1)
-            self.add_attribute('mthbc_xupper',1)
-            self.add_attribute('mthbc_ylower',1)
-            self.add_attribute('mthbc_yupper',1)
-            self.add_attribute('restart',0)
-            self.add_attribute('N_restart',0)
-            self.add_attribute('inraty',[1])
-
-        if ndim <= 2:
-            # AMR parameters:
-            self.add_attribute('mxnest',-1)
-            self.add_attribute('inratx',[1])
-            self.add_attribute('inratt',[1])
-            self.add_attribute('auxtype',[])
-            self.add_attribute('restart',False)
-            self.add_attribute('checkpt_iousr',1000)
-            self.add_attribute('tol',-1.0)
-            self.add_attribute('tolsp',0.05)
-            self.add_attribute('kcheck',2)
-            self.add_attribute('ibuff',3)
-            self.add_attribute('cutoff',0.7)
-            self.add_attribute('PRINT',False)
-            self.add_attribute('NCAR',False)
-            self.add_attribute('fortq',True)
-            self.add_attribute('dprint',False)
-            self.add_attribute('eprint',False)
-            self.add_attribute('edebug',False)
-            self.add_attribute('gprint',False)
-            self.add_attribute('nprint',False)
-            self.add_attribute('pprint',False)
-            self.add_attribute('rprint',False)
-            self.add_attribute('sprint',False)
-            self.add_attribute('tprint',False)
-            self.add_attribute('uprint',False)
-        else:
-            print '*** Error: only ndim=1 or 2 supported so far ***'
-            raise()
-
-    def write(self):
-        print 'Creating data file amr2ez.data for use with xamr'
-        make_amrclawdatafile(self)   
-
-
-
-def open_datafile(name, datasource='setrun.py'):
-    """
-    Open a data file and write a warning header.
-    Warning header starts with '#' character.  These lines are skipped if
-    data file is opened using the library routine opendatafile.
-
-    INPUT:
-        name - name of data file
-    OUTPUT:
-        file - file object
-    """
-    
-    import string
-
-    source = string.ljust(datasource,25)
-    file = open(name, 'w')
-    file.write('########################################################\n')
-    file.write('### DO NOT EDIT THIS FILE:  GENERATED AUTOMATICALLY ####\n')
-    file.write('### To modify data, edit  %s ####\n' % source)
-    file.write('###    and then "make .data"                        ####\n')
-    file.write('########################################################\n\n')
-
-    return file
-
-
-def data_write(file, dataobj, name=None, descr=''):
-
-    """
-    Write out value to data file, in the form
-       value =: name  descr
-    Remove brackets and commas from lists, and replace booleans by T/F.
-    Also convert numpy array to a list first.
-
-    INPUTS
-       name, normally a string defining the variable
-             if name==None, write a blank line.
-       descr, a short description to appear on the line
-    """
-
-    import string
-    if name is None:
-        file.write('\n')
-    else:
-        try:
-            value = getattr(dataobj, name)
-        except:
-            print "Variable missing: ",name
-            print "  from dataobj = ", dataobj
-            raise
-        # Convert value to an appropriate string repr
-        import numpy 
-        if isinstance(value,numpy.ndarray):
-            value = list(value)
-        if isinstance(value,tuple) | isinstance(value,list):
-            # Remove [], (), and ','
-            string_value = repr(value)[1:-1]
-            string_value = string_value.replace(',','')
-        elif isinstance(value,bool):
-            if value:
-                string_value = 'T'
-            else:
-                string_value = 'F'
-        else:
-            string_value = repr(value)
-        padded_value = string.ljust(string_value, 25)
-        padded_name = string.ljust(name, 12)
-        file.write('%s =: %s %s\n' % (padded_value, padded_name, descr))
-        
-
-def make_clawdatafile(clawdata):
-    """
-    Take the data specified in clawdata and write it to claw.data in the
-    form required by the Fortran code lib/main.f95.
-    """
-
-
-    # open file and write a warning header:
-    file = open_datafile('claw.data')
-
-    ndim = clawdata.ndim
-    data_write(file, clawdata, 'ndim', '(number of dimensions)')
-    data_write(file, clawdata, 'mx', '(cells in x direction)')
-    if ndim > 1:
-        data_write(file, clawdata, 'my', '(cells in y direction)')
-    if ndim == 3:
-        data_write(file, clawdata, 'mz', '(cells in z direction)')
-    data_write(file, clawdata, None)  # writes blank line
-
-    data_write(file, clawdata, 'nout', '(number of output times)')
-    data_write(file, clawdata, 'outstyle', '(style of specifying output times)')
-    if clawdata.outstyle == 1:
-        data_write(file, clawdata, 'tfinal', '(final time)')
-    elif clawdata.outstyle == 2:
-        data_write(file, clawdata, 'tout', '(output times)')
-    elif clawdata.outstyle == 3:
-        data_write(file, clawdata, 'iout', '(output every iout steps)')
-    else:
-        print '*** Error: unrecognized outstyle'
-        raise
-        return
-
-    data_write(file, clawdata, None)
-    data_write(file, clawdata, 'dt_initial', '(initial time step dt)')
-    data_write(file, clawdata, 'dt_max', '(max allowable dt)')
-    data_write(file, clawdata, 'cfl_max', '(max allowable Courant number)')
-    data_write(file, clawdata, 'cfl_desired', '(desired Courant number)')
-    data_write(file, clawdata, 'max_steps', '(max time steps per call to claw)')
-    data_write(file, clawdata, None)
-    data_write(file, clawdata, 'dt_variable', '(1 for variable dt, 0 for fixed)')
-    data_write(file, clawdata, 'order', '(1 or 2)')
-    if ndim == 1:
-        data_write(file, clawdata, 'order_trans', '(not used in 1d)')
-    else:
-        data_write(file, clawdata, 'order_trans', '(transverse order)')
-    data_write(file, clawdata, 'verbosity', '(verbosity of output)')
-    data_write(file, clawdata, 'src_split', '(source term splitting)')
-    data_write(file, clawdata, 'mcapa', '(aux index for capacity fcn)')
-    data_write(file, clawdata, 'maux', '(number of aux variables)')
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 'meqn', '(number of equations)')
-    data_write(file, clawdata, 'mwaves', '(number of waves)')
-    data_write(file, clawdata, 'mthlim', '(limiter choice for each wave)')
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 't0', '(initial time)')
-    data_write(file, clawdata, 'xlower', '(xlower)')
-    data_write(file, clawdata, 'xupper', '(xupper)')
-    if ndim > 1:
-        data_write(file, clawdata, 'ylower', '(ylower)')
-        data_write(file, clawdata, 'yupper', '(yupper)')
-    if ndim == 3:
-        data_write(file, clawdata, 'zlower', '(zlower)')
-        data_write(file, clawdata, 'zupper', '(zupper)')
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 'mbc', '(number of ghost cells)')
-    data_write(file, clawdata, 'mthbc_xlower', '(type of BC at xlower)')
-    data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
-    if ndim > 1:
-        data_write(file, clawdata, 'mthbc_ylower', '(type of BC at ylower)')
-        data_write(file, clawdata, 'mthbc_yupper', '(type of BC at yupper)')
-    if ndim == 3:
-        data_write(file, clawdata, 'mthbc_zlower', '(type of BC at zlower)')
-        data_write(file, clawdata, 'mthbc_zupper', '(type of BC at zupper)')
-    
-    file.close()
-
-def make_amrclawdatafile(clawdata):
-    """
-    Take the data specified in clawdata and write it to claw.data in the
-    form required by the Fortran code lib/main.f95.
-    """
-
-
-    # open file and write a warning header:
-    file = open_datafile('amr2ez.data')
-
-    ndim = clawdata.ndim
-    #data_write(file, clawdata, 'ndim', '(number of dimensions)')
-    data_write(file, clawdata, 'mx', '(cells in x direction)')
-    data_write(file, clawdata, 'my', '(cells in y direction)')
-    if ndim == 3:
-        data_write(file, clawdata, 'mz', '(cells in z direction)')
-    data_write(file, clawdata, 'mxnest', '(max number of grid levels)')
-    data_write(file, clawdata, 'inratx', '(refinement ratios)')
-    data_write(file, clawdata, 'inraty', '(refinement ratios)')
-    if ndim == 3:
-        data_write(file, clawdata, 'inratz', '(refinement ratios)')
-    data_write(file, clawdata, 'inratt', '(refinement ratios)')
-    data_write(file, clawdata, None)  # writes blank line
-
-    data_write(file, clawdata, 'nout', '(number of output times)')
-    data_write(file, clawdata, 'outstyle', '(style of specifying output times)')
-    if clawdata.outstyle == 1:
-        data_write(file, clawdata, 'tfinal', '(final time)')
-    elif clawdata.outstyle == 2:
-        data_write(file, clawdata, 'tout', '(output times)')
-    elif clawdata.outstyle == 3:
-        data_write(file, clawdata, 'iout', '(output every iout steps)')
-    else:
-        print '*** Error: unrecognized outstyle'
-        raise
-        return
-
-    data_write(file, clawdata, None)
-    data_write(file, clawdata, 'dt_initial', '(initial time step dt)')
-    data_write(file, clawdata, 'dt_max', '(max allowable dt)')
-    data_write(file, clawdata, 'cfl_max', '(max allowable Courant number)')
-    data_write(file, clawdata, 'cfl_desired', '(desired Courant number)')
-    data_write(file, clawdata, 'max_steps', '(max time steps per call to claw)')
-    data_write(file, clawdata, None)
-    data_write(file, clawdata, 'dt_variable', '(1 for variable dt, 0 for fixed)')
-    data_write(file, clawdata, 'order', '(1 or 2)')
-    if ndim == 1:
-        data_write(file, clawdata, 'order_trans', '(not used in 1d)')
-    else:
-        data_write(file, clawdata, 'order_trans', '(transverse order)')
-    data_write(file, clawdata, 'verbosity', '(verbosity of output)')
-    data_write(file, clawdata, 'src_split', '(source term splitting)')
-    data_write(file, clawdata, 'mcapa', '(aux index for capacity fcn)')
-    data_write(file, clawdata, 'maux', '(number of aux variables)')
-    if len(clawdata.auxtype) != clawdata.maux:
-        file.close()
-        raise AttributeError, "require len(clawdata.auxtype) == clawdata.maux"
-    for i in range(clawdata.maux):
-        file.write("'%s'\n" % clawdata.auxtype[i])
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 'meqn', '(number of equations)')
-    data_write(file, clawdata, 'mwaves', '(number of waves)')
-    data_write(file, clawdata, 'mthlim', '(limiter choice for each wave)')
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 't0', '(initial time)')
-    data_write(file, clawdata, 'xlower', '(xlower)')
-    data_write(file, clawdata, 'xupper', '(xupper)')
-    data_write(file, clawdata, 'ylower', '(ylower)')
-    data_write(file, clawdata, 'yupper', '(yupper)')
-    if ndim == 3:
-        data_write(file, clawdata, 'zlower', '(zlower)')
-        data_write(file, clawdata, 'zupper', '(zupper)')
-    data_write(file, clawdata, None)
-    
-    data_write(file, clawdata, 'mbc', '(number of ghost cells)')
-    data_write(file, clawdata, 'mthbc_xlower', '(type of BC at xlower)')
-    data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
-    data_write(file, clawdata, 'mthbc_ylower', '(type of BC at ylower)')
-    data_write(file, clawdata, 'mthbc_yupper', '(type of BC at yupper)')
-    if ndim == 3:
-        data_write(file, clawdata, 'mthbc_zlower', '(type of BC at zlower)')
-        data_write(file, clawdata, 'mthbc_zupper', '(type of BC at zupper)')
-    data_write(file, clawdata, None)
-
-    data_write(file, clawdata, 'restart', '(1 to restart from a past run)')
-    data_write(file, clawdata, 'checkpt_iousr', '(how often to checkpoint)')
-    data_write(file, clawdata, None)
-
-    data_write(file, clawdata, 'tol', '(tolerance for Richardson extrap)')
-    data_write(file, clawdata, 'tolsp', '(tolerance used in flag2refine)')
-    data_write(file, clawdata, 'kcheck', '(how often to regrid)')
-    data_write(file, clawdata, 'ibuff', '(buffer zone around flagged pts)')
-    data_write(file, clawdata, 'cutoff', '(efficiency cutoff for grid gen.)')
-    data_write(file, clawdata, None)
-
-    data_write(file, clawdata, 'PRINT', '(print to fort.amr)')
-    data_write(file, clawdata, 'NCAR', '(obsolete!)')
-    data_write(file, clawdata, 'fortq', '(Output to fort.q* files)')
-    data_write(file, clawdata, None)
-
-    data_write(file, clawdata, 'dprint', '(print domain flags)')
-    data_write(file, clawdata, 'eprint', '(print err est flags)')
-    data_write(file, clawdata, 'edebug', '(even more err est flags)')
-    data_write(file, clawdata, 'gprint', '(grid bisection/clustering)')
-    data_write(file, clawdata, 'nprint', '(proper nesting output)')
-    data_write(file, clawdata, 'pprint', '(proj. of tagged points)')
-    data_write(file, clawdata, 'rprint', '(print regridding summary)')
-    data_write(file, clawdata, 'sprint', '(space/memory output)')
-    data_write(file, clawdata, 'tprint', '(time step reporting each level)')
-    data_write(file, clawdata, 'uprint', '(update/upbnd reporting)')
-    
-    file.close()
-
-def make_userdatafile(userdata):
-
-    """
-    Create the data file using the parameters in userdata.
-    The parameters will be written to this file in the same order they were
-    specified using userdata.add_attribute.
-    Presumably the user will read these in using a Fortran routine, such as
-    setprob.f95, and the order is important.
-    """
-
-    # open file and write a warning header:
-    file = open_datafile(userdata._UserData__fname)
-
-    # write all the parameters:
-    for param in userdata.attributes:
-        data_write(file, userdata, param, \
-                   userdata._UserData__descr[param])
-
-    file.close()
 
 class GaugeSolution(Data):
     """
