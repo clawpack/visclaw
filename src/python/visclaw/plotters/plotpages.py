@@ -1446,21 +1446,21 @@ def plotclaw2html(plotdata):
         for name in plotdata.otherfigure_dict.iterkeys():
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
-                makefig = otherfigure.makefig
-                if makefig:
-                    if type(makefig)==str:
-                        try:
-                            exec(makefig)
-                        except:
-                            print "*** Problem executing makefig "
-                            print "    for otherfigure ",name
-                    else:
-                        try:
-                            makefig(plotdata)
-                        except:
-                            print "*** Problem executing makefig function"
-                            print "    for otherfigure ",name
-                        raise
+            makefig = otherfigure.makefig
+            if makefig:
+                if type(makefig)==str:
+                    try:
+                        exec(makefig)
+                    except:
+                        print "*** Problem executing makefig "
+                        print "    for otherfigure ",name
+                else:
+                    try:
+                        makefig(plotdata)
+                    except:
+                        print "*** Problem executing makefig function"
+                        print "    for otherfigure ",name
+                    raise
 
                 # Assume that makefig saves the file if needed, so removing the 
                 # following lines.  
