@@ -77,7 +77,7 @@ def plotframe(frameno, plotdata, verbose=False):
     t = framesoln.t
 
     # initialize current_data containing data that will be passed
-    # to afterframe, afteraxes, aftergrid commands
+    # to afterframe, afteraxes, afterpatch commands
     current_data = Data()
     current_data.user = Data()   # for user specified attributes
                                  # to avoid potential conflicts
@@ -178,15 +178,15 @@ def plotframe(frameno, plotdata, verbose=False):
 
 
             # NOTE: This was rearranged December 2009 to 
-            # loop over grids first and then over plotitems so that 
-            # finer grids will plot over coarser grids of other items.
+            # loop over patches first and then over plotitems so that 
+            # finer patches will plot over coarser patches of other items.
             # Needed in particular if masked arrays are used, e.g. if
             # two different items do pcolor plots with different color maps
             # for different parts of the domain (e.g. water and land).
 
             # Added loop over outdirs to prevent problems if different
             # items use data from different outdirs since loop over items
-            # is now inside loop on grids.
+            # is now inside loop on patches.
 
 
             # loop over all outdirs:
@@ -207,21 +207,21 @@ def plotframe(frameno, plotdata, verbose=False):
 
                 current_data.framesoln = framesoln
 
-                #print "+++ Looping over grids in outdir = ",outdir
+                #print "+++ Looping over patches in outdir = ",outdir
 
-                # loop over grids:
+                # loop over patches:
                 # ----------------
     
                 for stateno,state in enumerate(framesoln.states):
                     #print '+++ stateno = ',stateno
                     state = framesoln.states[stateno]
-                    grid = state.grid
+                    patch = state.patch
 
-                    current_data.grid = grid
+                    current_data.patch = patch
                     current_data.q = state.q
                     current_data.aux = state.aux
-                    current_data.xlower = grid.dimensions[0].lower
-                    current_data.xupper = grid.dimensions[0].upper
+                    current_data.xlower = patch.dimensions[0].lower
+                    current_data.xupper = patch.dimensions[0].upper
     
                     # loop over items:
                     # ----------------
@@ -242,7 +242,7 @@ def plotframe(frameno, plotdata, verbose=False):
                             continue
                             
 
-                        ndim = plotitem.ndim
+                        num_dim = plotitem.num_dim
 
                         # option to suppress printing some levels:
                         try:
@@ -254,7 +254,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
                         if plotitem._show and show_this_level:
                             cmd = 'output = plotitem%s(framesoln,plotitem,\
-                                    current_data,stateno)'  % ndim
+                                    current_data,stateno)'  % num_dim
     
                             try:
                                 exec(cmd)
@@ -262,12 +262,12 @@ def plotframe(frameno, plotdata, verbose=False):
                                 if verbose:  
                                         print '      Plotted  plotitem ', itemname
                             except:
-                                print '*** Error in plotframe: problem calling plotitem%s' % ndim
+                                print '*** Error in plotframe: problem calling plotitem%s' % num_dim
                                 traceback.print_exc()
                                 return None
     
                     # end of loop over plotitems
-                # end of loop over grids
+                # end of loop over patches
             # end of loop over outdirs
 
 
@@ -276,7 +276,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 if plotitem.afteritem:
                     print "*** ClawPlotItem.afteritem is deprecated"
                     print "*** use ClawPlotAxes.afteraxes "
-                    print "*** or  ClawPlotItem.aftergrid instead"
+                    print "*** or  ClawPlotItem.afterpatch instead"
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
@@ -381,7 +381,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     Make a 1d plot for a single plot item for the solution in framesoln.
 
     The current_data object holds data that should be passed into
-    aftergrid or afteraxes if these functions are defined.  The functions
+    afterpatch or afteraxes if these functions are defined.  The functions
     may add to this object, so this function should return the possibly
     modified current_data for use in other plotitems or in afteraxes or
     afterframe.
@@ -393,7 +393,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     plotaxes = plotitem._plotaxes
 
     # the following plot parameters should be set and independent of 
-    # which AMR level a grid is on:
+    # which AMR level a patch is on:
 
     plot_params = """
              plot_type  afteritem  mapc2p  MappedGrid gaugeno
@@ -412,8 +412,8 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
     state = framesoln.states[stateno]
-    grid = state.grid
-    current_data.grid = grid
+    patch = state.patch
+    current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
 
@@ -423,20 +423,20 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  aftergrid  plotstyle color kwargs 
+             plot_var  afterpatch  plotstyle color kwargs 
              plot_var2 fill_where map_2d_to_1d plot_show
              """.split()
 
     # For each plot_param check if there is an amr_ list for this
     # parameter and if so select the value corresponding to the level of
-    # this grid.  Otherwise, use plotitem attribute of this name.
+    # this patch.  Otherwise, use plotitem attribute of this name.
     # The resulting variable starts with 'pp_'.
 
     for plot_param in plot_params:
         amr_plot_param = "amr_%s" % plot_param
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
-            index = min(grid.level, len(amr_list)) - 1
+            index = min(patch.level, len(amr_list)) - 1
             exec("pp_%s = amr_list[%i]" % (plot_param, index))
         else:
             exec("pp_%s = getattr(plotitem, '%s', None)" \
@@ -446,11 +446,11 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         pp_plot_type = '1d_plot'  # '1d' is deprecated
     
     if pp_plot_type in ['1d_plot', '1d_semilogy']:
-        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
-        xc_center = thisgridvar.xc_center   # cell centers
-        xc_edge = thisgridvar.xc_edge       # cell edges
-        var = thisgridvar.var               # variable to be plotted
-        current_data.x = xc_center
+        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
+        xc_centers = thispatchvar.xc_centers   # cell centers
+        xc_edges = thispatchvar.xc_edges       # cell edges
+        var = thispatchvar.var               # variable to be plotted
+        current_data.x = xc_centers
         current_data.var = var
 
     elif pp_plot_type == '1d_fill_between':
@@ -459,13 +459,13 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
             print "*** This version of pylab is missing fill_between"
             print "*** Reverting to 1d_plot"
             pp_plot_type = '1d_plot'
-        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
-        thisgridvar2 = get_gridvar(state,pp_plot_var2,1,current_data)
-        xc_center = thisgridvar.xc_center   # cell centers
-        xc_edge = thisgridvar.xc_edge       # cell edges
-        var = thisgridvar.var               # variable to be plotted
-        var2 = thisgridvar2.var             # variable to be plotted
-	current_data.x = xc_center
+        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
+        thispatchvar2 = get_patchvar(state,pp_plot_var2,1,current_data)
+        xc_centers = thispatchvar.xc_centers   # cell centers
+        xc_edges = thispatchvar.xc_edges       # cell edges
+        var = thispatchvar.var               # variable to be plotted
+        var2 = thispatchvar2.var             # variable to be plotted
+	current_data.x = xc_centers
 	current_data.var = var
 	current_data.var2 = var2
 
@@ -477,22 +477,22 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
             raise
             return
         try:
-            thisgridvar = get_gridvar(state,pp_plot_var,2,current_data)
-            xc_center = thisgridvar.xc_center   # cell centers
-            yc_center = thisgridvar.yc_center
-            xc_edge = thisgridvar.xc_edge   # cell edge
-            yc_edge = thisgridvar.yc_edge
-            var = thisgridvar.var             # variable to be plotted
-            current_data.x = xc_center
-            current_data.y = yc_center
+            thispatchvar = get_patchvar(state,pp_plot_var,2,current_data)
+            xc_centers = thispatchvar.xc_centers   # cell centers
+            yc_centers = thispatchvar.yc_centers
+            xc_edges = thispatchvar.xc_edges   # cell edge
+            yc_edges = thispatchvar.yc_edges
+            var = thispatchvar.var             # variable to be plotted
+            current_data.x = xc_centers
+            current_data.y = yc_centers
             current_data.var = var
             # TODO: fix for xp, yp??
-            xc_center, var = pp_map_2d_to_1d(current_data)
-            xc_center = xc_center.flatten()  # convert to 1d
+            xc_centers, var = pp_map_2d_to_1d(current_data)
+            xc_centers = xc_centers.flatten()  # convert to 1d
             var = var.flatten()  # convert to 1d
 
-            #xc_center, var = pp_map_2d_to_1d(var,xc_center,yc_center,t)
-            #xc_edge, var = pp_map_2d_to_1d(var,xc_edge,yc_edge,t)
+            #xc_centers, var = pp_map_2d_to_1d(var,xc_centers,yc_centers,t)
+            #xc_edges, var = pp_map_2d_to_1d(var,xc_edges,yc_edges,t)
         except:
             print '*** Error with map_2d_to_1d function'
             print 'map_2d_to_1d = ',pp_map_2d_to_1d
@@ -501,15 +501,15 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     elif pp_plot_type == '1d_gauge_trace':
         gaugesoln = plotdata.getgauge(pp_gaugeno)
-        xc_center = None
-        xc_edge = None
+        xc_centers = None
+        xc_edges = None
         
 
     elif pp_plot_type == '1d_empty':
         pp_plot_var = 0  # shouldn't be used but needed below *FIX*
-        thisgridvar = get_gridvar(state,pp_plot_var,1,current_data)
-        xc_center = thisgridvar.xc_center   # cell centers
-        xc_edge = thisgridvar.xc_edge       # cell edges
+        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
+        xc_centers = thispatchvar.xc_centers   # cell centers
+        xc_edges = thispatchvar.xc_edges       # cell edges
 
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp_plot_type)
@@ -524,11 +524,11 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if (pp_MappedGrid & (pp_mapc2p is None)):
         print "*** Warning: MappedGrid == True but no mapc2p specified"
     elif pp_MappedGrid:
-        X_center= pp_mapc2p(xc_center)
-        X_edge = pp_mapc2p(xc_edge)
+        X_center= pp_mapc2p(xc_centers)
+        X_edge = pp_mapc2p(xc_edges)
     else:
-        X_center = xc_center
-        X_edge = xc_edge
+        X_center = xc_centers
+        X_edge = xc_edges
 
 
     # The plot commands using matplotlib:
@@ -600,27 +600,27 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         return None
 
 
-    # call an aftergrid function if present:
-    if pp_aftergrid:
-        if isinstance(pp_aftergrid, str):
+    # call an afterpatch function if present:
+    if pp_afterpatch:
+        if isinstance(pp_afterpatch, str):
             # a string to be executed
-            exec(pp_aftergrid)
+            exec(pp_afterpatch)
         else:
             # assume it's a function
             try:
-                # set values that may be needed in aftergrid:
-                current_data.gridno = gridno
+                # set values that may be needed in afterpatch:
+                current_data.patchno = patchno
                 current_data.plotitem = plotitem
-                current_data.grid = grid
+                current_data.patch = patch
                 current_data.var = var
-                current_data.xlower = grid.dimensions[0].lower
-                current_data.xupper = grid.dimensions[0].upper
+                current_data.xlower = patch.dimensions[0].lower
+                current_data.xupper = patch.dimensions[0].upper
                 current_data.x = X_center # cell centers
-		current_data.dx = grid.d[0]
-                output = pp_aftergrid(current_data)
+		current_data.dx = patch.delta[0]
+                output = pp_afterpatch(current_data)
                 if output: current_data = output
             except:
-                print '*** Error in aftergrid ***'
+                print '*** Error in afterpatch ***'
                 raise
 
 
@@ -641,7 +641,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     Make a 2d plot for a single plot item for the solution in framesoln.
 
     The current_data object holds data that should be passed into
-    aftergrid or afteraxes if these functions are defined.  The functions
+    afterpatch or afteraxes if these functions are defined.  The functions
     may add to this object, so this function should return the possibly
     modified current_data for use in other plotitems or in afteraxes or
     afterframe.
@@ -656,7 +656,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     plotaxes = plotitem._plotaxes
 
     # The following plot parameters should be set and independent of 
-    # which AMR level a grid is on:
+    # which AMR level a patch is on:
 
     plot_params = """
              plot_type  afteritem  mapc2p  MappedGrid
@@ -674,10 +674,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
     state = framesoln.states[stateno]
-    grid = state.grid
-    level = grid.level
+    patch = state.patch
+    level = patch.level
 
-    current_data.grid = grid
+    current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
     current_data.level = level
@@ -688,9 +688,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  aftergrid  kwargs 
-             gridlines_show  gridlines_color  grid_bgcolor
-             gridedges_show  gridedges_color  add_colorbar
+             plot_var  afterpatch  kwargs 
+             patchlines_show  patchlines_color  patch_bgcolor
+             patchedges_show  patchedges_color  add_colorbar
              pcolor_cmap  pcolor_cmin  pcolor_cmax
              imshow_cmap  imshow_cmin  imshow_cmax
              contour_levels  contour_nlevels  contour_min  contour_max
@@ -703,14 +703,14 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     # For each plot_param check if there is an amr_ list for this
     # parameter and if so select the value corresponding to the level of
-    # this grid.  Otherwise, use plotitem attribute of this name.
+    # this patch.  Otherwise, use plotitem attribute of this name.
     # The resulting variable starts with 'pp_'.
 
     for plot_param in plot_params:
         amr_plot_param = "amr_%s" % plot_param
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
-            index = min(grid.level, len(amr_list)) - 1
+            index = min(patch.level, len(amr_list)) - 1
             exec("pp_%s = amr_list[%i]" % (plot_param, index))
         else:
             exec("pp_%s = getattr(plotitem, '%s', None)" \
@@ -718,17 +718,17 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
 
 
-    # turn grid background color into a colormap for use with pcolor cmd:
-    pp_grid_bgcolormap = colormaps.make_colormap({0.: pp_grid_bgcolor, \
-                                             1.: pp_grid_bgcolor})
+    # turn patch background color into a colormap for use with pcolor cmd:
+    pp_patch_bgcolormap = colormaps.make_colormap({0.: pp_patch_bgcolor, \
+                                             1.: pp_patch_bgcolor})
     
-    thisgridvar = get_gridvar(state,pp_plot_var,2,current_data)
+    thispatchvar = get_patchvar(state,pp_plot_var,2,current_data)
 
-    xc_center = thisgridvar.xc_center   # cell centers (on mapped grid)
-    yc_center = thisgridvar.yc_center
-    xc_edge = thisgridvar.xc_edge       # cell edges (on mapped grid)
-    yc_edge = thisgridvar.yc_edge
-    var = thisgridvar.var             # variable to be plotted
+    xc_centers = thispatchvar.xc_centers   # cell centers (on mapped patch)
+    yc_centers = thispatchvar.yc_centers
+    xc_edges = thispatchvar.xc_edges       # cell edges (on mapped patch)
+    yc_edges = thispatchvar.yc_edges
+    var = thispatchvar.var             # variable to be plotted
 
 
     # Grid mapping:
@@ -739,11 +739,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     if (pp_MappedGrid & (pp_mapc2p is None)):
         print "*** Warning: MappedGrid == True but no mapc2p specified"
     elif pp_MappedGrid:
-        X_center, Y_center = pp_mapc2p(xc_center, yc_center)
-        X_edge, Y_edge = pp_mapc2p(xc_edge, yc_edge)
+        X_center, Y_center = pp_mapc2p(xc_centers, yc_centers)
+        X_edge, Y_edge = pp_mapc2p(xc_edges, yc_edges)
     else:
-        X_center, Y_center = xc_center, yc_center
-        X_edge, Y_edge = xc_edge, yc_edge
+        X_center, Y_center = xc_centers, yc_centers
+        X_edge, Y_edge = xc_edges, yc_edges
 
 
     # The plot commands using matplotlib:
@@ -773,8 +773,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pcolor_cmd = "pobj = pylab."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp_pcolor_cmap"
 
-        if pp_gridlines_show:
-            pcolor_cmd += ", edgecolors=pp_gridlines_color"
+        if pp_patchlines_show:
+            pcolor_cmd += ", edgecolors=pp_patchlines_color"
         else: 
             pcolor_cmd += ", shading='flat'"
 
@@ -805,12 +805,12 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                     cmap=pp_imshow_cmap, interpolation='nearest', \
                     norm=color_norm)
 
-            if pp_gridlines_show:
-                # This draws grid for labels shown.  Levels not shown will
+            if pp_patchlines_show:
+                # This draws patch for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this. 
-                pobj = pylab.plot(X_edge, Y_edge, color=pp_gridlines_color)
-                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_gridlines_color)
+                pobj = pylab.plot(X_edge, Y_edge, color=pp_patchlines_color)
+                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_patchlines_color)
 
         else:
             #print '*** Not doing imshow on totally masked array'
@@ -834,12 +834,12 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 levels_set = True 
 
 
-        if pp_gridlines_show:
+        if pp_patchlines_show:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color)
-        elif pp_grid_bgcolor is not 'w': 
+                    cmap=pp_patch_bgcolormap, edgecolors=pp_patchlines_color)
+        elif pp_patch_bgcolor is not 'w': 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_grid_bgcolormap, edgecolors='None')
+                    cmap=pp_patch_bgcolormap, edgecolors='None')
         pylab.hold(True)
 
 
@@ -863,15 +863,15 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             # may suppress plotting at coarse levels
             exec(contourcmd)
 
-    elif pp_plot_type == '2d_grid':
-        # plot only the grids, no data:
-        if pp_gridlines_show:
+    elif pp_plot_type == '2d_patch':
+        # plot only the patches, no data:
+        if pp_patchlines_show:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color,\
+                    cmap=pp_patch_bgcolormap, edgecolors=pp_patchlines_color,\
                     shading='faceted')
         else: 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_grid_bgcolormap, shading='flat')
+                    cmap=pp_patch_bgcolormap, shading='flat')
 
 
     elif pp_plot_type == '2d_schlieren':
@@ -885,8 +885,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
-        if pp_gridlines_show:
-            pcolor_cmd += ", edgecolors=pp_gridlines_color"
+        if pp_patchlines_show:
+            pcolor_cmd += ", edgecolors=pp_patchlines_color"
         else: 
             pcolor_cmd += ", edgecolors='None'"
 
@@ -901,8 +901,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     elif pp_plot_type == '2d_quiver':
         if pp_quiver_coarsening > 0:
-            var_x = get_gridvar(state,pp_quiver_var_x,2,current_data).var
-            var_y = get_gridvar(state,pp_quiver_var_y,2,current_data).var
+            var_x = get_patchvar(state,pp_quiver_var_x,2,current_data).var
+            var_y = get_patchvar(state,pp_quiver_var_y,2,current_data).var
             Q = pylab.quiver(X_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
                              Y_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
                              var_x[::pp_quiver_coarsening,::pp_quiver_coarsening],
@@ -933,42 +933,42 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
 
 
-    # plot grid patch edges if desired:
+    # plot patch patch edges if desired:
 
-    if pp_gridedges_show:
+    if pp_patchedges_show:
         for i in [0, X_edge.shape[0]-1]:
             X1 = X_edge[i,:]
             Y1 = Y_edge[i,:]
-            pylab.plot(X1, Y1, pp_gridedges_color)
+            pylab.plot(X1, Y1, pp_patchedges_color)
         for i in [0, X_edge.shape[1]-1]:
             X1 = X_edge[:,i] 
             Y1 = Y_edge[:,i]
-            pylab.plot(X1, Y1, pp_gridedges_color)
+            pylab.plot(X1, Y1, pp_patchedges_color)
 
 
-    if pp_aftergrid:
+    if pp_afterpatch:
         try:
-            if isinstance(pp_aftergrid, str):
-                exec(pp_aftergrid)
+            if isinstance(pp_afterpatch, str):
+                exec(pp_afterpatch)
             else:
                 # assume it's a function
-                current_data.gridno = gridno
+                current_data.patchno = patchno
                 current_data.plotitem = plotitem
-                current_data.grid = grid
+                current_data.patch = patch
                 current_data.var = var
-                current_data.xlower = grid.dimensions[0].lower
-                current_data.xupper = grid.dimensions[0].upper
-                current_data.ylower = grid.dimensions[0].lower
-                current_data.yupper = grid.dimensions[0].upper
+                current_data.xlower = patch.dimensions[0].lower
+                current_data.xupper = patch.dimensions[0].upper
+                current_data.ylower = patch.dimensions[0].lower
+                current_data.yupper = patch.dimensions[0].upper
                 current_data.x = X_center # cell centers
                 current_data.y = Y_center # cell centers
-                current_data.dx = grid.d[0]
-                current_data.dy = grid.d[1]
+                current_data.dx = patch.delta[0]
+                current_data.dy = patch.delta[1]
 
-                output = pp_aftergrid(current_data)
+                output = pp_afterpatch(current_data)
                 if output: current_data = output
         except:
-            print '*** Warning: could not execute aftergrid'
+            print '*** Warning: could not execute afterpatch'
             raise
 
 
@@ -982,55 +982,55 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
 
 #--------------------------------------
-def get_gridvar(state, plot_var, ndim, current_data):
+def get_patchvar(state, plot_var, num_dim, current_data):
 #--------------------------------------
     """
-    Return arrays for spatial variable(s) (on mapped grid if necessary)
-    and variable to be plotted on a single grid in ndim space dimensions.
+    Return arrays for spatial variable(s) (on mapped patch if necessary)
+    and variable to be plotted on a single patch in num_dim space dimensions.
     """
 
-    grid = state.grid
+    patch = state.patch
 
-    if ndim == 1:
+    if num_dim == 1:
     
         # +++ until bug in solution.py fixed.
-        xc_center = grid.c_center[0]
-        xc_edge = grid.c_edge[0]
-        #xc_center = grid.p_center[0]
-        #xc_edge = grid.p_edge[0]
-        current_data.x = xc_center
-        current_data.dx = grid.d[0]
+        xc_centers = patch.c_centers[0]
+        xc_edges = patch.c_edges[0]
+        #xc_centers = patch.p_center[0]
+        #xc_edges = patch.p_edges[0]
+        current_data.x = xc_centers
+        current_data.dx = patch.delta[0]
 
     
         if isinstance(plot_var, int):
             var = state.q[plot_var,:]
         else:
             try:
-                #var = plot_var(state.q, xc_center, state.t)
+                #var = plot_var(state.q, xc_centers, state.t)
                 var = plot_var(current_data)
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
                 return  
 
-        thisgridvar = Data()
-        thisgridvar.var = var
-        thisgridvar.xc_center = xc_center
-        thisgridvar.xc_edge = xc_edge
-        thisgridvar.mx = grid.dimensions[0].n
+        thispatchvar = Data()
+        thispatchvar.var = var
+        thispatchvar.xc_centers = xc_centers
+        thispatchvar.xc_edges = xc_edges
+        thispatchvar.mx = patch.dimensions[0].num_cells
 
         # end of 1d case
     
-    elif ndim == 2:
+    elif num_dim == 2:
         # +++ until bug in solution.py fixed.
-        #xc_center, yc_center = grid.c_center
-        #xc_edge, yc_edge = grid.c_edge
-        xc_center, yc_center = grid.p_center
-        xc_edge, yc_edge = grid.p_edge
-        current_data.x = xc_center
-        current_data.y = yc_center
-        current_data.dx = grid.d[0]
-        current_data.dy = grid.d[1]
+        #xc_centers, yc_centers = patch.c_centers
+        #xc_edges, yc_edges = patch.c_edges
+        xc_centers, yc_centers = patch.p_center
+        xc_edges, yc_edges = patch.p_edges
+        current_data.x = xc_centers
+        current_data.y = yc_centers
+        current_data.dx = patch.delta[0]
+        current_data.dy = patch.delta[1]
 
         if isinstance(plot_var, int):
             var = state.q[plot_var,:,:]
@@ -1042,18 +1042,18 @@ def get_gridvar(state, plot_var, ndim, current_data):
                 traceback.print_exc()
                 return 
 
-        thisgridvar = Data()
-        thisgridvar.var = var
-        thisgridvar.xc_center = xc_center
-        thisgridvar.yc_center = yc_center
-        thisgridvar.xc_edge = xc_edge
-        thisgridvar.yc_edge = yc_edge
-        thisgridvar.mx = grid.dimensions[0].n
-        thisgridvar.my = grid.dimensions[1].n
+        thispatchvar = Data()
+        thispatchvar.var = var
+        thispatchvar.xc_centers = xc_centers
+        thispatchvar.yc_centers = yc_centers
+        thispatchvar.xc_edges = xc_edges
+        thispatchvar.yc_edges = yc_edges
+        thispatchvar.mx = patch.dimensions[0].num_cells
+        thispatchvar.my = patch.dimensions[1].num_cells
 
         # end of 2d case
 
-    return thisgridvar
+    return thispatchvar
 
 
 #------------------------------------------------------------------------
@@ -1395,9 +1395,9 @@ def var_minmax(plotdata,framenos,vars):
 
     For example if vars = [0,'machnumber'] then
        varmin[0][3] is the minimum of q[0] (the first component of the
-           solution vector q) over all grids in frame 3.
+           solution vector q) over all patches in frame 3.
        varmin['machnumber']['all'] is the minimum of machnumber 
-           over all grids in all frames.
+           over all patches in all frames.
 
     """
 
@@ -1423,30 +1423,30 @@ def var_minmax(plotdata,framenos,vars):
 
     for frameno in framenos:
         solution = plotdata.getframe(frameno, plotdata.outdir)
-        ndim = solution.ndim
+        num_dim = solution.num_dim
 
         for state in solution.states:
-            grid = state.grid
+            patch = state.patch
             for var in vars:
                 if isinstance(var,int):
-                    if ndim == 1:
+                    if num_dim == 1:
                         qvar = state.q[var,:]
-                    elif ndim == 2:
+                    elif num_dim == 2:
                         qvar = state.q[var,:,:]
-                    elif ndim == 3:
+                    elif num_dim == 3:
                         qvar = state.q[var,:,:,:]
                 else:
                     t = solution.t
-                    #grid.compute_physical_coordinates()
-                    if ndim == 1:
-                        X_center = grid.p_center[0]
+                    #patch.compute_physical_coordinates()
+                    if num_dim == 1:
+                        X_center = patch.p_center[0]
                         qvar = var(state.q, X_center, t)
-                    elif ndim == 2:
-                        X_center, Y_center = grid.p_center
+                    elif num_dim == 2:
+                        X_center, Y_center = patch.p_center
                         qvar = var(state.q, X_center, \
                                    Y_center, t)
-                    elif ndim == 3:
-                        X_center, Y_center, Z_center = grid.p_center
+                    elif num_dim == 3:
+                        X_center, Y_center, Z_center = patch.p_center
                         qvar = var(state.q, X_center, \
                                    Y_center, Z_center, t)
                 varmin[var][frameno] = min(varmin[var][frameno], qvar.min())
@@ -1649,10 +1649,10 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
 
     errmax = 0.
     for stateno,state in enumerate(solution.states):
-        grid = state.grid
+        patch = state.patch
 
-        X_center, Y_center = grid.p_center
-        X_edge, Y_edge = grid.p_center
+        X_center, Y_center = patch.p_center
+        X_edge, Y_edge = patch.p_center
     
         if isinstance(var_2d, int):
             q = state.q[var_2d,:,:]
@@ -1669,14 +1669,14 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
         if hasattr(reference,'states'):
             if len(reference.states) > 1:
                 print '*** Warning in errors_2d_vs_1d: reference solution'
-                print '*** has more than one grid -- only using grid[0]'
+                print '*** has more than one patch -- only using patch[0]'
             refstate = reference.states[0]
         else:
             refstate = reference   # assume this contains true solution or
                                   # something set separately rather than
                                   # a framesoln
 
-        xref = grid.p_center[0]
+        xref = patch.p_center[0]
         if isinstance(var_1d, int):
             qref = refstate.q[var_1d,:].T
         else:
