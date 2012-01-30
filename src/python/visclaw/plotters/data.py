@@ -757,7 +757,8 @@ class ClawPlotItem(ClawData):
                            'MappedGrid', 'mapc2p', \
                            'figno', 'handle', 'params', \
                            'afterpatch','afteritem','framesoln_dict', \
-                           '_pobjs','name','plot_type','plot_show','user','show']  
+                           '_pobjs','name','plot_type','plot_show','user', \
+                           'map_2d_to_1d','show']  
 
         super(ClawPlotItem, self).__init__(attributes = attributes)    
 

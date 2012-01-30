@@ -996,7 +996,7 @@ def get_patchvar(state, plot_var, num_dim, current_data):
         # +++ until bug in solution.py fixed.
         xc_centers = patch.c_centers[0]
         xc_edges = patch.c_edges[0]
-        #xc_centers = patch.p_center[0]
+        #xc_centers = patch.p_centers[0]
         #xc_edges = patch.p_edges[0]
         current_data.x = xc_centers
         current_data.dx = patch.delta[0]
@@ -1025,7 +1025,7 @@ def get_patchvar(state, plot_var, num_dim, current_data):
         # +++ until bug in solution.py fixed.
         #xc_centers, yc_centers = patch.c_centers
         #xc_edges, yc_edges = patch.c_edges
-        xc_centers, yc_centers = patch.p_center
+        xc_centers, yc_centers = patch.p_centers
         xc_edges, yc_edges = patch.p_edges
         current_data.x = xc_centers
         current_data.y = yc_centers
@@ -1439,14 +1439,14 @@ def var_minmax(plotdata,framenos,vars):
                     t = solution.t
                     #patch.compute_physical_coordinates()
                     if num_dim == 1:
-                        X_center = patch.p_center[0]
+                        X_center = patch.p_centers[0]
                         qvar = var(state.q, X_center, t)
                     elif num_dim == 2:
-                        X_center, Y_center = patch.p_center
+                        X_center, Y_center = patch.p_centers
                         qvar = var(state.q, X_center, \
                                    Y_center, t)
                     elif num_dim == 3:
-                        X_center, Y_center, Z_center = patch.p_center
+                        X_center, Y_center, Z_center = patch.p_centers
                         qvar = var(state.q, X_center, \
                                    Y_center, Z_center, t)
                 varmin[var][frameno] = min(varmin[var][frameno], qvar.min())
@@ -1651,8 +1651,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
     for stateno,state in enumerate(solution.states):
         patch = state.patch
 
-        X_center, Y_center = patch.p_center
-        X_edge, Y_edge = patch.p_center
+        X_center, Y_center = patch.p_centers
+        X_edge, Y_edge = patch.p_centers
     
         if isinstance(var_2d, int):
             q = state.q[var_2d,:,:]
@@ -1676,7 +1676,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
                                   # something set separately rather than
                                   # a framesoln
 
-        xref = patch.p_center[0]
+        xref = patch.p_centers[0]
         if isinstance(var_1d, int):
             qref = refstate.q[var_1d,:].T
         else:
