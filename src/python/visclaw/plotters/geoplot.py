@@ -197,7 +197,7 @@ def plot_topo_file(topoplotdata):
 
     import os
     import pylab
-    from pyclaw.data import Data
+    from clawdata import Data
 
     fname = topoplotdata.fname 
     topotype = getattr(topoplotdata, 'topotype', 3)

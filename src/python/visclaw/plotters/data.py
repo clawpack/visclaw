@@ -758,7 +758,9 @@ class ClawPlotItem(ClawData):
                            'figno', 'handle', 'params', \
                            'afterpatch','afteritem','framesoln_dict', \
                            '_pobjs','name','plot_type','plot_show','user', \
-                           'map_2d_to_1d','show','plotstyle','color','markersize']  
+                           'map_2d_to_1d','show','plotstyle','color', \
+                           'markersize','MappedPatch', \
+                           'contour_colors']
 
         super(ClawPlotItem, self).__init__(attributes = attributes)    
 
