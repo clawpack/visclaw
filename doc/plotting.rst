@@ -34,7 +34,7 @@ The advantages of using the Python options are:
    open source visualization tools such as `VisIt
    <https://wci.llnl.gov/codes/visit>`_ (developed at Lawrence Livermore
    National Laboratory) are much better for dealing
-   with large data sets, AMR grids, etc.  VisIt has Python bindings and 
+   with large data sets, AMR meshes, etc.  VisIt has Python bindings and 
    we are currently extending our tools to work with VisIt.  If you are
    already a VisIt user, note that VisIt has a Claw reader that can be used to
    import data from Clawpack, see `Application Toolkit Formats
