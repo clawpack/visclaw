@@ -11,7 +11,7 @@ import time
 import traceback
 
 
-from clawdata import Data
+from clawutil.clawdata import Data
 from visclaw import plotpages
 from matplotlib.colors import Normalize 
 

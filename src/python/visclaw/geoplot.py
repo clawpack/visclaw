@@ -234,7 +234,7 @@ def plot_topo_file(topoplotdata):
     import os
     import pylab
     from visclaw.data import Data
-    from clawdata import Data
+    from clawutil.clawdata import Data
 
     fname = topoplotdata.fname 
     topotype = topoplotdata.topotype
