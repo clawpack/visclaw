@@ -38,7 +38,7 @@ The following attributes can be set by the user:
     * '2d_contour' : two dimensional contour plot,
     * '2d_pcolor' : two dimensional pcolor plot,
     * '2d_schlieren' : two dimensional Schlieren plot,
-    * '2d_grid' : two dimensional plot of only the grids, no data
+    * '2d_edges' : two dimensional plot of only the cell and/or patch edges, no data
 
 .. attribute:: outdir : str or None
 
@@ -52,7 +52,7 @@ The following attributes can be set by the user:
      the Python convention that plot_var=0 corresponds to the first
      component).
 
-     If a function, then this function is applied to q on each grid to
+     If a function, then this function is applied to q on each patch to
      compute the variable var that is plotted.  The signature is
 
      * var = plot_var(current_data)
@@ -72,30 +72,30 @@ The following attributes can be set by the user:
 
         def afteritem(current_data):
 
-.. attribute:: aftergrid : str or function or None
+.. attribute:: afterpatch : str or function or None
 
      A string or function that is to be executed after plotting this item on
-     each grid. (There may be more than 1 grid in an AMR calculation.)
+     each patch. (There may be more than 1 patch in an AMR calculation.)
      If a string, this string is executed using *exec*.  If a
      function, it should be defined to have a single argument
      "data", [documentation to appear!] 
      
      For example::
 
-        def aftergrid(current_data):
+        def afterpatch(current_data):
             cd = current_data
-	    print "On grid number %s, xlower = %s, ylower = %s" \
-	          % (cd.gridno, cd.xlower, cd.ylower)
+	    print "On patch number %s, xlower = %s, ylower = %s" \
+	          % (cd.patchno, cd.xlower, cd.ylower)
      
-     would print out the grid number and lower left corner for each grid in
-     a 2d computation after the grid is plotted.
+     would print out the patch number and lower left corner for each patch in
+     a 2d computation after the patch is plotted.
 
 
 
 .. attribute:: MappedGrid : bool
 
-     If True, the grid mapping specified by the *mapc2p* attribute of the
-     underlying `ClawPlotData` object should be applied to the grid before
+     If True, the mapping specified by the *mapc2p* attribute of the
+     underlying `ClawPlotData` object should be applied to the patch before
      plotting.
 
 
@@ -200,16 +200,16 @@ Special attributes for plot_type = '1d_from_2d_data'
 Special attributes for all 2d plots,  plot_type = '2d...'
 ------------------------------------------------------------
 
-.. attribute:: gridlines_show : bool
+.. attribute:: celledges_show : bool
 
-     If True, draw the grid lines on the plot.  
-     The attribute 'amr_gridlines_show' should be used for AMR computations
-     to specify that gridlines should be shown on some levels and not
+     If True, draw the cell edges on the plot.  
+     The attribute 'amr_celledges_show' should be used for AMR computations
+     to specify that cell edges should be shown on some levels and not
      others. See :ref:`amr_attributes`.
 
-.. attribute:: gridedges_show : bool
+.. attribute:: patchedges_show : bool
 
-     If True, draw the edges of grids, mostly useful in AMR computations.
+     If True, draw the edges of patches, mostly useful in AMR computations.
 
 Special attributes for plot_type = '2d_contour'
 ------------------------------------------------------
@@ -247,9 +247,9 @@ Special attributes for plot_type = '2d_contour'
 
      to use black lines on Level 1, blue on Level 2, and red for all
      subsequent levels.  This is useful since with the matplotlib contour
-     plotter you will see both fine and course grid lines on top of one
+     plotter you will see both fine and coarse cell edges on top of one
      another in refined regions (Matplotlib lacks the required
-     hidden line removal to blank out the lines from coarser grids easily.
+     hidden line removal to blank out the lines from coarser patches easily.
      See also the next attributes.)
 
 .. attribute:: contour_show : boolean
@@ -261,7 +261,7 @@ Special attributes for plot_type = '2d_contour'
 .. attribute:: amr_contour_show : list or tuple of booleans
 
      Determines whether to show the contour lines on each AMR level.  Useful
-     if you only want to view the lines on the finest grids.
+     if you only want to view the lines on the finest patches.
 
 
 .. attribute:: contour_kwargs : dictionary
@@ -280,7 +280,7 @@ Special attributes for plot_type = '2d_pcolor'
      In general you should specify *pcolor_cmin* and *pcolor_cmax* to
      specify the range of q values over which the colormap applies.  If they 
      are not specified they will be chosen automatically and may vary from
-     frame to frame.  Also, if AMR is used, they may vary from grid to grid,
+     frame to frame.  Also, if AMR is used, they may vary from patch to patch,
      yielding very confusing plots.
 
 .. attribute:: pcolor_colorbar : bool
@@ -309,8 +309,8 @@ other hand::
     plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
     plotitem.amr_contour_color = ['k', 'b']
 
-will result in contour lines on grids at level 1 being black and on grids of
-level 2 or higher being blue.  
+will result in contour lines on patches at level 1 being black and on
+patches of level 2 or higher being blue.  
 
 Note that if the list is shorter than the number of levels, the last element
 is used repeatedly.
@@ -318,12 +318,12 @@ is used repeatedly.
 If both attributes *contour_color* and *amr_contour_color* are set, 
 only *amr_contour_color* is used.
 
-A common use is to show grid lines only on coarse levels, not on finer
+A common use is to show cell edges only on coarse levels, not on finer
 levels, e.g.::
 
-    plotitem.amr_gridlines_show = [1,1,0]
+    plotitem.amr_celledges_show = [1,1,0]
 
-will result in gridlines being shown only on levels 1 and 2, not on finer
+will result in celledges being shown only on levels 1 and 2, not on finer
 levels.
 
 
