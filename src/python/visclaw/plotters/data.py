@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# encoding: utf-8
-# ======================================================================
-#  Package:     pyclaw.plotters
-#  File:        data.py
-#  Created:     Aug 7, 2009
-#  Author:      R.J. LeVeque
-# ============================================================================
 """
 Plotting Data Module
 

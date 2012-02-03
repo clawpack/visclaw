@@ -369,7 +369,7 @@ def read_setgauges(datadir):
     """
     import os
     import numpy as np
-    from pyclaw.data import Data
+    from clawutil.data import Data
     from matplotlib.mlab import find
 
     setgauges = Data()
