@@ -39,6 +39,7 @@ def setplot(plotdata):
     # Set up for item on these axes:
     if ndim==1:
         plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+        plotitem.kwargs = {'linewidth':2,'markersize':5}
     elif ndim==2:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         from visclaw.plotters import colormaps
@@ -51,7 +52,6 @@ def setplot(plotdata):
     plotitem.plotstyle = '-o'
     plotitem.color = 'b'
     plotitem.show = True       # show on plot?
-    plotitem.kwargs = {'linewidth':2,'markersize':5}
     
 
     # Parameters used only when creating html and/or latex hardcopy

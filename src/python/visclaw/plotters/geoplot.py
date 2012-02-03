@@ -197,7 +197,7 @@ def plot_topo_file(topoplotdata):
 
     import os
     import pylab
-    from pyclaw.data import Data
+    from clawdata import Data
 
     fname = topoplotdata.fname 
     topotype = getattr(topoplotdata, 'topotype', 3)
@@ -266,8 +266,8 @@ def plot_topo_file(topoplotdata):
     if addcontour:
         pylab.contour(x,y,topo,levels=contour_levels,colors='k')
 
-    gridedges_show = True
-    if gridedges_show:
+    patchedges_show = True
+    if patchedges_show:
         pylab.plot([x[0],x[-1]],[y[0],y[0]],'k')
         pylab.plot([x[0],x[-1]],[y[-1],y[-1]],'k')
         pylab.plot([x[0],x[0]],[y[0],y[-1]],'k')

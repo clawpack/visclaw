@@ -203,7 +203,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             if plotitem.afteritem:
                 print "*** ClawPlotItem.afteritem is deprecated"
                 print "*** use ClawPlotAxes.afteraxes "
-                print "*** or  ClawPlotItem.aftergrid instead"
+                print "*** or  ClawPlotItem.afterpatch instead"
 
 
         pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
@@ -294,7 +294,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     gaugesoln.
 
     The current_data object holds data that should be passed into
-    aftergrid or afteraxes if these functions are defined.  The functions
+    afterpatch or afteraxes if these functions are defined.  The functions
     may add to this object, so this function should return the possibly
     modified current_data for use in other plotitems or in afteraxes or
     afterframe.
@@ -310,7 +310,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  aftergrid  plotstyle color kwargs 
+             plot_var  afterpatch  plotstyle color kwargs 
              plot_var2 fill_where map_2d_to_1d 
              """.split()
 
@@ -369,7 +369,7 @@ def read_setgauges(datadir):
     """
     import os
     import numpy as np
-    from pyclaw.data import Data
+    from clawdata import Data
     from matplotlib.mlab import find
 
     setgauges = Data()

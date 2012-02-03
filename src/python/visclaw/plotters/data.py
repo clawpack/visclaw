@@ -41,7 +41,7 @@ class ClawPlotData(Data):
                            'msgfile','printfig_format','afterframe',
                            'beforeframe','mapc2p',
                            'html_framenos','html_fignos','html_fignames',
-                           'ndim','clear_figs', 'setplot', 'eagle',
+                           'num_dim','clear_figs', 'setplot', 'eagle',
                            'plotitem_dict', 'html_movies', 'params']
 
         # Initialize the data object and read the data files
@@ -247,7 +247,7 @@ class ClawPlotData(Data):
         else:
             format_module = __import__('pyclaw.io.%s' % format, fromlist=['pyclaw','io'])
         format_read_t = getattr(format_module, 'read_%s_t' % format)
-        t,meqn,ngrids,maux,ndim = format_read_t(frameno,path=outdir)
+        t,meqn,npatches,maux,num_dim = format_read_t(frameno,path=outdir)
         return t
 
     def clearfigures(self):
@@ -560,10 +560,10 @@ class ClawPlotData(Data):
 
     def getq(self,frameno):
         solution = self.getframe(frameno)
-        grids = solution.grids
-        if len(grids) > 1:
-            print '*** Warning: more than 1 grid, q on grid[0] is returned'
-        q = grids[0].q
+        patches = solution.patches
+        if len(patches) > 1:
+            print '*** Warning: more than 1 patch, q on patch[0] is returned'
+        q = patches[0].q
         return q
 
 
@@ -752,13 +752,15 @@ class ClawPlotItem(ClawData):
         """
         Initialize a ClawPlotItem object
         """
-        attributes = ['ndim','outdir','refresh_frames',\
+        attributes = ['num_dim','outdir','refresh_frames',\
                            'plot_var','plot_var_title', \
                            'MappedGrid', 'mapc2p', \
                            'figno', 'handle', 'params', \
-                           'aftergrid','afteritem','framesoln_dict', \
+                           'afterpatch','afteritem','framesoln_dict', \
                            '_pobjs','name','plot_type','plot_show','user', \
-                           'map_2d_to_1d','show']  
+                           'map_2d_to_1d','show','plotstyle','color', \
+                           'markersize','MappedPatch', \
+                           'contour_colors']
 
         super(ClawPlotItem, self).__init__(attributes = attributes)    
 
@@ -768,11 +770,11 @@ class ClawPlotItem(ClawData):
         self._plotdata = plotaxes._plotfigure._plotdata           # parent ClawPlotData object
 
         try:
-            ndim = int(plot_type[0])   # first character of plot_type should be ndim
+            num_dim = int(plot_type[0])   # first character of plot_type should be num_dim
         except:
-            print '*** Error: could not determine ndim from plot_type = ',plot_type
+            print '*** Error: could not determine num_dim from plot_type = ',plot_type
 
-        self.ndim = ndim
+        self.num_dim = num_dim
         self.name = name
         self.figno = plotaxes.figno
 
@@ -783,7 +785,7 @@ class ClawPlotItem(ClawData):
         self.plot_var = 0
         self.plot_show = True
 
-        self.MappedGrid = None          # False to plot on comput. grid even
+        self.MappedGrid = None          # False to plot on comput. patch even
                                         # if _plotdata.mapc2p is not None.
 
         self.mapc2p = None              # function to map computational
@@ -791,13 +793,13 @@ class ClawPlotItem(ClawData):
 	                                # plotdata.mapc2p if set for item
 
 
-        self.aftergrid = None           # function called after each grid is
+        self.afterpatch = None           # function called after each patch is
                                         # plotted within each single plotitem.
         self.afteritem = None           # function called after the item is
                                         # plotted for each frame
 
         self.user = Data()              # for user to pass things into
-                                        # aftergrid, for example
+                                        # afterpatch, for example
                                         # Deprecated.
 
         self.show = True                # False => suppress showing this item
@@ -806,7 +808,7 @@ class ClawPlotItem(ClawData):
         self._current_pobj = None
 
 
-        if ndim == 1:
+        if num_dim == 1:
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
@@ -819,15 +821,15 @@ class ClawPlotItem(ClawData):
             if plot_type == '1d_from_2d_data':
                 self.add_attribute('map2d_to_1d',None)
 
-        elif ndim == 2:
+        elif num_dim == 2:
 
             # default values specifying this single plot:
             self.add_attribute('plot_type',plot_type)
-            self.add_attribute('gridlines_show',0)
-            self.add_attribute('gridlines_color','k')
-            self.add_attribute('grid_bgcolor','w')
-            self.add_attribute('gridedges_show',0)
-            self.add_attribute('gridedges_color','k')
+            self.add_attribute('patchlines_show',0)
+            self.add_attribute('patchlines_color','k')
+            self.add_attribute('patch_bgcolor','w')
+            self.add_attribute('patchedges_show',0)
+            self.add_attribute('patchedges_color','k')
             self.add_attribute('kwargs',{})
 
             if plot_type == '2d_pcolor':
@@ -866,9 +868,9 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('schlieren_cmax',None)
                 self.add_attribute('add_colorbar',False)
 
-            elif plot_type == '2d_grid':
+            elif plot_type == '2d_patch':
                 self.add_attribute('max_density',None)
-                self.gridlines_show = True
+                self.patchlines_show = True
                 
             elif plot_type == '2d_quiver':
                 self.add_attribute('quiver_var_x',None)
@@ -884,8 +886,8 @@ class ClawPlotItem(ClawData):
             else:
                  print '*** Warning 2d plot type %s not recognized' % plot_type
 
-        elif ndim == 3:
-            print '*** Warning- ClawPlotItem not yet set up for ndim = 3'
+        elif num_dim == 3:
+            print '*** Warning- ClawPlotItem not yet set up for num_dim = 3'
     
         else:
             print '*** Warning- Unrecognized plot_type in ClawPlotItem'
@@ -937,12 +939,12 @@ class ClawInputData(Data):
     """
     Object that will be written out to claw.data.
     """
-    def __init__(self, ndim):
+    def __init__(self, num_dim):
         super(ClawInputData,self).__init__()
-        self.add_attribute('ndim',ndim)
+        self.add_attribute('num_dim',num_dim)
         
         # Set default values:
-        if ndim == 1:
+        if num_dim == 1:
             self.add_attribute('mx',100)
             self.add_attribute('nout',5)
             self.add_attribute('outstyle',1)
@@ -972,7 +974,7 @@ class ClawInputData(Data):
             self.add_attribute('N_restart',0)
 
 
-        elif ndim == 2:
+        elif num_dim == 2:
             self.add_attribute('mx',100)
             self.add_attribute('my',100)
             self.add_attribute('nout',5)
@@ -1007,7 +1009,7 @@ class ClawInputData(Data):
             self.add_attribute('N_restart',0)
 
         else:
-            print '*** Error: only ndim=1 or 2 supported so far ***'
+            print '*** Error: only num_dim=1 or 2 supported so far ***'
             raise()
 
     def write(self):
@@ -1020,12 +1022,12 @@ class AmrclawInputData(Data):
     """
     Object that will be written out to amr2ez.data.
     """
-    def __init__(self, ndim):
+    def __init__(self, num_dim):
         super(AmrclawInputData,self).__init__()
-        self.add_attribute('ndim',ndim)
+        self.add_attribute('num_dim',num_dim)
         
         # Set default values:
-        if ndim == 1:
+        if num_dim == 1:
             self.add_attribute('mx',100)
             self.add_attribute('nout',5)
             self.add_attribute('outstyle',1)
@@ -1062,7 +1064,7 @@ class AmrclawInputData(Data):
             self.add_attribute('mthbc_yupper',1)
             self.add_attribute('inraty',[1,1,1,1,1,1])
 
-        elif ndim == 2:
+        elif num_dim == 2:
             self.add_attribute('mx',100)
             self.add_attribute('my',100)
             self.add_attribute('nout',5)
@@ -1097,7 +1099,7 @@ class AmrclawInputData(Data):
             self.add_attribute('N_restart',0)
             self.add_attribute('inraty',[1])
 
-        if ndim <= 2:
+        if num_dim <= 2:
             # AMR parameters:
             self.add_attribute('mxnest',-1)
             self.add_attribute('inratx',[1])
@@ -1124,7 +1126,7 @@ class AmrclawInputData(Data):
             self.add_attribute('tprint',False)
             self.add_attribute('uprint',False)
         else:
-            print '*** Error: only ndim=1 or 2 supported so far ***'
+            print '*** Error: only num_dim=1 or 2 supported so far ***'
             raise()
 
     def write(self):
@@ -1212,12 +1214,12 @@ def make_clawdatafile(clawdata):
     # open file and write a warning header:
     file = open_datafile('claw.data')
 
-    ndim = clawdata.ndim
-    data_write(file, clawdata, 'ndim', '(number of dimensions)')
+    num_dim = clawdata.num_dim
+    data_write(file, clawdata, 'num_dim', '(number of dimensions)')
     data_write(file, clawdata, 'mx', '(cells in x direction)')
-    if ndim > 1:
+    if num_dim > 1:
         data_write(file, clawdata, 'my', '(cells in y direction)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'mz', '(cells in z direction)')
     data_write(file, clawdata, None)  # writes blank line
 
@@ -1243,7 +1245,7 @@ def make_clawdatafile(clawdata):
     data_write(file, clawdata, None)
     data_write(file, clawdata, 'dt_variable', '(1 for variable dt, 0 for fixed)')
     data_write(file, clawdata, 'order', '(1 or 2)')
-    if ndim == 1:
+    if num_dim == 1:
         data_write(file, clawdata, 'order_trans', '(not used in 1d)')
     else:
         data_write(file, clawdata, 'order_trans', '(transverse order)')
@@ -1261,10 +1263,10 @@ def make_clawdatafile(clawdata):
     data_write(file, clawdata, 't0', '(initial time)')
     data_write(file, clawdata, 'xlower', '(xlower)')
     data_write(file, clawdata, 'xupper', '(xupper)')
-    if ndim > 1:
+    if num_dim > 1:
         data_write(file, clawdata, 'ylower', '(ylower)')
         data_write(file, clawdata, 'yupper', '(yupper)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'zlower', '(zlower)')
         data_write(file, clawdata, 'zupper', '(zupper)')
     data_write(file, clawdata, None)
@@ -1272,10 +1274,10 @@ def make_clawdatafile(clawdata):
     data_write(file, clawdata, 'mbc', '(number of ghost cells)')
     data_write(file, clawdata, 'mthbc_xlower', '(type of BC at xlower)')
     data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
-    if ndim > 1:
+    if num_dim > 1:
         data_write(file, clawdata, 'mthbc_ylower', '(type of BC at ylower)')
         data_write(file, clawdata, 'mthbc_yupper', '(type of BC at yupper)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'mthbc_zlower', '(type of BC at zlower)')
         data_write(file, clawdata, 'mthbc_zupper', '(type of BC at zupper)')
     
@@ -1291,16 +1293,16 @@ def make_amrclawdatafile(clawdata):
     # open file and write a warning header:
     file = open_datafile('amr2ez.data')
 
-    ndim = clawdata.ndim
-    #data_write(file, clawdata, 'ndim', '(number of dimensions)')
+    num_dim = clawdata.num_dim
+    #data_write(file, clawdata, 'num_dim', '(number of dimensions)')
     data_write(file, clawdata, 'mx', '(cells in x direction)')
     data_write(file, clawdata, 'my', '(cells in y direction)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'mz', '(cells in z direction)')
-    data_write(file, clawdata, 'mxnest', '(max number of grid levels)')
+    data_write(file, clawdata, 'mxnest', '(max number of patch levels)')
     data_write(file, clawdata, 'inratx', '(refinement ratios)')
     data_write(file, clawdata, 'inraty', '(refinement ratios)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'inratz', '(refinement ratios)')
     data_write(file, clawdata, 'inratt', '(refinement ratios)')
     data_write(file, clawdata, None)  # writes blank line
@@ -1327,7 +1329,7 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, None)
     data_write(file, clawdata, 'dt_variable', '(1 for variable dt, 0 for fixed)')
     data_write(file, clawdata, 'order', '(1 or 2)')
-    if ndim == 1:
+    if num_dim == 1:
         data_write(file, clawdata, 'order_trans', '(not used in 1d)')
     else:
         data_write(file, clawdata, 'order_trans', '(transverse order)')
@@ -1352,7 +1354,7 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, 'xupper', '(xupper)')
     data_write(file, clawdata, 'ylower', '(ylower)')
     data_write(file, clawdata, 'yupper', '(yupper)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'zlower', '(zlower)')
         data_write(file, clawdata, 'zupper', '(zupper)')
     data_write(file, clawdata, None)
@@ -1362,7 +1364,7 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
     data_write(file, clawdata, 'mthbc_ylower', '(type of BC at ylower)')
     data_write(file, clawdata, 'mthbc_yupper', '(type of BC at yupper)')
-    if ndim == 3:
+    if num_dim == 3:
         data_write(file, clawdata, 'mthbc_zlower', '(type of BC at zlower)')
         data_write(file, clawdata, 'mthbc_zupper', '(type of BC at zupper)')
     data_write(file, clawdata, None)
@@ -1373,9 +1375,9 @@ def make_amrclawdatafile(clawdata):
 
     data_write(file, clawdata, 'tol', '(tolerance for Richardson extrap)')
     data_write(file, clawdata, 'tolsp', '(tolerance used in flag2refine)')
-    data_write(file, clawdata, 'kcheck', '(how often to regrid)')
+    data_write(file, clawdata, 'kcheck', '(how often to repatch)')
     data_write(file, clawdata, 'ibuff', '(buffer zone around flagged pts)')
-    data_write(file, clawdata, 'cutoff', '(efficiency cutoff for grid gen.)')
+    data_write(file, clawdata, 'cutoff', '(efficiency cutoff for patch gen.)')
     data_write(file, clawdata, None)
 
     data_write(file, clawdata, 'PRINT', '(print to fort.amr)')
@@ -1386,10 +1388,10 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, 'dprint', '(print domain flags)')
     data_write(file, clawdata, 'eprint', '(print err est flags)')
     data_write(file, clawdata, 'edebug', '(even more err est flags)')
-    data_write(file, clawdata, 'gprint', '(grid bisection/clustering)')
+    data_write(file, clawdata, 'gprint', '(patch bisection/clustering)')
     data_write(file, clawdata, 'nprint', '(proper nesting output)')
     data_write(file, clawdata, 'pprint', '(proj. of tagged points)')
-    data_write(file, clawdata, 'rprint', '(print regridding summary)')
+    data_write(file, clawdata, 'rprint', '(print repatchding summary)')
     data_write(file, clawdata, 'sprint', '(space/memory output)')
     data_write(file, clawdata, 'tprint', '(time step reporting each level)')
     data_write(file, clawdata, 'uprint', '(update/upbnd reporting)')
