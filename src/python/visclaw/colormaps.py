@@ -119,15 +119,15 @@ schlieren_greens = schlieren_colormap('g')
 def make_amrcolors(nlevels=4):
 #-------------------------------
     """
-    Make lists of colors useful for distinguishing different grids when 
+    Make lists of colors useful for distinguishing different patches when 
     plotting AMR results.
 
     INPUT::
        nlevels: maximum number of AMR levels expected.
     OUTPUT::
        (linecolors, bgcolors) 
-       linecolors = list of nlevels colors for grid lines, contour lines
-       bgcolors = list of nlevels pale colors for grid background
+       linecolors = list of nlevels colors for patch lines, contour lines
+       bgcolors = list of nlevels pale colors for patch background
     """
 
     # For 4 or less levels:

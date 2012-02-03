@@ -27,7 +27,7 @@ def plot_multiframes(plotdata, verbose=False):
 
 
     # initialize current_data containing data that will be passed
-    # to afterframe, afteraxes, aftergrid commands
+    # to afterframe, afteraxes, afterpatch commands
     current_data = Data()
     current_data.user = Data()   # for user specified attributes
                                  # to avoid potential conflicts
@@ -133,14 +133,14 @@ def plot_multiframes(plotdata, verbose=False):
                     times = []
                     for frameno in framenos:
                         framesoln = plotdata.getframe(frameno, plotdata.outdir)
-                        if len(framesoln.grids) > 1:
+                        if len(framesoln.patches) > 1:
                             print "*** plot_type 1d_xt can't be used with AMR"
                             return None
-                        grid = framesoln.grids[0]
-                        thisgridvar = get_gridvar(grid,plot_var,1,current_data)
-                        var_over_t.append(thisgridvar)
+                        patch = framesoln.patches[0]
+                        thispatchvar = get_patchvar(patch,plot_var,1,current_data)
+                        var_over_t.append(thispatchvar)
                         times.append(framesoln.t)
-                    x = thisgridvar.xc_center   # cell centers
+                    x = thispatchvar.xc_centers   # cell centers
                     var = array(var_over_t)
                     times = array(times)
                     contour(x,times,var)
