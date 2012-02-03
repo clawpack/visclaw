@@ -182,11 +182,11 @@ class Iplotclaw(cmd.Cmd):
 
     def postloop(self):
         #self.framedata = self.plotdata.getframe(self.frameno)
-        #grid0 = self.framedata.grids[0]
-        #self.q = grid0.q
-        #self.mx = grid0.mx
-        #if self.ndim > 1:
-        #    self.my = grid0.my
+        #patch0 = self.framedata.patches[0]
+        #self.q = patch0.q
+        #self.mx = patch0.mx
+        #if self.num_dim > 1:
+        #    self.my = patch0.my
         self.prevframeno = self.frameno
 
 
@@ -547,30 +547,30 @@ class Iplotclaw(cmd.Cmd):
         return self.plotdata.getframe(frameno).t
 
 
-    def get_grids(self, frameno=None):
+    def get_patches(self, frameno=None):
         """
-        Return the list of grids for frameno.  
+        Return the list of patches for frameno.  
         If frameno is not specified, use the most recently plotted frameno.
         """
         if frameno is None:
             frameno = self.frameno
 
-        return self.plotdata.getframe(frameno).grids
+        return self.plotdata.getframe(frameno).patches
 
-    def get_grid(self, frameno=None):
+    def get_patch(self, frameno=None):
         """
-        Return the final grid for frameno.  
+        Return the final patch for frameno.  
         If frameno is not specified, use the most recently plotted frameno.  
-        If AMR is not used and there is only one grid, then return this one 
-        (rather than a list with one element, as get_grids would return).  
-        If AMR is used, then the final grid plotted is returned, 
-        similar to claw/matlab/plotclaw behavior where only the final grid 
+        If AMR is not used and there is only one patch, then return this one 
+        (rather than a list with one element, as get_patches would return).  
+        If AMR is used, then the final patch plotted is returned, 
+        similar to claw/matlab/plotclaw behavior where only the final patch 
         is easily available after the plots are made.
         """
         if frameno is None:
             frameno = self.frameno
         
-        return self.plotdata.getframe(frameno).grids[-1]
+        return self.plotdata.getframe(frameno).patches[-1]
 
     def otherfigures(self):
         """
