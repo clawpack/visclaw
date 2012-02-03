@@ -2,7 +2,11 @@
 Useful things for plotting GeoClaw results.
 """
 
-from visclaw.plotters import colormaps
+from visclaw import colormaps
+from matplotlib.colors import Normalize 
+from geoclaw.geotools import topotools
+from numpy import ma
+
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run
@@ -66,6 +70,13 @@ bathy3_colormap = colormaps.make_colormap({-1:[0.3,0.2,0.1],
                                            -0.01:[0.95,0.9,0.7],
                                            .01:[.5,.7,0],
                                            1:[.2,.5,.2]})
+
+seafloor_colormap = colormaps.make_colormap({-1:[0.3,0.2,0.1],
+                                              0:[0.95,0.9,0.7]})
+
+land_colormap = colormaps.make_colormap({ 0:[0.95,0.9,0.7],
+                                          1:[.2,.5,.2]})
+
 
                                            
 colormaps_list = {"tsunami":tsunami_colormap,"land1":land1_colormap,
@@ -190,6 +201,31 @@ def surface_or_depth(current_data):
    return surface_or_depth
 
 
+class TopoPlotData(object):
+    def __init__(self, fname):
+        self.fname = fname 
+        self.topotype = 3
+        self.neg_cmap = None
+        self.pos_cmap = None
+        self.cmap = None
+        self.cmax = 100.
+        self.cmin = -4000.
+        self.climits = None
+        self.figno = 200
+        self.addcolorbar = False
+        self.addcontour = False
+        self.contour_levels = [0, 0]
+        self.xlimits = None
+        self.ylimits = None
+        self.coarsen = 1
+        self.imshow = True
+        self.gridedges_show = True
+        self.print_fname = True
+
+    def plot(self):
+        plot_topo_file(self)
+        
+
 def plot_topo_file(topoplotdata):
     """
     Read in a topo or bathy file and produce a pcolor map.
@@ -197,23 +233,59 @@ def plot_topo_file(topoplotdata):
 
     import os
     import pylab
-    from clawdata import Data
+    from visclaw.data import Data
+    from clawutil.clawdata import Data
 
     fname = topoplotdata.fname 
-    topotype = getattr(topoplotdata, 'topotype', 3)
-    cmap = getattr(topoplotdata, 'cmap', bathy3_colormap)
-    climits = getattr(topoplotdata, 'climits', [-50,50])
-    figno = getattr(topoplotdata, 'figno', 200)
-    addcolorbar = getattr(topoplotdata, 'addcolorbar', True)
-    addcontour = getattr(topoplotdata, 'addcontour', False)
-    contour_levels = getattr(topoplotdata, 'contour_levels', [0, 0])
-    xlimits = getattr(topoplotdata, 'xlimits', None)
-    ylimits = getattr(topoplotdata, 'ylimits', None)
-    coarsen = getattr(topoplotdata, 'coarsen', 1)
+    topotype = topoplotdata.topotype
+    if topoplotdata.climits:
+        # deprecated option
+        cmin = topoplotdata.climits[0]
+        cmax = topoplotdata.climits[1]
+    else:
+        cmin = topoplotdata.cmin
+        cmax = topoplotdata.cmax
+    figno = topoplotdata.figno
+    addcolorbar = topoplotdata.addcolorbar
+    addcontour = topoplotdata.addcontour
+    contour_levels = topoplotdata.contour_levels
+    xlimits = topoplotdata.xlimits
+    ylimits = topoplotdata.ylimits
+    coarsen = topoplotdata.coarsen
+    imshow = topoplotdata.imshow
+    gridedges_show = topoplotdata.gridedges_show
+    neg_cmap = topoplotdata.neg_cmap
+    pos_cmap = topoplotdata.pos_cmap
+    cmap = topoplotdata.cmap
+    print_fname = topoplotdata.print_fname
 
-    if abs(topotype) != 3:
-        print "*** Only topotype = 3, -3 implemented so far."
-        return
+
+    if neg_cmap is None:
+        neg_cmap = colormaps.make_colormap({cmin:[0.3,0.2,0.1],
+                                                0:[0.95,0.9,0.7]})
+    if pos_cmap is None:
+        pos_cmap = colormaps.make_colormap({    0:[.5,.7,0],
+                                        cmax:[.2,.5,.2]})
+    if cmap is None:
+        cmap = colormaps.make_colormap({-1:[0.3,0.2,0.1],
+                                           -0.00001:[0.95,0.9,0.7],
+                                           0.00001:[.5,.7,0],
+                                           1:[.2,.5,.2]})
+        #cmap = colormaps.make_colormap({-1:[0,0,1],0:[1,1,1],1:[1,0,0]})
+
+    if abs(topotype) == 1:
+
+        X,Y,topo = topotools.topofile2griddata(fname, topotype)
+        topo = pylab.flipud(topo)
+        Y = pylab.flipud(Y)
+        x = X[0,:]
+        y = Y[:,0]
+        xllcorner = x[0]
+        yllcorner = y[0]
+        cellsize = x[1]-x[0]
+
+
+    elif abs(topotype) == 3:
 
     file = open(fname, 'r')
     lines = file.readlines()
@@ -237,12 +309,14 @@ def plot_topo_file(topoplotdata):
         topo = pylab.array(topo)
 
     topo = pylab.flipud(topo)
-    if topotype < 0:
-        topo = -topo
 
     x = pylab.linspace(xllcorner, xllcorner+ncols*cellsize, ncols)
     y = pylab.linspace(yllcorner, yllcorner+nrows*cellsize, nrows)
     print "Shape of x, y, topo: ", x.shape, y.shape, topo.shape
+
+    else:
+        raise Exception("*** Only topotypes 1 and 3 supported so far")
+    
 
     if coarsen > 1:
         topo = topo[slice(0,nrows,coarsen), slice(0,ncols,coarsen)]
@@ -251,17 +325,41 @@ def plot_topo_file(topoplotdata):
         print "Shapes after coarsening: ", x.shape, y.shape, topo.shape
 
 
-    #import pdb; pdb.set_trace()
+    if topotype < 0:
+        topo = -topo
 
     if figno:
         pylab.figure(figno)
 
-    pylab.pcolor(x,y,topo,cmap=cmap)
-    pylab.clim(climits)
-    pylab.axis('scaled')
+    if topoplotdata.imshow:
+            color_norm = Normalize(cmin,cmax,clip=True)
+            xylimits = (x[0],x[-1],y[0],y[-1])
+            #pylab.imshow(pylab.flipud(topo.T), extent=xylimits, \
+            pylab.imshow(pylab.flipud(topo), extent=xylimits, \
+                    cmap=cmap, interpolation='nearest', \
+                    norm=color_norm)
+            #pylab.clim([cmin,cmax])
+            if addcolorbar:
+                pylab.colorbar()
+    else:
+        neg_topo = ma.masked_where(topo>0., topo)
+        all_masked = (ma.count(neg_topo) == 0)
+        if not all_masked:
+            pylab.pcolormesh(x,y,neg_topo,cmap=neg_cmap)
+            pylab.clim([cmin,0])
+            if addcolorbar:
+                pylab.colorbar()
 
+        pos_topo = ma.masked_where(topo<0., topo)
+        all_masked = (ma.count(pos_topo) == 0)
+        if not all_masked:
+            pylab.pcolormesh(x,y,pos_topo,cmap=pos_cmap)
+            pylab.clim([0,cmax])
     if addcolorbar:
         pylab.colorbar()
+
+    pylab.axis('scaled')
+
 
     if addcontour:
         pylab.contour(x,y,topo,levels=contour_levels,colors='k')
@@ -273,8 +371,9 @@ def plot_topo_file(topoplotdata):
         pylab.plot([x[0],x[0]],[y[0],y[-1]],'k')
         pylab.plot([x[-1],x[-1]],[y[0],y[-1]],'k')
 
-    fname2 = os.path.splitext(fname)[0]
-    pylab.text(xllcorner+cellsize, yllcorner+cellsize, fname2, color='m')
+    if print_fname:
+        fname2 = os.path.splitext(fname)[0]
+        pylab.text(xllcorner+cellsize, yllcorner+cellsize, fname2, color='m')
 
     topodata = Data()
     topodata.x = x
