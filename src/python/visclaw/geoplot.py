@@ -2,7 +2,7 @@
 Useful things for plotting GeoClaw results.
 """
 
-from visclaw.plotters import colormaps
+from visclaw import colormaps
 from matplotlib.colors import Normalize 
 from geoclaw.geotools import topotools
 from numpy import ma
@@ -233,7 +233,7 @@ def plot_topo_file(topoplotdata):
 
     import os
     import pylab
-    from visclaw.plotters.data import Data
+    from visclaw.data import Data
 
     fname = topoplotdata.fname 
     topotype = topoplotdata.topotype

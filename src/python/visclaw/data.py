@@ -336,7 +336,7 @@ class ClawPlotData(Data):
         import os
         import numpy as np
         from matplotlib.mlab import find
-        from visclaw.plotters import gaugetools
+        from visclaw import gaugetools
         from StringIO import StringIO
     
         fname = outdir + '/fort.gauge'
@@ -395,11 +395,11 @@ class ClawPlotData(Data):
 
 
     def plotframe(self, frameno):
-        from visclaw.plotters import frametools
+        from visclaw import frametools
         frametools.plotframe(frameno, self)
         
     def printframes(self, verbose=True):
-        #from visclaw.plotters import frametools
+        #from visclaw import frametools
         #frametools.printframes(self, verbose)
         print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
         print "*** for added capabilities."
@@ -829,14 +829,14 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('amr_%s' % a, [])
 
             if plot_type == '2d_pcolor':
-                from visclaw.plotters import colormaps
+                from visclaw import colormaps
                 self.add_attribute('pcolor_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('pcolor_cmin',None)
                 self.add_attribute('pcolor_cmax',None)
                 self.add_attribute('add_colorbar',True)
 
             elif plot_type == '2d_imshow':
-                from visclaw.plotters import colormaps
+                from visclaw import colormaps
                 self.add_attribute('imshow_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('imshow_cmin',None)
                 self.add_attribute('imshow_cmax',None)
@@ -857,7 +857,7 @@ class ClawPlotItem(ClawData):
                     self.add_attribute('amr_contour_%s' % a, [])
 
             elif plot_type == '2d_schlieren':
-                from visclaw.plotters import colormaps
+                from visclaw import colormaps
                 self.add_attribute('schlieren_cmap',colormaps.schlieren_grays)
                 self.add_attribute('schlieren_cmin',None)
                 self.add_attribute('schlieren_cmax',None)

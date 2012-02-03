@@ -12,7 +12,7 @@ import traceback
 
 
 from clawdata import Data
-from visclaw.plotters import plotpages
+from visclaw import plotpages
 from matplotlib.colors import Normalize 
 
 plotter = 'matplotlib'
@@ -649,7 +649,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     """
 
     import numpy as np
-    from visclaw.plotters import colormaps
+    from visclaw import colormaps
 
     plotdata = plotitem._plotdata
     plotfigure = plotitem._plotfigure
@@ -1114,7 +1114,7 @@ def printframes(plotdata=None, verbose=True):
     """
 
     import glob
-    from visclaw.plotters.data import ClawPlotData
+    from visclaw.data import ClawPlotData
 
 
 

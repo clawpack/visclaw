@@ -41,7 +41,7 @@ def setplot(plotdata):
         plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     elif ndim==2:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-        from visclaw.plotters import colormaps
+        from visclaw import colormaps
         plotitem.pcolor_cmap = colormaps.yellow_red_blue
         plotitem.add_colorbar = True
     else:
