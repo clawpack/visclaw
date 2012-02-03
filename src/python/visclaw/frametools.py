@@ -11,8 +11,8 @@ import time
 import traceback
 
 
-from clawdata import Data
-from visclaw.plotters import plotpages
+from clawutil.clawdata import Data
+from visclaw import plotpages
 from matplotlib.colors import Normalize 
 
 plotter = 'matplotlib'
@@ -649,7 +649,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     """
 
     import numpy as np
-    from visclaw.plotters import colormaps
+    from visclaw import colormaps
 
     plotdata = plotitem._plotdata
     plotfigure = plotitem._plotfigure
@@ -689,7 +689,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     plot_params = """
              plot_var  afterpatch  kwargs 
-             patchlines_show  patchlines_color  patch_bgcolor
+             celledges_show  celledges_color  patch_bgcolor
              patchedges_show  patchedges_color  add_colorbar
              pcolor_cmap  pcolor_cmin  pcolor_cmax
              imshow_cmap  imshow_cmin  imshow_cmax
@@ -773,8 +773,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pcolor_cmd = "pobj = pylab."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp_pcolor_cmap"
 
-        if pp_patchlines_show:
-            pcolor_cmd += ", edgecolors=pp_patchlines_color"
+        if pp_celledges_show:
+            pcolor_cmd += ", edgecolors=pp_celledges_color"
         else: 
             pcolor_cmd += ", shading='flat'"
 
@@ -805,12 +805,12 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                     cmap=pp_imshow_cmap, interpolation='nearest', \
                     norm=color_norm)
 
-            if pp_patchlines_show:
+            if pp_celledges_show:
                 # This draws patch for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this. 
-                pobj = pylab.plot(X_edge, Y_edge, color=pp_patchlines_color)
-                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_patchlines_color)
+                pobj = pylab.plot(X_edge, Y_edge, color=pp_celledges_color)
+                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_celledges_color)
 
         else:
             #print '*** Not doing imshow on totally masked array'
@@ -834,9 +834,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 levels_set = True 
 
 
-        if pp_patchlines_show:
+        if pp_celledges_show:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, edgecolors=pp_patchlines_color)
+                    cmap=pp_patch_bgcolormap, edgecolors=pp_celledges_color)
         elif pp_patch_bgcolor is not 'w': 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_patch_bgcolormap, edgecolors='None')
@@ -863,11 +863,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             # may suppress plotting at coarse levels
             exec(contourcmd)
 
-    elif pp_plot_type == '2d_patch':
+    elif pp_plot_type == '2d_edges':
         # plot only the patches, no data:
-        if pp_patchlines_show:
+        if pp_celledges_show:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, edgecolors=pp_patchlines_color,\
+                    cmap=pp_patch_bgcolormap, edgecolors=pp_celledges_color,\
                     shading='faceted')
         else: 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
@@ -885,8 +885,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
-        if pp_patchlines_show:
-            pcolor_cmd += ", edgecolors=pp_patchlines_color"
+        if pp_celledges_show:
+            pcolor_cmd += ", edgecolors=pp_celledges_color"
         else: 
             pcolor_cmd += ", edgecolors='None'"
 
@@ -1114,7 +1114,7 @@ def printframes(plotdata=None, verbose=True):
     """
 
     import glob
-    from visclaw.plotters.data import ClawPlotData
+    from visclaw.data import ClawPlotData
 
 
 

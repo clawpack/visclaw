@@ -3,13 +3,13 @@
 Generic code for plotting Clawpack results.
 
 Execute from unix by
-    $ python $CLAW/python/pyclaw/plotclaw.py
+    $ python $VISCLAW/src/python/visclaw/plotclaw.py
 from a directory that contains a file setplot.py that sets other
 parameters to specify the desired plots, location of data, etc.
 
 If a different file is to be used to define the function setplot, this can
 be given as an argument, e.g.
-    $ python $CLAW/python/pyclaw/plotclaw.py setplot_alternative.py
+    $ python $VISCLAW/src/python/visclaw/plotclaw.py setplot_alternative.py
 
 From most Clawpack applications directories the command
     $ make .plots
@@ -35,8 +35,8 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',format='ascii'
         format specifies the format of the files output from Clawpack
     """
 
-    from visclaw.plotters.data import ClawPlotData
-    from visclaw.plotters import plotpages
+    from visclaw.data import ClawPlotData
+    from visclaw import plotpages
 
     plotdata = ClawPlotData()
     plotdata.outdir = outdir
