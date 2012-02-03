@@ -18,7 +18,7 @@ Call back functions include:
 
  * *beforeframe* and *afterframe* attributes of :ref:`ClawPlotData` 
  * *afteraxes* attribute of :ref:`ClawPlotAxes` 
- * *afteritem*, *aftergrid*, *plot_var*, *map2d_to_1d* attributes of :ref:`ClawPlotItem` 
+ * *afteritem*, *afterpatch*, *plot_var*, *map2d_to_1d* attributes of :ref:`ClawPlotItem` 
 
 
 All of these functions are designed to take a single argument
@@ -48,14 +48,14 @@ current context, e.g. in a *beforeframe* function.
 
    The current frame number
 
-.. attribute:: grid : 
+.. attribute:: patch : 
 
-   Object of :class:`pyclaw.solution.grid` with data for the last grid
+   Object of :class:`pyclaw.solution.patch` with data for the last patch
    plotted.
 
-.. attribute:: gridno : 
+.. attribute:: patchno : 
 
-   Grid number of this grid, of interest only in AMR calculations.
+   Grid number of this patch, of interest only in AMR calculations.
 
 .. attribute:: q : 
 
@@ -63,7 +63,7 @@ current context, e.g. in a *beforeframe* function.
     value in the (i,j) cell would be *current_data.q[i,j,0]* (remember that
     Python always indexes starting at 0).
 
-    In an AMR calculation q will be from the last grid plotted.  
+    In an AMR calculation q will be from the last patch plotted.  
 
 .. attribute:: aux : 
 
@@ -74,7 +74,7 @@ current context, e.g. in a *beforeframe* function.
 
     If fort.a files are not found then current_data.aux will be None.
 
-    In an AMR calculation aux will be from the last grid plotted.  
+    In an AMR calculation aux will be from the last patch plotted.  
 
 .. attribute:: var : 
 
@@ -84,9 +84,9 @@ current context, e.g. in a *beforeframe* function.
 
 .. attribute:: level : 
 
-   For AMR computations, where *current_data.grid* is for the last grid plotted,
-   *current_data.level* is the AMR level of this grid.  Particularly useful
-   in `aftergrid` functions.
+   For AMR computations, where *current_data.patch* is for the last patch plotted,
+   *current_data.level* is the AMR level of this patch.  Particularly useful
+   in `afterpatch` functions.
 
 .. attribute:: t : 
 
@@ -102,11 +102,11 @@ current context, e.g. in a *beforeframe* function.
 
 .. attribute:: xlower :
 
-    left edge of current grid.
+    left edge of current patch.
 
 .. attribute:: ylower :
 
-    left edge of current grid in y (only in 2d).
+    left edge of current patch in y (only in 2d).
 
 
 

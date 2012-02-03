@@ -38,8 +38,8 @@ Overview
 The approach outlined below may seem more complicated than necessary, and it
 would be if all you ever want to do is plot one set of data at each output
 time.  However, when adaptive mesh refinement is used each frame of data may
-contain several grids and so creating the desired plot requires looping over
-all grids.  This is done by the plotting utilities described in :ref:`plotting`,
+contain several patches and so creating the desired plot requires looping over
+all patches.  This is done by the plotting utilities described in :ref:`plotting`,
 but for this to work it is necessary to specify what plot(s) are desired.
 
 Most example directories contain a file setplot.py that contains a

@@ -43,7 +43,7 @@ If plot_var is a function then this function is applied to applied to
 :ref:`current_data` and should return the array of values to be plotted.
 For an example, see :ref:`plotexample-acou-1d-6`.
 
-Sometimes you want to plot something other than the solution on the grid, 
+Sometimes you want to plot something other than the solution on the patch, 
 for example to add another feature to a plot of the solution. This can be
 done via an ``afteraxes`` command, for example, which is called after all
 items have been plotted on the current axes.  See :ref:`ClawPlotAxes` for
