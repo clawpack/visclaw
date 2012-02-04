@@ -8,7 +8,7 @@ import os
 import copy
 import re
 import logging
-from clawdata import Data, ClawData
+from clawutil.clawdata import Data, ClawData
 
 
 # ============================================================================
