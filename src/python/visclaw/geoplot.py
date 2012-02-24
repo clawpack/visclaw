@@ -4,7 +4,7 @@ Useful things for plotting GeoClaw results.
 
 from visclaw import colormaps
 from matplotlib.colors import Normalize 
-from geoclaw.geotools import topotools
+from geoclaw import topotools
 from numpy import ma
 
 
@@ -287,32 +287,32 @@ def plot_topo_file(topoplotdata):
 
     elif abs(topotype) == 3:
 
-    file = open(fname, 'r')
-    lines = file.readlines()
-    ncols = int(lines[0].split()[0])
-    nrows = int(lines[1].split()[0])
-    xllcorner = float(lines[2].split()[0])
-    yllcorner = float(lines[3].split()[0])
-    cellsize = float(lines[4].split()[0])
-    NODATA_value = int(lines[5].split()[0])
+        file = open(fname, 'r')
+        lines = file.readlines()
+        ncols = int(lines[0].split()[0])
+        nrows = int(lines[1].split()[0])
+        xllcorner = float(lines[2].split()[0])
+        yllcorner = float(lines[3].split()[0])
+        cellsize = float(lines[4].split()[0])
+        NODATA_value = int(lines[5].split()[0])
 
-    print "Loading file ",fname
-    print "   nrows = %i, ncols = %i" % (nrows,ncols)
-    topo = pylab.loadtxt(fname,skiprows=6,dtype=float)
-    print "   Done loading"
+        print "Loading file ",fname
+        print "   nrows = %i, ncols = %i" % (nrows,ncols)
+        topo = pylab.loadtxt(fname,skiprows=6,dtype=float)
+        print "   Done loading"
 
-    if 0:
-        topo = []
-        for i in range(nrows):
-            topo.append(pylab.array(lines[6+i],))
-        print '+++ topo = ',topo
-        topo = pylab.array(topo)
+        if 0:
+            topo = []
+            for i in range(nrows):
+                topo.append(pylab.array(lines[6+i],))
+            print '+++ topo = ',topo
+            topo = pylab.array(topo)
 
-    topo = pylab.flipud(topo)
+        topo = pylab.flipud(topo)
 
-    x = pylab.linspace(xllcorner, xllcorner+ncols*cellsize, ncols)
-    y = pylab.linspace(yllcorner, yllcorner+nrows*cellsize, nrows)
-    print "Shape of x, y, topo: ", x.shape, y.shape, topo.shape
+        x = pylab.linspace(xllcorner, xllcorner+ncols*cellsize, ncols)
+        y = pylab.linspace(yllcorner, yllcorner+nrows*cellsize, nrows)
+        print "Shape of x, y, topo: ", x.shape, y.shape, topo.shape
 
     else:
         raise Exception("*** Only topotypes 1 and 3 supported so far")
