@@ -1,5 +1,4 @@
-
-
+#!/usr/bin/env python
 """
 Module frametools for plotting frames of time-dependent data.
 
@@ -8,6 +7,7 @@ Module frametools for plotting frames of time-dependent data.
 import os,sys,shutil,glob
 import string,re
 import time
+import types
 import traceback
 
 
@@ -37,9 +37,9 @@ except:
     
 
 
-#==========================================
+#==============================================================================
 def plotframe(frameno, plotdata, verbose=False):
-#==========================================
+#==============================================================================
 
     """
     Plot a single frame from the computation.
@@ -1542,74 +1542,86 @@ def call_setplot(setplot, plotdata, verbose=True):
     Otherwise assume setplot is a function.
     """
 
-    if not setplot:
+    # This is a bit of a hack to make sure that we still handle the 
+    # setplot == None case, we may want to deprecate this and require
+    # an argument here
+    if setplot is None:
+        setplot = False
+
+    # Figure out what to do with the setplot passed in
+    if not isinstance(setplot,types.FunctionType):
+        # We need to parse the names given and import the module and function
+        if isinstance(setplot,bool):
+            if setplot:
+                # Assume that we should import setplot.py from current directory
+                setplot_module_dir = os.getcwd()
+                setplot_module_name = "setplot"
+            else:
+                if verbose:
+                    print >> sys.stderr, "*** WARNING:  No setplot specified!"
+                return plotdata
+        elif isinstance(setplot,str):
+            # Assume this is the path to the required setplot module
+            path = os.path.abspath(os.path.expandvars(os.path.expanduser(setplot)))
+            setplot_module_dir = os.path.dirname(path)
+            setplot_module_name = os.path.splitext(os.path.basename(setplot))[0]
+        else:
+            raise Exception("Invalid setplot module specification.")
+        
         if verbose:
-            print '*** Warning: no setplot specified'
-        return plotdata
-
-    if setplot is True:
-        # indicates we should import setplot.py from current directory
-        # and the setplot function is in this module.  
+            print "Importing %s.setplot from %s." % (setplot_module_name,setplot_module_dir)
+        
+        # Attempt to import whatever was handed to us and parsed above
         try:
-            sys.path.insert(0,os.getcwd())
-            import setplot as SetPlot
-            # make sure setplot from current directory is used:
-            reload(SetPlot)
-            setplot = SetPlot.setplot   # should be a function
-
-            if verbose:
-                print 'Imported setplot from ', os.getcwd()
-        except:
-            print """*** Error in call_setplot: 
-                  Problem importing setplot.py in directory %s""" \
-                  % os.getcwd()
-            raise
+            sys.path.insert(0,setplot_module_dir)
+            setplot_module = __import__(setplot_module_name)
+            reload(setplot_module)
+            setplot = setplot_module.setplot
+            if not isinstance(setplot,types.FunctionType):
+                raise ImportError("Failed importing %s.setplot" % setplot_module_name)
+        except ImportError as e:
+            print >> sys.stderr, "WARNING: Failed to import %s.setplot from %s." \
+                                        % (setplot_module_name,setplot_module_dir)
+            print >> sys.stderr, "Exception and traceback:"
+            print >> sys.stderr, "="*80
+            print >> sys.stderr, "\t%s\n\n" % e
+            traceback.print_exc(file=sys.stderr)
+            print >> sys.stderr, "="*80
+            
+            # Not sure if this is the right place to be doing this, maybe 
+            # this should go higher up than this routine so it can check all
+            # of the same attributes?
+            print "Would you like to use visclaw.setplot_default() instead [Y/n]?"
+            use_default = raw_input()
+            if "Y" in use_default.capitalize():
+                setplot_module = __import__('visclaw.setplot_default')
+                reload(setplot_module)
+                setplot = setplot_module.setplot   # should be a function
+            else:
+                sys.exit(1)
+            
             return plotdata
-
-    elif isinstance(setplot,str):
-        # assume setplot specifies module containing setplot function
-        # strip off the .py if it is there:
-        setplotmod = os.path.splitext(os.path.basename(setplot))[0]
-        try:
-            sys.path.insert(0,os.getcwd())
-            # import pdb; pdb.set_trace()
-            exec('import %s as SetPlot' % setplotmod)
-            # make sure setplot from current directory is used:
-            reload(SetPlot)
-            setplot = SetPlot.setplot   # should be a function
-        except ImportError:
-            print 'WARNING: setplot.py not found in current directory'
-            print '         Using visclaw.setplot_default() instead'
-            import visclaw.setplot_default as SetPlot
-            reload(SetPlot)
-            setplot = SetPlot.setplot   # should be a function
         except:
-            print """*** Error in call_setplot: 
-                  Problem importing from %s.py in directory %s""" \
-                  % (setplotmod, os.getcwd())
             raise
-            return plotdata
     else:
-        # assume setplot is the setplot function itself:
+        # setplot was handed to us as a function, we don't have to do anything!
         pass
 
-    # execute setplot:
+    # Execute the setplot function
     try:
         plotdata = setplot(plotdata)
+        if plotdata is None:
+            # Simple warning if we did not get anything back from plotdata
+            print '*** Did you forget the "return plotdata" statement?'
+            raise Exception("Plotdata was not set by given setplot function!")
         if verbose:
             print 'Executed setplot successfully'
-    except: #Exception as error:
-        print '*** Error in call_setplot: Problem executing function setplot'
+    except:
+        print >> sys.stderr, '*** Error in call_setplot: Problem executing function setplot'
         raise
-        return plotdata
 
-    if plotdata is None:
-        print '*** Error in printframes:  plotdata is None after call to setplot'
-        print '*** Did you forget the "return plotdata" statement?'
-        raise
-        return plotdata
-    
     return plotdata
+
 
 #------------------------------------------------------------------
 def clawpack_header():
