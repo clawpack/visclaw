@@ -7,14 +7,16 @@ ASCII output data format
 
 Two output files are created at each output time (each frame).  The frames
 are generally numbered 0, 1, 2, etc.  The two files, at frame 2, for
-example, are called `fort.t0002` and `fort.q0002`.  The first has the form
+example, are called `fort.t0002` and `fort.q0002`.  
 
 `fort.t0002`
 ------------
 
+This file has the typical form::
+
     0.50000000E+00    time
     1                 meqn
-   36                 ngrids
+    36                ngrids
     3                 naux
     2                 ndim
 
@@ -27,16 +29,17 @@ or PyClaw with only a single patch, then `ngrids` would be 1.
 
 The data for all 36 patches is contained in `fort.q0002`.  The data from each
 patch is preceeded by a header that tells where the patch is located in the
-domain, how many grid cells it contains, and what the cell size is, e.g. ::
-
+domain, how many grid cells it contains, and what the cell size is, e.g. 
 
 `fort.q0002`
 ------------
 
+This header has the typical form::
+
     1                 grid_number
     1                 AMR_level
-   40                 mx
-   40                 my
+    40                mx
+    40                my
     0.00000000E+00    xlow
     0.00000000E+00    ylow
     0.25000000E-01    dx
@@ -55,7 +58,11 @@ the system in this grid cell.
 After the data for this patch, there would be another header for the next
 patch, followed by its data, etc.
 
-In the header, `AMR_level` is the level of refinement, where 1 is the
-coarsest level.  
+In the header, `xlow` and `ylow` are the coordinates of the lower left
+corner of the patch, `dx` and `dy` are the cell width in `x` and `y`, and 
+`AMR_level` is the level of refinement, where 1 is the coarsest level.  
+Each patch has a unique `grid_number` that usually isn't needed for
+visualization purposes.
+
 
 

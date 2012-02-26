@@ -6,6 +6,7 @@ VisClaw: Clawpack Plotting Tools
 .. toctree::
    :maxdepth: 2
    
+   output_ascii
    matlab_plotting
    plotting
    setplot
