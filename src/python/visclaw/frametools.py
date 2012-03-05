@@ -4,16 +4,8 @@ Module frametools for plotting frames of time-dependent data.
 
 """
 
-import os,sys,shutil,glob
-import string,re
-import time
-import types
+import os,sys
 import traceback
-
-
-from clawutil.clawdata import Data
-from visclaw import plotpages
-from matplotlib.colors import Normalize 
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
@@ -30,13 +22,6 @@ except:
     print "*** Error: problem importing pylab"
 
 
-try:
-    from numpy import ma
-except:
-    print "*** Error: problem importing masked array module ma"
-    
-
-
 #==============================================================================
 def plotframe(frameno, plotdata, verbose=False):
 #==============================================================================
@@ -49,6 +34,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
     """
 
+    from clawutil.clawdata import Data
     if verbose:  print '    Plotting frame %s ... '  % frameno
 
     if plotdata.mode() == 'iplotclaw':
@@ -56,7 +42,7 @@ def plotframe(frameno, plotdata, verbose=False):
         
     try:
         plotfigure_dict = plotdata.plotfigure_dict
-    except:
+    except AttributeError:
         print '*** Error in plotframe: plotdata missing plotfigure_dict'
         print '*** This should not happen'
         return None
@@ -103,7 +89,6 @@ def plotframe(frameno, plotdata, verbose=False):
             except:
                 print '*** Error in beforeframe ***'
                 raise
-
 
 
     # iterate over each single plot that makes up this frame:
@@ -223,7 +208,21 @@ def plotframe(frameno, plotdata, verbose=False):
                     current_data.xlower = patch.dimensions[0].lower
                     current_data.xupper = patch.dimensions[0].upper
     
-                    # loop over items:
+                    if patch.num_dim == 1:
+                        # +++ until bug in solution.py fixed.
+                        #xc_centers = patch.p_centers[0]
+                        #xc_edges = patch.p_edges[0]
+                        current_data.x     = patch.c_centers[0]
+                        current_data.dx    = patch.delta[0]
+
+                    elif patch.num_dim == 2:
+                        # +++ until bug in solution.py fixed.
+                        #xc_centers, yc_centers = patch.c_centers
+                        current_data.x, current_data.y = patch.c_centers
+                        current_data.dx = patch.delta[0]
+                        current_data.dy = patch.delta[1]
+
+                 # loop over items:
                     # ----------------
     
                     for itemname in plotaxes._itemnames:
@@ -246,25 +245,21 @@ def plotframe(frameno, plotdata, verbose=False):
 
                         # option to suppress printing some levels:
                         try:
-                            pp_amr_data_show = plotitem.amr_data_show
-                            i = min(len(pp_amr_data_show), state.level) - 1
-                            show_this_level = pp_amr_data_show[i]
+                            pp['amr_data_show'] = plotitem.amr_data_show
+                            i = min(len(pp['amr_data_show']), state.level) - 1
+                            show_this_level = pp['amr_data_show'][i]
                         except:
                             show_this_level = True
 
                         if plotitem._show and show_this_level:
-                            cmd = 'output = plotitem%s(framesoln,plotitem,\
-                                    current_data,stateno)'  % num_dim
+                            if num_dim == 1:
+                                plotitem_fun = plotitem1
+                            elif num_dim == 2:
+                                plotitem_fun = plotitem2
+                            current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
     
-                            try:
-                                exec(cmd)
-                                if output: current_data = output
-                                if verbose:  
-                                        print '      Plotted  plotitem ', itemname
-                            except:
-                                print '*** Error in plotframe: problem calling plotitem%s' % num_dim
-                                traceback.print_exc()
-                                return None
+                            if verbose:  
+                                    print '      Plotted  plotitem ', itemname
     
                     # end of loop over plotitems
                 # end of loop over patches
@@ -371,9 +366,30 @@ def plotframe(frameno, plotdata, verbose=False):
 
     # end of plotframe
 
+def params_dict(plotitem, base_params, level_params, level):
+    """ 
+    Create a dictionary containing the plot parameters.
+
+    For each level_param check if there is an amr_ list for this
+    parameter and if so select the value corresponding to the level of
+    this patch.  Otherwise, use plotitem attribute of this name.
+    """
+    pp = {}
+    for plot_param in base_params:
+        pp[plot_param] = getattr(plotitem, plot_param, None)
 
 
-    
+    for plot_param in level_params:
+        amr_plot_param = "amr_%s" % plot_param
+        amr_list = getattr(plotitem, amr_plot_param, [])
+        if len(amr_list) > 0:
+            index = min(level, len(amr_list)) - 1
+            pp[plot_param] = amr_list[index]
+        else:
+            pp[plot_param] = getattr(plotitem, plot_param, None)
+
+    return pp
+
 #==================================================================
 def plotitem1(framesoln, plotitem, current_data, stateno):
 #==================================================================
@@ -389,222 +405,133 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     """
 
     plotdata = plotitem._plotdata
-    plotfigure = plotitem._plotfigure
-    plotaxes = plotitem._plotaxes
-
-    # the following plot parameters should be set and independent of 
-    # which AMR level a patch is on:
-
-    plot_params = """
-             plot_type  afteritem  mapc2p  MappedGrid gaugeno
-             """.split()
-
-    # Convert each plot parameter into a local variable starting with 'pp_'.
-
-    for plot_param in plot_params:
-        cmd = "pp_%s = getattr(plotitem, '%s',None)" \
-             % (plot_param, plot_param)
-        exec(cmd)
-
-
-    if pp_mapc2p is None:
-        # if this item does not have a mapping, check for a global mapping:
-        pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
     state = framesoln.states[stateno]
     patch = state.patch
     current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
-
     t = framesoln.t
 
+    # the following plot parameters should be set and independent of 
+    # which AMR level a patch is on:
+
+    base_params = ['plot_type','afteritem','mapc2p','MappedGrid','gaugeno']
+    
     # the following plot parameters may be set, depending on what
     # plot_type was requested:
 
-    plot_params = """
-             plot_var  afterpatch  plotstyle color kwargs 
-             plot_var2 fill_where map_2d_to_1d plot_show
-             """.split()
+    level_params = ['plot_var','afterpatch','plotstyle','color','kwargs',\
+             'plot_var2','fill_where','map_2d_to_1d','plot_show']
 
-    # For each plot_param check if there is an amr_ list for this
-    # parameter and if so select the value corresponding to the level of
-    # this patch.  Otherwise, use plotitem attribute of this name.
-    # The resulting variable starts with 'pp_'.
+    pp = params_dict(plotitem, base_params, level_params, patch.level)
 
-    for plot_param in plot_params:
-        amr_plot_param = "amr_%s" % plot_param
-        amr_list = getattr(plotitem, amr_plot_param, [])
-        if len(amr_list) > 0:
-            index = min(patch.level, len(amr_list)) - 1
-            exec("pp_%s = amr_list[%i]" % (plot_param, index))
-        else:
-            exec("pp_%s = getattr(plotitem, '%s', None)" \
-                 % (plot_param, plot_param))
+    if pp['mapc2p'] is None:
+        # if this item does not have a mapping, check for a global mapping:
+        pp['mapc2p'] = getattr(plotdata, 'mapc2p', None)
 
-    if pp_plot_type == '1d':
-        pp_plot_type = '1d_plot'  # '1d' is deprecated
+    if pp['plot_type'] == '1d':
+        pp['plot_type'] = '1d_plot'  # '1d' is deprecated
     
-    if pp_plot_type in ['1d_plot', '1d_semilogy']:
-        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
-        xc_centers = thispatchvar.xc_centers   # cell centers
-        xc_edges = thispatchvar.xc_edges       # cell edges
-        var = thispatchvar.var               # variable to be plotted
-        current_data.x = xc_centers
+    elif pp['plot_type'] == '1d_gauge_trace':
+        gaugesoln = plotdata.getgauge(pp['gaugeno'])
+        xc_centers = None
+        xc_edges = None
+
+    elif pp['plot_type'] in ['1d_plot', '1d_semilogy', '1d_fill_between', '1d_empty','1d_from_2d_data']:
+        var = get_var(state,pp['plot_var'],current_data)
         current_data.var = var
 
-    elif pp_plot_type == '1d_fill_between':
+    else:
+        raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
+        return None
+
+    if pp['plot_type'] == '1d_fill_between':
         try: pylab.fill_between
         except: 
             print "*** This version of pylab is missing fill_between"
             print "*** Reverting to 1d_plot"
-            pp_plot_type = '1d_plot'
-        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
-        thispatchvar2 = get_patchvar(state,pp_plot_var2,1,current_data)
-        xc_centers = thispatchvar.xc_centers   # cell centers
-        xc_edges = thispatchvar.xc_edges       # cell edges
-        var = thispatchvar.var               # variable to be plotted
-        var2 = thispatchvar2.var             # variable to be plotted
-	current_data.x = xc_centers
-	current_data.var = var
+            pp['plot_type'] = '1d_plot'
+        var  = get_var(state,pp['plot_var'],current_data)
+        var2 = get_var(state,pp['plot_var2'],current_data)
+        current_data.var = var
 	current_data.var2 = var2
 
+    # Grid mapping:
 
-    elif pp_plot_type == '1d_from_2d_data':
-        if not pp_map_2d_to_1d:
+    if pp['MappedGrid'] is None:
+        pp['MappedGrid'] = (pp['mapc2p'] is not None)
+
+    if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
+        print "*** Warning: MappedGrid == True but no mapc2p specified"
+    elif pp['MappedGrid']:
+        p_centers = pp['mapc2p'](current_data.x)
+    else:
+        p_centers = current_data.x
+
+    if pp['plot_type'] == '1d_from_2d_data':
+        if not pp['map_2d_to_1d']:
             print '*** Error, plot_type = 1d_from_2d_data requires '
             print '*** map_2d_to_1d function as plotitem attribute'
             raise
             return
-        try:
-            thispatchvar = get_patchvar(state,pp_plot_var,2,current_data)
-            xc_centers = thispatchvar.xc_centers   # cell centers
-            yc_centers = thispatchvar.yc_centers
-            xc_edges = thispatchvar.xc_edges   # cell edge
-            yc_edges = thispatchvar.yc_edges
-            var = thispatchvar.var             # variable to be plotted
-            current_data.x = xc_centers
-            current_data.y = yc_centers
-            current_data.var = var
-            # TODO: fix for xp, yp??
-            xc_centers, var = pp_map_2d_to_1d(current_data)
-            xc_centers = xc_centers.flatten()  # convert to 1d
-            var = var.flatten()  # convert to 1d
-
-            #xc_centers, var = pp_map_2d_to_1d(var,xc_centers,yc_centers,t)
-            #xc_edges, var = pp_map_2d_to_1d(var,xc_edges,yc_edges,t)
-        except:
-            print '*** Error with map_2d_to_1d function'
-            print 'map_2d_to_1d = ',pp_map_2d_to_1d
-            raise
-            return
-
-    elif pp_plot_type == '1d_gauge_trace':
-        gaugesoln = plotdata.getgauge(pp_gaugeno)
-        xc_centers = None
-        xc_edges = None
-        
-
-    elif pp_plot_type == '1d_empty':
-        pp_plot_var = 0  # shouldn't be used but needed below *FIX*
-        thispatchvar = get_patchvar(state,pp_plot_var,1,current_data)
-        xc_centers = thispatchvar.xc_centers   # cell centers
-        xc_edges = thispatchvar.xc_edges       # cell edges
-
-    else:
-        raise ValueError("Unrecognized plot_type: %s" % pp_plot_type)
-        return None
-
-
-    # Grid mapping:
-
-    if pp_MappedGrid is None:
-        pp_MappedGrid = (pp_mapc2p is not None)
-
-    if (pp_MappedGrid & (pp_mapc2p is None)):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
-    elif pp_MappedGrid:
-        X_center= pp_mapc2p(xc_centers)
-        X_edge = pp_mapc2p(xc_edges)
-    else:
-        X_center = xc_centers
-        X_edge = xc_edges
-
+        p_centers, var = pp['map_2d_to_1d'](current_data)
+        p_centers = p_centers.flatten()  # convert to 1d
+        var = var.flatten()  # convert to 1d
 
     # The plot commands using matplotlib:
 
     pylab.hold(True)
 
+    if pp['color']:
+        pp['kwargs']['color'] = pp['color']
 
-    if (pp_plot_type in ['1d_plot','1d_from_2d_data']):
-        if pp_color:
-            pp_kwargs['color'] = pp_color
+    if pp['plot_show']:
+        if (pp['plot_type'] in ['1d_plot','1d_from_2d_data']):
+            pobj=pylab.plot(p_centers,var,pp['plotstyle'],**pp['kwargs'])
 
-        plotcommand = "pobj=pylab.plot(X_center,var,'%s', **pp_kwargs)"  \
-                      % pp_plotstyle
-        if pp_plot_show:
-            exec(plotcommand)
+        elif pp['plot_type'] == '1d_semilogy':
+            pobj=pylab.semilogy(p_centers,var,pp['plotstyle'], **pp['kwargs'])
 
-    elif pp_plot_type == '1d_semilogy':
-        if pp_color:
-            pp_kwargs['color'] = pp_color
+        elif pp['plot_type'] == '1d_fill_between':
+            if pp['fill_where']:
+                pp['fill_where'] = pp['fill_where'].replace('plot_var','var')
+                pp['fill_where'] = pp['fill_where'].replace('plot_var2','var2')
+                pobj=pylab.fill_between(p_centers,var,var2,pp['fill_where'],**pp['kwargs'])
+            else:
+                pobj=pylab.fill_between(p_centers,var,var2,**pp['kwargs'])
 
-        plotcommand = "pobj=pylab.semilogy(X_center,var,'%s', **pp_kwargs)"  \
-                      % pp_plotstyle
-        if pp_plot_show:
-            exec(plotcommand)
+        elif pp['plot_type'] == '1d_gauge_trace':
 
-    elif pp_plot_type == '1d_fill_between':
-        if pp_color:
-            pp_kwargs['color'] = pp_color
-        if pp_fill_where:
-            pp_fill_where = pp_fill_where.replace('plot_var','var')
-            pp_fill_where = pp_fill_where.replace('plot_var2','var2')
-            plotcommand = \
-              "pobj=pylab.fill_between(X_center,var,var2,%s,**pp_kwargs)"  \
-                  % pp_fill_where
+            gauget = gaugesoln.t
+            gaugeq = gaugesoln.q[3,:]
+            pobj=pylab.plot(gauget, gaugeq)
+
+            # interpolate to the current time t:
+            try:
+                i1 = pylab.find(gauget < t)[-1]
+                i1 = min(i1,len(gauget)-2)
+                slope = (gaugeq[i1+1]-gaugeq[i1]) / (gauget[i1+1]-gauget[i1])
+                qt = gaugeq[i1] + slope * (t-gauget[i1])
+            except:
+                qt = gaugeq[0]
+                print "Warning: t out of range"
+            pylab.plot([t], [qt], 'ro')
+
+        elif pp['plot_type'] == '1d_empty':
+            # no plot to create (user might make one in afteritem or
+            # afteraxes)
+            pass
 
         else:
-            plotcommand = "pobj=pylab.fill_between(X_center,var,var2,**pp_kwargs)" 
-        if pp_plot_show:
-            exec(plotcommand)
-
-    elif pp_plot_type == '1d_gauge_trace':
-
-        gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[3,:]
-        plotcommand = "pobj=pylab.plot(gauget, gaugeq)"
-        if pp_plot_show:
-            exec(plotcommand)
-
-        # interpolate to the current time t:
-        try:
-            i1 = pylab.find(gauget < t)[-1]
-            i1 = min(i1,len(gauget)-2)
-            slope = (gaugeq[i1+1]-gaugeq[i1]) / (gauget[i1+1]-gauget[i1])
-            qt = gaugeq[i1] + slope * (t-gauget[i1])
-        except:
-            qt = gaugeq[0]
-            print "Warning: t out of range"
-        pylab.plot([t], [qt], 'ro')
-
-        
-
-    elif pp_plot_type == '1d_empty':
-        # no plot to create (user might make one in afteritem or
-        # afteraxes)
-        pass
-
-    else:
-        raise ValueError("Unrecognized plot_type: %s" % pp_plot_type)
-        return None
-
+            raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
+            return None
 
     # call an afterpatch function if present:
-    if pp_afterpatch:
-        if isinstance(pp_afterpatch, str):
+    if pp['afterpatch']:
+        if isinstance(pp['afterpatch'], str):
             # a string to be executed
-            exec(pp_afterpatch)
+            exec(pp['afterpatch'])
         else:
             # assume it's a function
             try:
@@ -615,21 +542,18 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 current_data.var = var
                 current_data.xlower = patch.dimensions[0].lower
                 current_data.xupper = patch.dimensions[0].upper
-                current_data.x = X_center # cell centers
+                current_data.x = p_centers # cell centers
 		current_data.dx = patch.delta[0]
-                output = pp_afterpatch(current_data)
+                output = pp['afterpatch'](current_data)
                 if output: current_data = output
             except:
                 print '*** Error in afterpatch ***'
                 raise
 
-
     try:
         plotitem._current_pobj = pobj
     except:
         pass # if no plot was done
-
-
 
     return current_data
     
@@ -649,107 +573,68 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     """
 
     import numpy as np
+    from numpy import ma
     from visclaw import colormaps
 
     plotdata = plotitem._plotdata
-    plotfigure = plotitem._plotfigure
-    plotaxes = plotitem._plotaxes
-
-    # The following plot parameters should be set and independent of 
-    # which AMR level a patch is on:
-
-    plot_params = """
-             plot_type  afteritem  mapc2p  MappedGrid
-             """.split()
-
-    # Convert each plot parameter into a local variable starting with 'pp_'.
-
-    for plot_param in plot_params:
-        cmd = "pp_%s = getattr(plotitem, '%s',None)" \
-             % (plot_param, plot_param)
-        exec(cmd)
-
-    if pp_mapc2p is None:
-        # if this item does not have a mapping, check for a global mapping:
-        pp_mapc2p = getattr(plotdata, 'mapc2p', None)
 
     state = framesoln.states[stateno]
     patch = state.patch
-    level = patch.level
+    level = patch.level #2d only
 
     current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
-    current_data.level = level
+    current_data.level = level #2d only
 
     t = framesoln.t
 
-    # The following plot parameters may be set, depending on what
-    # plot_type was requested:
+    # The following plot parameters should be set and independent of 
+    # which AMR level a patch is on:
 
-    plot_params = """
-             plot_var  afterpatch  kwargs 
-             celledges_show  celledges_color  patch_bgcolor
-             patchedges_show  patchedges_color  add_colorbar
-             pcolor_cmap  pcolor_cmin  pcolor_cmax
-             imshow_cmap  imshow_cmin  imshow_cmax
-             contour_levels  contour_nlevels  contour_min  contour_max
-             contour_colors   contour_cmap  contour_show
-             schlieren_cmap  schlieren_cmin schlieren_cmax
-             quiver_coarsening  quiver_var_x  quiver_var_y  quiver_key_show
-             quiver_key_scale  quiver_key_label_x  quiver_key_label_y  
-             quiver_key_scale  quiver_key_units  quiver_key_kwargs
-             """.split()
+    base_params = ['plot_type','afteritem','mapc2p','MappedGrid']
 
-    # For each plot_param check if there is an amr_ list for this
-    # parameter and if so select the value corresponding to the level of
-    # this patch.  Otherwise, use plotitem attribute of this name.
-    # The resulting variable starts with 'pp_'.
+    level_params = ['plot_var','afterpatch','kwargs',
+             'celledges_show','celledges_color','patch_bgcolor',
+             'patchedges_show','patchedges_color','add_colorbar',
+             'pcolor_cmap','pcolor_cmin','pcolor_cmax',
+             'imshow_cmap','imshow_cmin','imshow_cmax',
+             'contour_levels','contour_nlevels','contour_min','contour_max',
+             'contour_colors','contour_cmap','contour_show',
+             'schlieren_cmap','schlieren_cmin schlieren_cmax',
+             'quiver_coarsening','quiver_var_x','quiver_var_y','quiver_key_show',
+             'quiver_key_scale','quiver_key_label_x','quiver_key_label_y',
+             'quiver_key_scale','quiver_key_units','quiver_key_kwargs']
 
-    for plot_param in plot_params:
-        amr_plot_param = "amr_%s" % plot_param
-        amr_list = getattr(plotitem, amr_plot_param, [])
-        if len(amr_list) > 0:
-            index = min(patch.level, len(amr_list)) - 1
-            exec("pp_%s = amr_list[%i]" % (plot_param, index))
-        else:
-            exec("pp_%s = getattr(plotitem, '%s', None)" \
-                 % (plot_param, plot_param))
+    pp = params_dict(plotitem, base_params, level_params,patch.level)
 
-
+    if pp['mapc2p'] is None:
+        # if this item does not have a mapping, check for a global mapping:
+        pp['mapc2p'] = getattr(plotdata, 'mapc2p', None)
 
     # turn patch background color into a colormap for use with pcolor cmd:
-    pp_patch_bgcolormap = colormaps.make_colormap({0.: pp_patch_bgcolor, \
-                                             1.: pp_patch_bgcolor})
+    pp['patch_bgcolormap'] = colormaps.make_colormap({0.: pp['patch_bgcolor'], \
+                                             1.: pp['patch_bgcolor']})
     
-    thispatchvar = get_patchvar(state,pp_plot_var,2,current_data)
-
-    xc_centers = thispatchvar.xc_centers   # cell centers (on mapped patch)
-    yc_centers = thispatchvar.yc_centers
-    xc_edges = thispatchvar.xc_edges       # cell edges (on mapped patch)
-    yc_edges = thispatchvar.yc_edges
-    var = thispatchvar.var             # variable to be plotted
-
+    var  = get_var(state,pp['plot_var'],current_data)
+    current_data.var = var
 
     # Grid mapping:
 
-    if pp_MappedGrid is None:
-        pp_MappedGrid = (pp_mapc2p is not None)
+    xc_edges, yc_edges = patch.c_edges
+    if pp['MappedGrid'] is None:
+        pp['MappedGrid'] = (pp['mapc2p'] is not None)
 
-    if (pp_MappedGrid & (pp_mapc2p is None)):
+    if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
         print "*** Warning: MappedGrid == True but no mapc2p specified"
-    elif pp_MappedGrid:
-        X_center, Y_center = pp_mapc2p(xc_centers, yc_centers)
-        X_edge, Y_edge = pp_mapc2p(xc_edges, yc_edges)
+    elif pp['MappedGrid']:
+        X_center, Y_center = pp['mapc2p'](current_data.x, current_data.y)
+        X_edge, Y_edge = pp['mapc2p'](xc_edges, yc_edges)
     else:
-        X_center, Y_center = xc_centers, yc_centers
+        X_center, Y_center = current_data.x, current_data.y
         X_edge, Y_edge = xc_edges, yc_edges
 
-
-    # The plot commands using matplotlib:
-
     pylab.hold(True)
-
 
     if ma.isMaskedArray(var):
         # If var is a masked array: plotting should work ok unless all 
@@ -768,113 +653,114 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pc_cmd = 'pcolormesh'
         pc_mth = pylab.pcolormesh
 
-    if pp_plot_type == '2d_pcolor':
+    if pp['plot_type'] == '2d_pcolor':
 
         pcolor_cmd = "pobj = pylab."+pc_cmd+"(X_edge, Y_edge, var, \
-                        cmap=pp_pcolor_cmap"
+                        cmap=pp['pcolor_cmap']"
 
-        if pp_celledges_show:
-            pcolor_cmd += ", edgecolors=pp_celledges_color"
+        if pp['celledges_show']:
+            pcolor_cmd += ", edgecolors=pp['celledges_color']"
         else: 
             pcolor_cmd += ", shading='flat'"
 
-        pcolor_cmd += ", **pp_kwargs)"
+        pcolor_cmd += ", **pp['kwargs'])"
 
         if not var_all_masked:
             exec(pcolor_cmd)
 
 
-            if (pp_pcolor_cmin not in ['auto',None]) and \
-                     (pp_pcolor_cmax not in ['auto',None]):
-                pylab.clim(pp_pcolor_cmin, pp_pcolor_cmax) 
+            if (pp['pcolor_cmin'] not in ['auto',None]) and \
+                     (pp['pcolor_cmax'] not in ['auto',None]):
+                pylab.clim(pp['pcolor_cmin'], pp['pcolor_cmax']) 
         else:
             #print '*** Not doing pcolor on totally masked array'
             pass
 
-    elif pp_plot_type == '2d_imshow':
+    elif pp['plot_type'] == '2d_imshow':
 
         if not var_all_masked:
-            if pp_imshow_cmin in ['auto',None]:
-                pp_imshow_cmin = np.min(var)
-            if pp_imshow_cmax in ['auto',None]:
-                pp_imshow_cmax = np.max(var)
-            color_norm = Normalize(pp_imshow_cmin,pp_imshow_cmax,clip=True)
+            if pp['imshow_cmin'] in ['auto',None]:
+                pp['imshow_cmin'] = np.min(var)
+            if pp['imshow_cmax'] in ['auto',None]:
+                pp['imshow_cmax'] = np.max(var)
+            from matplotlib.colors import Normalize 
+            color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
             pobj = pylab.imshow(pylab.flipud(var.T), extent=xylimits, \
-                    cmap=pp_imshow_cmap, interpolation='nearest', \
+                    cmap=pp['imshow_cmap'], interpolation='nearest', \
                     norm=color_norm)
 
-            if pp_celledges_show:
+            if pp['celledges_show']:
                 # This draws patch for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this. 
-                pobj = pylab.plot(X_edge, Y_edge, color=pp_celledges_color)
-                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_celledges_color)
+                pobj = pylab.plot(X_edge, Y_edge, color=pp['celledges_color'])
+                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
 
         else:
             #print '*** Not doing imshow on totally masked array'
             pass
 
 
-    elif pp_plot_type == '2d_contour':
+    elif pp['plot_type'] == '2d_contour':
         levels_set = True
-        if pp_contour_levels is None:
+        if pp['contour_levels'] is None:
             levels_set = False
-            if pp_contour_nlevels is None:
+            if pp['contour_nlevels'] is None:
                 print '*** Error in plotitem2:'
                 print '    contour_levels or contour_nlevels must be set'
                 raise
                 return
-            if (pp_contour_min is not None) and \
-                    (pp_contour_max is not None):
+            if (pp['contour_min'] is not None) and \
+                    (pp['contour_max'] is not None):
 
-                pp_contour_levels = pylab.linspace(pp_contour_min, \
-                       pp_contour_max, pp_contour_nlevels)
+                pp['contour_levels'] = pylab.linspace(pp['contour_min'], \
+                       pp['contour_max'], pp['contour_nlevels'])
                 levels_set = True 
 
 
-        if pp_celledges_show:
+        if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, edgecolors=pp_celledges_color)
-        elif pp_patch_bgcolor is not 'w': 
+                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
+        elif pp['patch_bgcolor'] is not 'w': 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, edgecolors='None')
+                    cmap=pp['patch_bgcolormap'], edgecolors='None')
         pylab.hold(True)
 
 
         # create the contour command:
         contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
         if levels_set:
-            contourcmd += "pp_contour_levels"
+            contourcmd += "pp['contour_levels']"
         else:
-            contourcmd += "pp_contour_nlevels"
+            contourcmd += "pp['contour_nlevels']"
 
-        if pp_contour_cmap:
-            if (pp_kwargs is None) or ('cmap' not in pp_kwargs):
-                contourcmd += ", cmap = pp_contour_cmap"
-        elif pp_contour_colors:
-            if (pp_kwargs is None) or ('colors' not in pp_kwargs):
-                contourcmd += ", colors = pp_contour_colors"
+        if pp['contour_cmap']:
+            if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
+                contourcmd += ", cmap = pp['contour_cmap']"
+        elif pp['contour_colors']:
+            if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
+                contourcmd += ", colors = pp['contour_colors']"
 
-        contourcmd += ", **pp_kwargs)"
+        contourcmd += ", **pp['kwargs'])"
 
-        if (pp_contour_show and not var_all_masked):
+        if (pp['contour_show'] and not var_all_masked):
             # may suppress plotting at coarse levels
             exec(contourcmd)
 
-    elif pp_plot_type == '2d_edges':
+    elif pp['plot_type'] == '2d_edges':
         # plot only the patches, no data:
-        if pp_celledges_show:
+        if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, edgecolors=pp_celledges_color,\
+                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'],\
                     shading='faceted')
         else: 
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp_patch_bgcolormap, shading='flat')
+                    cmap=pp['patch_bgcolormap'], shading='flat')
 
 
-    elif pp_plot_type == '2d_schlieren':
+    elif pp['plot_type'] == '2d_schlieren':
         # plot 2-norm of gradient of variable var:
         
         # No idea why this next line is needed...maybe a 64-/32-bit incompatibility issue?
@@ -883,50 +769,50 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         vs = pylab.sqrt(vx**2 + vy**2)
 
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
-                        cmap=pp_schlieren_cmap"
+                        cmap=pp['schlieren_cmap']"
 
-        if pp_celledges_show:
-            pcolor_cmd += ", edgecolors=pp_celledges_color"
+        if pp['celledges_show']:
+            pcolor_cmd += ", edgecolors=pp['celledges_color']"
         else: 
             pcolor_cmd += ", edgecolors='None'"
 
-        pcolor_cmd += ", **pp_kwargs)"
+        pcolor_cmd += ", **pp['kwargs'])"
 
         if not var_all_masked:
             exec(pcolor_cmd)
 
-            if (pp_schlieren_cmin not in ['auto',None]) and \
-                     (pp_schlieren_cmax not in ['auto',None]):
-                pylab.clim(pp_schlieren_cmin, pp_schlieren_cmax) 
+            if (pp['schlieren_cmin'] not in ['auto',None]) and \
+                     (pp['schlieren_cmax'] not in ['auto',None]):
+                pylab.clim(pp['schlieren_cmin'], pp['schlieren_cmax']) 
 
-    elif pp_plot_type == '2d_quiver':
-        if pp_quiver_coarsening > 0:
-            var_x = get_patchvar(state,pp_quiver_var_x,2,current_data).var
-            var_y = get_patchvar(state,pp_quiver_var_y,2,current_data).var
-            Q = pylab.quiver(X_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
-                             Y_center[::pp_quiver_coarsening,::pp_quiver_coarsening],
-                             var_x[::pp_quiver_coarsening,::pp_quiver_coarsening],
-                             var_y[::pp_quiver_coarsening,::pp_quiver_coarsening],
-                             **pp_kwargs)
-                             # units=pp_quiver_units,scale=pp_quiver_scale)
+    elif pp['plot_type'] == '2d_quiver':
+        if pp['quiver_coarsening'] > 0:
+            var_x = get_var(state,pp['quiver_var_x'],current_data)
+            var_y = get_var(state,pp['quiver_var_y'],current_data)
+            Q = pylab.quiver(X_center[::pp['quiver_coarsening'],::pp['quiver_coarsening']],
+                             Y_center[::pp['quiver_coarsening'],::pp['quiver_coarsening']],
+                             var_x[::pp['quiver_coarsening'],::pp['quiver_coarsening']],
+                             var_y[::pp['quiver_coarsening'],::pp['quiver_coarsening']],
+                             **pp['kwargs'])
+                             # units=pp['quiver_units'],scale=pp['quiver_scale'])
 
             # Show key
-            if pp_quiver_key_show:
-                if pp_quiver_key_scale is None:
+            if pp['quiver_key_show']:
+                if pp['quiver_key_scale'] is None:
                     key_scale = np.max(np.sqrt(var_x**2+var_y**2))*0.5
                 else:
-                    key_scale = pp_quiver_key_scale
-                label = r"%s %s" % (str(np.ceil(key_scale)),pp_quiver_key_units)
-                pylab.quiverkey(Q,pp_quiver_key_label_x,pp_quiver_key_label_y,
-                                key_scale,label,**pp_quiver_key_kwargs)
+                    key_scale = pp['quiver_key_scale']
+                label = r"%s %s" % (str(np.ceil(key_scale)),pp['quiver_key_units'])
+                pylab.quiverkey(Q,pp['quiver_key_label_x'],pp['quiver_key_label_y'],
+                                key_scale,label,**pp['quiver_key_kwargs'])
 
-    elif pp_plot_type == '2d_empty':
+    elif pp['plot_type'] == '2d_empty':
         # no plot to create (user might make one in afteritem or
         # afteraxes)
         pass
 
     else:
-        raise ValueError("Unrecognized plot_type: %s" % pp_plot_type)
+        raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
         return None
 
     # end of various plot types
@@ -935,21 +821,21 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     # plot patch patch edges if desired:
 
-    if pp_patchedges_show:
+    if pp['patchedges_show']:
         for i in [0, X_edge.shape[0]-1]:
             X1 = X_edge[i,:]
             Y1 = Y_edge[i,:]
-            pylab.plot(X1, Y1, pp_patchedges_color)
+            pylab.plot(X1, Y1, pp['patchedges_color'])
         for i in [0, X_edge.shape[1]-1]:
             X1 = X_edge[:,i] 
             Y1 = Y_edge[:,i]
-            pylab.plot(X1, Y1, pp_patchedges_color)
+            pylab.plot(X1, Y1, pp['patchedges_color'])
 
 
-    if pp_afterpatch:
+    if pp['afterpatch']:
         try:
-            if isinstance(pp_afterpatch, str):
-                exec(pp_afterpatch)
+            if isinstance(pp['afterpatch'], str):
+                exec(pp['afterpatch'])
             else:
                 # assume it's a function
                 current_data.patchno = patchno
@@ -958,14 +844,14 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 current_data.var = var
                 current_data.xlower = patch.dimensions[0].lower
                 current_data.xupper = patch.dimensions[0].upper
-                current_data.ylower = patch.dimensions[0].lower
-                current_data.yupper = patch.dimensions[0].upper
+                current_data.ylower = patch.dimensions[1].lower
+                current_data.yupper = patch.dimensions[1].upper
                 current_data.x = X_center # cell centers
                 current_data.y = Y_center # cell centers
                 current_data.dx = patch.delta[0]
                 current_data.dy = patch.delta[1]
 
-                output = pp_afterpatch(current_data)
+                output = pp['afterpatch'](current_data)
                 if output: current_data = output
         except:
             print '*** Warning: could not execute afterpatch'
@@ -980,80 +866,24 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     return current_data
 
-
 #--------------------------------------
-def get_patchvar(state, plot_var, num_dim, current_data):
+def get_var(state, plot_var, current_data):
 #--------------------------------------
     """
     Return arrays for spatial variable(s) (on mapped patch if necessary)
     and variable to be plotted on a single patch in num_dim space dimensions.
     """
 
-    patch = state.patch
+    if isinstance(plot_var, int):
+        var = state.q[plot_var,...]
+    else:
+        try:
+            var = plot_var(current_data)
+        except:
+            print '*** Error applying function plot_var = ',plot_var
+            raise
 
-    if num_dim == 1:
-    
-        # +++ until bug in solution.py fixed.
-        xc_centers = patch.c_centers[0]
-        xc_edges = patch.c_edges[0]
-        #xc_centers = patch.p_centers[0]
-        #xc_edges = patch.p_edges[0]
-        current_data.x = xc_centers
-        current_data.dx = patch.delta[0]
-
-    
-        if isinstance(plot_var, int):
-            var = state.q[plot_var,:]
-        else:
-            try:
-                #var = plot_var(state.q, xc_centers, state.t)
-                var = plot_var(current_data)
-            except:
-                print '*** Error applying function plot_var = ',plot_var
-                traceback.print_exc()
-                return  
-
-        thispatchvar = Data()
-        thispatchvar.var = var
-        thispatchvar.xc_centers = xc_centers
-        thispatchvar.xc_edges = xc_edges
-        thispatchvar.mx = patch.dimensions[0].num_cells
-
-        # end of 1d case
-    
-    elif num_dim == 2:
-        # +++ until bug in solution.py fixed.
-        #xc_centers, yc_centers = patch.c_centers
-        #xc_edges, yc_edges = patch.c_edges
-        xc_centers, yc_centers = patch.p_centers
-        xc_edges, yc_edges = patch.p_edges
-        current_data.x = xc_centers
-        current_data.y = yc_centers
-        current_data.dx = patch.delta[0]
-        current_data.dy = patch.delta[1]
-
-        if isinstance(plot_var, int):
-            var = state.q[plot_var,:,:]
-        else:
-            try:
-                var = plot_var(current_data)
-            except:
-                print '*** Error applying function plot_var = ',plot_var
-                traceback.print_exc()
-                return 
-
-        thispatchvar = Data()
-        thispatchvar.var = var
-        thispatchvar.xc_centers = xc_centers
-        thispatchvar.yc_centers = yc_centers
-        thispatchvar.xc_edges = xc_edges
-        thispatchvar.yc_edges = yc_edges
-        thispatchvar.mx = patch.dimensions[0].num_cells
-        thispatchvar.my = patch.dimensions[1].num_cells
-
-        # end of 2d case
-
-    return thispatchvar
+    return var
 
 
 #------------------------------------------------------------------------
@@ -1115,6 +945,7 @@ def printframes(plotdata=None, verbose=True):
 
     import glob
     from visclaw.data import ClawPlotData
+    from visclaw import plotpages
 
 
 
@@ -1541,6 +1372,7 @@ def call_setplot(setplot, plotdata, verbose=True):
     If setplot is a string, setplot function is in module named by string.
     Otherwise assume setplot is a function.
     """
+    import types
 
     # This is a bit of a hack to make sure that we still handle the 
     # setplot == None case, we may want to deprecate this and require
