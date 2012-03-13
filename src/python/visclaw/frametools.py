@@ -601,7 +601,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'imshow_cmap','imshow_cmin','imshow_cmax',
              'contour_levels','contour_nlevels','contour_min','contour_max',
              'contour_colors','contour_cmap','contour_show',
-             'schlieren_cmap','schlieren_cmin schlieren_cmax',
+             'schlieren_cmap','schlieren_cmin', 'schlieren_cmax',
              'quiver_coarsening','quiver_var_x','quiver_var_y','quiver_key_show',
              'quiver_key_scale','quiver_key_label_x','quiver_key_label_y',
              'quiver_key_scale','quiver_key_units','quiver_key_kwargs']
