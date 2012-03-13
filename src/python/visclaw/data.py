@@ -339,7 +339,7 @@ class ClawPlotData(Data):
         from visclaw import gaugetools
         from StringIO import StringIO
     
-        fname = outdir + '/fort.gauge'
+        fname = os.path.join(outdir,'fort.gauge')
         if not os.path.isfile(fname):
             print "*** Gauge file not found: ",fname
             gauges = {}
@@ -946,7 +946,7 @@ class GaugeSolution(Data):
         gauge_attrs = 'gaugeno level t q x y t1 t2'.split()
 
         # Initialize the data object and read the data files
-        super(GaugeSolution,self).__init__(data_files,gauge_attrs)
+        super(GaugeSolution,self).__init__(gauge_attrs)
 
         # default values of attributes:
         # none.
