@@ -209,7 +209,7 @@ class ClawPlotData(Data):
 
         if self.refresh_frames or (not framesoln_dict.has_key(key)):
             try:
-                framesoln = solution.Solution(frameno,path=outdir,format=self.format)
+                framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             except:
                 print '*** Error reading frame in ClawPlotData.getframe'
                 raise
