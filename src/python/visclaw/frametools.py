@@ -1425,13 +1425,13 @@ def call_setplot(setplot, plotdata, verbose=True):
             # of the same attributes?
             print "Would you like to use visclaw.setplot_default() instead [Y/n]?"
             use_default = raw_input()
-            if "Y" in use_default.capitalize():
-                setplot_module = __import__('visclaw.setplot_default')
-                reload(setplot_module)
-                setplot = setplot_module.setplot   # should be a function
+            if (use_default == "") or ("Y" in use_default.capitalize()):
+                from visclaw import setplot_default
+                setplot = setplot_default.setplot
             else:
                 sys.exit(1)
             
+            plotdata = setplot(plotdata)
             return plotdata
         except:
             raise
