@@ -210,15 +210,15 @@ def plotframe(frameno, plotdata, verbose=False):
     
                     if patch.num_dim == 1:
                         # +++ until bug in solution.py fixed.
-                        #xc_centers = patch.p_centers[0]
-                        #xc_edges = patch.p_edges[0]
-                        current_data.x     = patch.c_centers[0]
+                        #xc_centers = patch.grid.p_centers[0]
+                        #xc_edges = patch.grid.p_edges[0]
+                        current_data.x     = patch.grid.c_centers[0]
                         current_data.dx    = patch.delta[0]
 
                     elif patch.num_dim == 2:
                         # +++ until bug in solution.py fixed.
-                        #xc_centers, yc_centers = patch.c_centers
-                        current_data.x, current_data.y = patch.c_centers
+                        #xc_centers, yc_centers = patch.grid.c_centers
+                        current_data.x, current_data.y = patch.grid.c_centers
                         current_data.dx = patch.delta[0]
                         current_data.dy = patch.delta[1]
 
@@ -433,7 +433,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if pp['plot_type'] == '1d':
         pp['plot_type'] = '1d_plot'  # '1d' is deprecated
     
-    elif pp['plot_type'] == '1d_gauge_trace':
+    if pp['plot_type'] == '1d_gauge_trace':
         gaugesoln = plotdata.getgauge(pp['gaugeno'])
         xc_centers = None
         xc_edges = None
@@ -621,7 +621,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     # Grid mapping:
 
-    xc_edges, yc_edges = patch.c_edges
+    xc_edges, yc_edges = patch.grid.c_edges
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
 
@@ -1270,14 +1270,14 @@ def var_minmax(plotdata,framenos,vars):
                     t = solution.t
                     #patch.compute_physical_coordinates()
                     if num_dim == 1:
-                        X_center = patch.p_centers[0]
+                        X_center = patch.grid.p_centers[0]
                         qvar = var(state.q, X_center, t)
                     elif num_dim == 2:
-                        X_center, Y_center = patch.p_centers
+                        X_center, Y_center = patch.grid.p_centers
                         qvar = var(state.q, X_center, \
                                    Y_center, t)
                     elif num_dim == 3:
-                        X_center, Y_center, Z_center = patch.p_centers
+                        X_center, Y_center, Z_center = patch.grid.p_centers
                         qvar = var(state.q, X_center, \
                                    Y_center, Z_center, t)
                 varmin[var][frameno] = min(varmin[var][frameno], qvar.min())
@@ -1495,8 +1495,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
     for stateno,state in enumerate(solution.states):
         patch = state.patch
 
-        X_center, Y_center = patch.p_centers
-        X_edge, Y_edge = patch.p_centers
+        X_center, Y_center = patch.grid.p_centers
+        X_edge, Y_edge = patch.grid.p_centers
     
         if isinstance(var_2d, int):
             q = state.q[var_2d,:,:]
@@ -1520,7 +1520,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
                                   # something set separately rather than
                                   # a framesoln
 
-        xref = patch.p_centers[0]
+        xref = patch.grid.p_centers[0]
         if isinstance(var_1d, int):
             qref = refstate.q[var_1d,:].T
         else:
