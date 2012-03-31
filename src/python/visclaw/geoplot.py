@@ -129,8 +129,8 @@ def topo(current_data):
    Surface eta is assumed to be output as 4th column of fort.q files.
    """
    q = current_data.q
-   h = q[:,:,0]
-   eta = q[:,:,3]
+   h = q[0,:,:]
+   eta = q[3,:,:]
    topo = eta - h
    return topo
 
@@ -141,18 +141,19 @@ def land(current_data):
    from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
-   h = q[:,:,0]
-   eta = q[:,:,3]
+   h = q[0,:,:]
+   eta = q[3,:,:]
    land = ma.masked_where(h>drytol, eta)
    return land
 
 def water(current_data):
    """Deprecated: use surface instead."""
+   raise DeprecationWarning("Deprecated function, use surface instead.")
    from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
-   h = q[:,:,0]
-   eta = q[:,:,3]
+   h = q[0,:,:]
+   eta = q[3,:,:]
    water = ma.masked_where(h<=drytol, eta)
    return water
 
@@ -163,42 +164,42 @@ def depth(current_data):
    from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
-   h = q[:,:,0]
+   h = q[0,:,:]
    depth = ma.masked_where(h<=drytol, h)
    return depth
 
 def surface(current_data):
-   """
-   Return a masked array containing the surface elevation only in wet cells.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
-   from numpy import ma
-   drytol = getattr(current_data.user, 'drytol', drytol_default)
-   q = current_data.q
-   h = q[:,:,0]
-   eta = q[:,:,3]
-   water = ma.masked_where(h<=drytol, eta)
-   return water
+    """
+    Return a masked array containing the surface elevation only in wet cells.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
+    from numpy import ma
+    drytol = getattr(current_data.user, 'drytol', drytol_default)
+    q = current_data.q
+    h = q[0,:,:]
+    eta = q[3,:,:]
+    water = ma.masked_where(h<=drytol, eta)
+    return water
 
 def surface_or_depth(current_data):
-   """
-   Return a masked array containing the surface elevation where the topo is 
-   below sea level or the water depth where the topo is above sea level.
-   Mask out dry cells.  Assumes sea level is at topo=0.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
-   from numpy import ma, where
-   drytol = getattr(current_data.user, 'drytol', drytol_default)
-   q = current_data.q
-   h = q[:,:,0]
-   eta = q[:,:,3]
-   topo = eta - h
-   surface = ma.masked_where(h<=drytol, eta)
-   depth = ma.masked_where(h<=drytol, h)
-   surface_or_depth = where(topo<0, surface, depth)
-   return surface_or_depth
+    """
+    Return a masked array containing the surface elevation where the topo is 
+    below sea level or the water depth where the topo is above sea level.
+    Mask out dry cells.  Assumes sea level is at topo=0.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
+    from numpy import ma, where
+    drytol = getattr(current_data.user, 'drytol', drytol_default)
+    q = current_data.q
+    h = q[0,:,:]
+    eta = q[3,:,:]
+    topo = eta - h
+    surface = ma.masked_where(h<=drytol, eta)
+    depth = ma.masked_where(h<=drytol, h)
+    surface_or_depth = where(topo<0, surface, depth)
+    return surface_or_depth
 
 
 class TopoPlotData(object):
