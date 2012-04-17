@@ -13,12 +13,13 @@ Specify output directory other than _output by adding the outdir to this line:
 """
 
 from pylab import *
-from pyclaw.plotters import geoplot, colormaps, plotpages
-from plottools import fix_long_tick_labels
+from visclaw import geoplot, colormaps, plotpages
+# Cannot find this!
+# from plottools import fix_long_tick_labels
 
 import os
 from numpy import ma
-from pyclaw.data import Data
+from clawutil.oldclawdata import Data
 
 
 class ClawPlotFGData(Data):
@@ -185,7 +186,7 @@ class ClawPlotFGData(Data):
         title('Eta on FG %s at time = %s' % (self.fgno,t_str))
         xlim((grid.xlow, grid.xhi))
         ylim((grid.ylow, grid.yhi,))
-        fix_long_tick_labels()        
+        # fix_long_tick_labels()        
         axis('tight')
         axis('scaled')
     
@@ -241,7 +242,7 @@ class ClawPlotFGData(Data):
             title("Inundated region for t <= %s" % t_str)
             xlim((grid.xlow, grid.xhi))
             ylim((grid.ylow, grid.yhi,))
-            fix_long_tick_labels()        
+            # fix_long_tick_labels()        
             axis('tight')
             axis('scaled')
             if self.save_png:
@@ -274,7 +275,7 @@ class ClawPlotFGData(Data):
                 title("Exposed seabed for t <= %s" % t_str)
             xlim((grid.xlow, grid.xhi))
             ylim((grid.ylow, grid.yhi,))
-            fix_long_tick_labels()        
+            # fix_long_tick_labels()        
             axis('tight')
             axis('scaled')
             if self.save_png:
