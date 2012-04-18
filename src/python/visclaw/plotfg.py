@@ -132,14 +132,14 @@ class ClawPlotFGData(Data):
         solution = Data()
         solution.t = t
         solution.ncols = d.shape[1]
-        solution.h = reshape(d[:,0], (grid.my,grid.mx))
-        solution.B = reshape(d[:,3], (grid.my,grid.mx))
-        solution.eta = reshape(d[:,4], (grid.my,grid.mx))
+        solution.h = reshape(d[0,:], (grid.my,grid.mx))
+        solution.B = reshape(d[3,:], (grid.my,grid.mx))
+        solution.eta = reshape(d[4,:], (grid.my,grid.mx))
         solution.surface = ma.masked_where(isnan(solution.eta),solution.eta)
         solution.land = ma.masked_where(solution.h>self.drytol,solution.B)
         solution.fg = empty((grid.my,grid.mx,solution.ncols), dtype=float)
         for col in range(solution.ncols):
-            solution.fg[:,:,col] = reshape(d[:,col],(grid.my,grid.mx))
+            solution.fg[col,:,:] = reshape(d[col,:],(grid.my,grid.mx))
         
         self.solutions[frameno] = solution
         return grid, solution
@@ -199,8 +199,8 @@ class ClawPlotFGData(Data):
         
         if solution.ncols > 5:
 
-            etamin = solution.fg[:,:,5]
-            etamax = solution.fg[:,:,6]
+            etamin = solution.fg[5,:,:]
+            etamax = solution.fg[6,:,:]
     
             etamax2 = where(solution.B<0, 1., etamax)
             
