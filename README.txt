@@ -1,1 +1,1 @@
-This repository will host the classic single-grid Clawpack code.
+This repository hosts VisClaw, the Clawpack visualization tools.

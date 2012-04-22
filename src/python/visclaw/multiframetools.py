@@ -127,7 +127,7 @@ def plot_multiframes(plotdata, verbose=False):
                     print "*** No frames found in plot_multiframes for "
                     print "*** plotitem named ",itemname
                     continue
-                else if plotitem.plot_type == '1d_xt':
+                elif plotitem.plot_type == '1d_xt':
                     plot_var = plotitem.plot_var
                     var_over_t = []
                     times = []
