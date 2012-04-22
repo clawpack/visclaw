@@ -34,7 +34,7 @@ except:
     print "problem importing pylab"
     sys.exit(1)
 
-from visclaw import data, frametools, gaugetools
+from clawpack.visclaw import data, frametools, gaugetools
 
 #rundata = data.ClawData('claw.data')
 
@@ -47,7 +47,7 @@ class Iplotclaw(cmd.Cmd):
 
     Usage:
     ------
-    >>> from visclaw.Iplotclaw import Iplotclaw 
+    >>> from clawpack.visclaw.Iplotclaw import Iplotclaw 
     >>> ip = Iplotclaw()             # new instantiation
     >>> ip.plotloop()                # to start looping
     PLOTCLAW > help                  # for list of available commands
@@ -66,7 +66,7 @@ class Iplotclaw(cmd.Cmd):
     Other arguments of Iplotclaw rarely need to be changed:
        completekey='tab', stdin=None, stdout=None
     """
-    from visclaw import frametools, data
+    from clawpack.visclaw import frametools, data
 
     # initialization:
     # ---------------
@@ -201,7 +201,7 @@ class Iplotclaw(cmd.Cmd):
     # next frame:
     # -----------
     def do_n(self, rest):
-        from visclaw import frametools, data
+        from clawpack.visclaw import frametools, data
         #print '    frameno = ',self.frameno
         self.frameno = self.frameno+1
 	self.current_data = frametools.plotframe(self.frameno, self.plotdata)
@@ -375,7 +375,7 @@ class Iplotclaw(cmd.Cmd):
     # print figure to a file:
     # -----------------------
     def do_print(self, rest):
-        #from visclaw import frametools
+        #from clawpack.visclaw import frametools
         fname = rest
         try:
             for figno in self.plotdata._fignos:
