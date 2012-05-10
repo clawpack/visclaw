@@ -869,6 +869,7 @@ class ClawPlotItem(ClawData):
             elif plot_type == '2d_patch':
                 self.add_attribute('max_density',None)
                 self.celledges_show = True
+                self.patchedges_show = True
                 
             elif plot_type == '2d_quiver':
                 self.add_attribute('quiver_var_x',None)
