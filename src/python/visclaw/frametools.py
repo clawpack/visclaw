@@ -34,7 +34,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
     """
 
-    from clawutil.clawdata import Data
+    from clawpack.clawutil.clawdata import Data
     if verbose:  print '    Plotting frame %s ... '  % frameno
 
     if plotdata.mode() == 'iplotclaw':
@@ -574,7 +574,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     import numpy as np
     from numpy import ma
-    from visclaw import colormaps
+    from clawpack.visclaw import colormaps
 
     plotdata = plotitem._plotdata
 
@@ -944,8 +944,8 @@ def printframes(plotdata=None, verbose=True):
     """
 
     import glob
-    from visclaw.data import ClawPlotData
-    from visclaw import plotpages
+    from clawpack.visclaw.data import ClawPlotData
+    from clawpack.visclaw import plotpages
 
 
 
@@ -1423,10 +1423,10 @@ def call_setplot(setplot, plotdata, verbose=True):
             # Not sure if this is the right place to be doing this, maybe 
             # this should go higher up than this routine so it can check all
             # of the same attributes?
-            print "Would you like to use visclaw.setplot_default() instead [Y/n]?"
+            print "Would you like to use clawpack.visclaw.setplot_default() instead [Y/n]?"
             use_default = raw_input()
             if (use_default == "") or ("Y" in use_default.capitalize()):
-                from visclaw import setplot_default
+                from clawpack.visclaw import setplot_default
                 setplot = setplot_default.setplot
             else:
                 sys.exit(1)

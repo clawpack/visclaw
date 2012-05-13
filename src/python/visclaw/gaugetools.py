@@ -8,9 +8,9 @@ import time
 import traceback
 
 
-from clawutil.clawdata import Data
-from visclaw import plotpages
-from visclaw.frametools import set_show
+from clawpack.clawutil.clawdata import Data
+from clawpack.visclaw import plotpages
+from clawpack.visclaw.frametools import set_show
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
@@ -369,7 +369,7 @@ def read_setgauges(datadir):
     """
     import os
     import numpy as np
-    from clawutil.clawdata import Data
+    from clawpack.clawutil.clawdata import Data
     from matplotlib.mlab import find
 
     setgauges = Data()
@@ -540,7 +540,7 @@ def printgauges(plotdata=None, verbose=True):
     """
 
     import glob
-    from visclaw.data import ClawPlotData
+    from clawpack.visclaw.data import ClawPlotData
 
 
 

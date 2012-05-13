@@ -35,8 +35,8 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',format='ascii'
         format specifies the format of the files output from Clawpack
     """
 
-    from visclaw.data import ClawPlotData
-    from visclaw import plotpages
+    from clawpack.visclaw.data import ClawPlotData
+    from clawpack.visclaw import plotpages
 
     plotdata = ClawPlotData()
     plotdata.outdir = outdir
