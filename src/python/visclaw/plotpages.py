@@ -1927,8 +1927,8 @@ def plotclaw_driver(plotdata, verbose=False):
 
     import glob, sys, os
     import numpy as np
-    from visclaw.data import ClawPlotData
-    from visclaw import frametools, gaugetools, plotpages
+    from clawpack.visclaw.data import ClawPlotData
+    from clawpack.visclaw import frametools, gaugetools, plotpages
 
     datadir = os.getcwd()  # assume data files in this directory
 
