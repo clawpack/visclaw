@@ -1460,7 +1460,7 @@ def plotclaw2html(plotdata):
                     except:
                         print "*** Problem executing makefig function"
                         print "    for otherfigure ",name
-                    raise
+                        raise
 
                 # Assume that makefig saves the file if needed, so removing the 
                 # following lines.  
