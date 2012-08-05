@@ -749,7 +749,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             # may suppress plotting at coarse levels
             exec(contourcmd)
 
-    elif pp['plot_type'] == '2d_edges':
+    elif pp['plot_type'] == '2d_patch':
         # plot only the patches, no data:
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
