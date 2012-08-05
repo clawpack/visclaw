@@ -13,13 +13,13 @@ Specify output directory other than _output by adding the outdir to this line:
 """
 
 from pylab import *
-from visclaw import geoplot, colormaps, plotpages
+from clawpack.visclaw import geoplot, colormaps, plotpages
 # Cannot find this!
 # from plottools import fix_long_tick_labels
 
 import os
 from numpy import ma
-from clawutil.oldclawdata import Data
+from clawpack.clawutil.oldclawdata import Data
 
 
 class ClawPlotFGData(Data):
