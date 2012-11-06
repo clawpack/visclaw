@@ -701,7 +701,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('fill_where',None)
 
             if plot_type == '1d_from_2d_data':
-                self.add_attribute('map2d_to_1d',None)
+                self.add_attribute('map_2d_to_1d',None)
 
         elif num_dim == 2:
 
