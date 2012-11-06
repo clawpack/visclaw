@@ -7,8 +7,10 @@ import string,re
 import time
 import traceback
 
+import numpy as np
 
-from clawpack.clawutil.clawdata import Data
+import clawpack.clawutil.clawdata as clawdata
+
 from clawpack.visclaw import plotpages
 from clawpack.visclaw.frametools import set_show
 
@@ -43,7 +45,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if verbose:  
         gaugesoln = plotdata.getgauge(gaugeno)
         print '    Plotting gauge %s  at x = %g, y = %g ... '  \
-                 % (gaugeno, gaugesoln.x, gaugesoln.y)
+                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
 
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
@@ -65,11 +67,11 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     # initialize current_data containing data that will be passed
     # to beforegauge, aftergauge, afteraxes commands
-    current_data = Data()
-    current_data.user = Data()   # for user specified attributes
-                                 # to avoid potential conflicts
-    current_data.plotdata = plotdata
-    current_data.gaugeno = gaugeno
+    current_data = clawdata.ClawData()
+    current_data.add_attribute("user",{})   # for user specified attributes
+                                           # to avoid potential conflicts
+    current_data.add_attribute('plotdata',plotdata)
+    current_data.add_attribute('gaugeno',gaugeno)
 
     # call beforegauge if present, which might define additional 
     # attributes in current_data or otherwise set up plotting for this
@@ -96,9 +98,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
  
     if plotdata._mode == 'iplotclaw':
         gaugesoln = plotdata.getgauge(gaugeno)
-        #import pdb; pdb.set_trace()
         print '    Plotting Gauge %s  at x = %g, y = %g ... '  \
-                 % (gaugeno, gaugesoln.x, gaugesoln.y)
+                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -167,26 +168,18 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             for itemname in plotaxes._itemnames:
                 
                 plotitem = plotaxes.plotitem_dict[itemname]
-                try:
-                    outdir = plotitem.outdir
-                    if outdir is None:
-                        outdir = plotdata.outdir
-                    gaugesoln = plotdata.getgauge(gaugeno, outdir)
-                except:
-                    print '*** Cannot find gauge number ',gaugeno
-                    print '*** looking in directory ', outdir
-                    print '*** cwd = ',os.getcwd()
-                    return None
+                outdir = plotitem.outdir
+                if outdir is None:
+                    outdir = plotdata.outdir
+                gaugesoln = plotdata.getgauge(gaugeno, outdir)
 
-                #import pdb; pdb.set_trace()
-                current_data.gaugesoln = gaugesoln
-                current_data.q = gaugesoln.q
-                current_data.t = gaugesoln.t
+                current_data.add_attribute('gaugesoln',gaugesoln)
+                current_data.add_attribute('q',gaugesoln.q)
+                current_data.add_attribute('t',gaugesoln.t)
 
                 if plotitem._show:
                     try:
-                        output = plotgauge1(gaugesoln,plotitem,\
-                            current_data)
+                        output = plotgauge1(gaugesoln,plotitem,current_data)
                         if output: current_data = output
                         if verbose:  
                                 print '      Plotted  plotitem ', itemname
@@ -200,11 +193,6 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
         for itemname in plotaxes._itemnames:
             plotitem = plotaxes.plotitem_dict[itemname]
-            if plotitem.afteritem:
-                print "*** ClawPlotItem.afteritem is deprecated"
-                print "*** use ClawPlotAxes.afteraxes "
-                print "*** or  ClawPlotItem.afterpatch instead"
-
 
         pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
 
@@ -218,8 +206,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             else:
                 # assume it's a function
                 try:
-                    current_data.plotaxes = plotaxes
-                    current_data.plotfigure = plotaxes._plotfigure
+                    current_data.add_attribute("plotaxes",plotaxes)
+                    current_data.add_attribute("plotfigure",plotaxes._plotfigure)
                     output = afteraxes(current_data)
                     if output: current_data = output
                 except:
@@ -325,7 +313,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     t = gaugesoln.t
     if type(plot_var) is int:
         #import pdb pdb.set_trace()
-        var = gaugesoln.q[:,plot_var]
+        var = gaugesoln.q[plot_var,:]
     else:
         try:
             var = plot_var(gaugesoln)
@@ -339,7 +327,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     pylab.hold(True)
 
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
-                 gaugesoln.gaugeno))
+                 gaugesoln.number))
 
     pylab.xlabel("time")
 
@@ -347,9 +335,10 @@ def plotgauge1(gaugesoln, plotitem, current_data):
         if color:
             kwargs['color'] = color
 
-        plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)"  \
-                      % plotstyle
-        exec(plotcommand)
+        pobj = pylab.plot(t,var,plotstyle,**kwargs)
+        # plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)"  \
+        #               % plotstyle
+        # exec(plotcommand)
 
 
     elif plot_type == '1d_empty':
@@ -367,78 +356,9 @@ def read_setgauges(datadir):
     """
     Read the info from setgauges.data.
     """
-    import os
-    import numpy as np
-    from clawpack.clawutil.clawdata import Data
-    from matplotlib.mlab import find
 
-    setgauges = Data()
-
-    # default values if no gauges found:
-    setgauges.numgauges = 0
-    setgauges.gaugenos = []
-    setgauges.x = {}
-    setgauges.y = {}
-    setgauges.t1 = {}
-    setgauges.t2 = {}
-
-    fname = os.path.join(datadir, 'setgauges.data')
-    if not os.path.isfile(fname):
-        #print "*** Warning in read_setgauges: missing file ",fname
-        return setgauges
-
-    sgfile = open(fname,'r')
-    lines = sgfile.readlines()
-    sgfile.close()
-
-    lineno = 0
-    ignore_line = True
-    while ignore_line:
-        line = lines[lineno] + "#"
-        #print "+++ lineno = %s, line = %s" % (lineno,line)
-        if line.split()[0][0]=="#":
-            lineno = lineno+1
-        else:
-            ignore_line = False
-
-    try:
-        numgauges = int(line.split()[0])
-    except:
-        print "*** error setting numgauges"
-        return
-
-    if numgauges==0:
-        return setgauges
-        
-    #print '+++ ignoring %s lines, numgauges = %s' %(lineno, numgauges)
-    try:
-        sgno, x, y, t1, t2 = np.loadtxt(fname, unpack=True, skiprows=lineno+1, \
-                                usecols=range(5))
-        if numgauges==1:
-            # loadtxt returns numbers rather than arrays in this case:
-            sgno = [sgno]; x = [x]; y = [y]; t1 = [t1]; t2 = [t2]
-
-    except:
-        print "*** problem reading gauges from setgauges.data"
-        return setgauges
-
-    sgno = np.array(sgno, dtype=int)  # convert to int
-    setgauges.gaugenos = sgno
-    setgauges.numgauges = numgauges
-
-    for n in sgno:
-        nn = find(sgno==n)
-        if len(nn) > 1:
-            print "*** Warning: found more than one gauge numbered ",n
-
-        if len(nn) == 0:
-            print "*** Error: didn't find gauge number %s in %s" % (n,fname)
-        else:
-            nn = nn[0]
-            setgauges.x[n] = x[nn]
-            setgauges.y[n] = y[nn]
-            setgauges.t1[n] = t1[nn]
-            setgauges.t2[n] = t2[nn]
+    setgauges = clawdata.GaugeData()
+    setgauges.read(datadir)
 
     return setgauges
 
@@ -464,24 +384,22 @@ def plot_gauge_locations(plotdata, gaugenos='all', \
     except:
         return
 
-    if setgauges.numgauges == 0:
+    if len(setgauges.gauges) == 0:
         print "*** plot_gauge_locations: No gauges specified in setgauges.data"
         return
 
     if gaugenos=='all':
-        gaugenos = setgauges.gaugenos
+        gaugenos = setgauges.gauge_numbers
 
 
-    for n in gaugenos:
+    for gauge in setgauges.gauges:
         try:
-            xn = setgauges.x[n]
-            yn = setgauges.y[n]
-            #print "Gauge %s:  x = %g, y = %g" % (n,xn,yn)
+            xn,yn = gauge.location
             plot([xn], [yn], format_string, markersize=markersize)
             if add_labels: 
                 xn = xn + xoffset
                 yn = yn + yoffset
-                text(xn,yn,'  %s' % n, fontsize=fontsize)
+                text(xn,yn,'  %s' % gauge.number, fontsize=fontsize)
         except:
             print "*** plot_gauge_locations: warning: did not find x,y data for gauge ",n
 

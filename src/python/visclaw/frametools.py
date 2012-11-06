@@ -21,6 +21,8 @@ try:
 except:
     print "*** Error: problem importing pylab"
 
+import clawpack.clawutil.clawdata as clawdata
+
 
 #==============================================================================
 def plotframe(frameno, plotdata, verbose=False):
@@ -34,7 +36,6 @@ def plotframe(frameno, plotdata, verbose=False):
 
     """
 
-    from clawpack.clawutil.clawdata import Data
     if verbose:  print '    Plotting frame %s ... '  % frameno
 
     if plotdata.mode() == 'iplotclaw':
@@ -64,12 +65,12 @@ def plotframe(frameno, plotdata, verbose=False):
 
     # initialize current_data containing data that will be passed
     # to afterframe, afteraxes, afterpatch commands
-    current_data = Data()
-    current_data.user = Data()   # for user specified attributes
-                                 # to avoid potential conflicts
-    current_data.plotdata = plotdata
-    current_data.frameno = frameno
-    current_data.t = t
+    current_data = clawdata.ClawData()
+    current_data.add_attribute('user',{})   # for user specified attributes
+                                            # to avoid potential conflicts
+    current_data.add_attribute('plotdata',plotdata)
+    current_data.add_attribute('frameno',frameno)
+    current_data.add_attribute('t',t)
 
 
     # call beforeframe if present, which might define additional 
@@ -190,7 +191,7 @@ def plotframe(frameno, plotdata, verbose=False):
                     print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
                     print '*** t = %g for outdir = %s' % (framesoln.t,outdir)
 
-                current_data.framesoln = framesoln
+                current_data.add_attribute('framesoln',framesoln)
 
                 #print "+++ Looping over patches in outdir = ",outdir
 
@@ -202,42 +203,35 @@ def plotframe(frameno, plotdata, verbose=False):
                     state = framesoln.states[stateno]
                     patch = state.patch
 
-                    current_data.patch = patch
-                    current_data.q = state.q
-                    current_data.aux = state.aux
-                    current_data.xlower = patch.dimensions[0].lower
-                    current_data.xupper = patch.dimensions[0].upper
-    
-                    if patch.num_dim == 1:
-                        # +++ until bug in solution.py fixed.
-                        #xc_centers = patch.grid.p_centers[0]
-                        #xc_edges = patch.grid.p_edges[0]
-                        current_data.x     = patch.grid.c_centers[0]
-                        current_data.dx    = patch.delta[0]
+                    current_data.add_attribute('patch',patch)
+                    current_data.add_attribute('q',state.q)
+                    current_data.add_attribute('var',None)
+                    current_data.add_attribute('aux',state.aux)
+                    current_data.add_attribute('xlower',patch.dimensions[0].lower)
+                    current_data.add_attribute('xupper',patch.dimensions[0].upper)
+                    
+                    current_data.add_attribute("x",patch.grid.p_centers[0])
+                    current_data.add_attribute("dx",patch.delta[0])
 
-                    elif patch.num_dim == 2:
-                        # +++ until bug in solution.py fixed.
-                        #xc_centers, yc_centers = patch.grid.c_centers
-                        current_data.x, current_data.y = patch.grid.c_centers
-                        current_data.dx = patch.delta[0]
-                        current_data.dy = patch.delta[1]
+                    if patch.num_dim == 2:
+                        current_data.add_attribute('y',patch.grid.p_centers[1])
+                        current_data.add_attribute('dy',patch.delta[1])
 
-                 # loop over items:
+                    current_data.add_attribute('plotaxes',None)
+                    current_data.add_attribute('plotfigure',None)
+
+                    # loop over items:
                     # ----------------
     
                     for itemname in plotaxes._itemnames:
                         
                         plotitem = plotaxes.plotitem_dict[itemname]
-                        #print '+++ %s: %s' % (itemname,plotitem.outdir)
 
                         item_outdir = plotitem.outdir
                         if not plotitem.outdir:
                             item_outdir = plotdata.outdir
                         if item_outdir != outdir:
                             # skip to next item
-                            #print '+++ skipping, plotitem.outdir=',item_outdir
-                            #print '+++           plotdata.outdir=',plotdata.outdir
-                            #print '+++                    outdir=',outdir
                             continue
                             
 
@@ -585,7 +579,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
-    current_data.level = level #2d only
+    current_data.add_attribute('level',level) #2d only
 
     t = framesoln.t
 
