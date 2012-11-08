@@ -449,7 +449,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         var  = get_var(state,pp['plot_var'],current_data)
         var2 = get_var(state,pp['plot_var2'],current_data)
         current_data.var = var
-	current_data.var2 = var2
+        current_data.add_attribute('var2',var2)
 
     # Grid mapping:
 

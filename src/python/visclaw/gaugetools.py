@@ -358,7 +358,11 @@ def read_setgauges(datadir):
     """
 
     setgauges = clawdata.GaugeData()
-    setgauges.read(datadir)
+    try:
+        setgauges.read(datadir)
+    except IOError as e:
+        # No gauges.data file was found, ignore this exception
+        pass
 
     return setgauges
 
