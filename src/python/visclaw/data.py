@@ -289,7 +289,6 @@ class ClawPlotData(clawdata.ClawData):
             except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
                 print '*** outdir = ', outdir
-                print '*** thisdir = ', thisdir
                 raise e
 
             self.gaugesoln_dict[key] = gauge
