@@ -8,13 +8,13 @@ import os
 import copy
 import re
 import logging
-from clawpack.clawutil.clawdata import Data, ClawData
+import clawpack.clawutil.clawdata as clawdata
 
 
 # ============================================================================
 #  Subclass ClawPlotData containing data for plotting results
 # ============================================================================
-class ClawPlotData(Data):
+class ClawPlotData(clawdata.ClawData):
     """ClawPlotData class
     
     Data subclass containing plot data.
@@ -22,114 +22,106 @@ class ClawPlotData(Data):
     """
 
     # ========== Initialization routine ======================================
-    def __init__(self, data_files=[], controller=None):
+    def __init__(self, controller=None):
         """Initialize a PlotData object
         
-        Accepts a list of data_files to be read into and instantiate into one
-        ClawPlotData object.  An empty object can be created by not passing 
-        anything in for the data_file_list
         """
-        plot_attrs = ['rundir','plotdir','outdir','overwrite','plotter',
-                           'msgfile','printfig_format','afterframe',
-                           'beforeframe','mapc2p',
-                           'html_framenos','html_fignos','html_fignames',
-                           'num_dim','clear_figs', 'setplot', 'eagle',
-                           'plotitem_dict', 'html_movies', 'params']
 
         # Initialize the data object and read the data files
-        super(ClawPlotData,self).__init__(plot_attrs)
+        super(ClawPlotData,self).__init__()
 
         # default values of attributes:
 
         if controller:
             controller.plotdata = self
             # inherit some values from controller
-            self.rundir = copy.copy(controller.rundir)
-            self.outdir = copy.copy(controller.outdir)
+            self.add_attribute('rundir',copy.copy(controller.rundir))
+            self.add_attribute('outdir',copy.copy(controller.outdir))
         else:
-            self.rundir = os.getcwd()     # uses *.data from rundir
-            self.outdir = os.getcwd()     # where to find fort.* files
+            self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
+            self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
 
-        self.format = 'ascii'
+        self.add_attribute('format','ascii')
 
-        self.plotdir = os.getcwd()      # directory for plots *.png, *.html
-        self.overwrite = True           # ok to overwrite old plotdir?
-        self.plotter = 'matplotlib'     # backend for plots
-        self.msgfile = ''               # where to write error messages
-        self.verbose = True             # verbose output?
+        self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
+        self.add_attribute('overwrite',True)           # ok to overwrite old plotdir?
+        self.add_attribute('plotter','matplotlib')     # backend for plots
+        self.add_attribute('msgfile','')               # where to write error messages
+        self.add_attribute('verbose',True)             # verbose output?
 
-        self.ion = False                # call ion() or ioff()?
+        self.add_attribute('ion',False)                # call ion() or ioff()?
 
-        self.user = Data()              # for user to pass things into
-                                        # afterframe, for example
-					# Deprecated.
+        self.add_attribute('printfigs',True)
+        self.add_attribute('print_format','png')     
+        self.add_attribute('print_framenos','all')  # which frames to plot
+        self.add_attribute('print_gaugenos','all')  # which gauges to plot
+        self.add_attribute('print_fignos','all')    # which figures to plot each frame
 
-        self.printfigs = True 
-        self.print_format = 'png'     
-        self.print_framenos = 'all'  # which frames to plot
-        self.print_gaugenos = 'all'  # which gauges to plot
-        self.print_fignos = 'all'    # which figures to plot each frame
+        self.add_attribute('iplotclaw_fignos','all')    # which figures to plot interactively
 
-        self.iplotclaw_fignos = 'all'    # which figures to plot interactively
+        self.add_attribute('latex',True)                # make latex files for figures
+        self.add_attribute('latex_fname','plots')       # name of latex file
+        self.add_attribute('latex_title','Clawpack Results')       
+        self.add_attribute('latex_framesperpage','all') # number of frames on each page
+        self.add_attribute('latex_framesperline',2)     # number of frames on each line
+        self.add_attribute('latex_figsperline','all')   # number of figures on each line
+        self.add_attribute('latex_makepdf',False)       # run pdflatex on latex file
 
-        self.latex = True                # make latex files for figures
-        self.latex_fname = 'plots'       # name of latex file
-        self.latex_title = 'Clawpack Results'       
-        self.latex_framesperpage = 'all' # number of frames on each page
-        self.latex_framesperline = 2     # number of frames on each line
-        self.latex_figsperline = 'all'   # number of figures on each line
-        self.latex_makepdf = False       # run pdflatex on latex file
+        self.add_attribute('html',True)                # make html files for figures
+        self.add_attribute('html_index_fname','_PlotIndex.html')   # name of html index file
+        self.add_attribute('html_index_title','Plot Index')   # title at top of index page
+        self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
+        self.add_attribute('html_movie',True)          # make html with java script for movie
+        self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
-        self.html = True                # make html files for figures
-        self.html_index_fname = '_PlotIndex.html'   # name of html index file
-        self.html_index_title = 'Plot Index'   # title at top of index page
-        self.html_homelink = None       # link to here from top of _PlotIndex.html
-        self.html_movie = True          # make html with java script for movie
-        self.html_eagle = False         # use EagleClaw titles on html pages?
+        self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
-        self.gif_movie = False          # make animated gif movie of frames
+        self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
-
-    #    self.clear_figs = True          # give clf() command in each figure
-                                        # before plotting each frame
-
-        self.setplot = False            # Execute setplot.py in plot routine
-    #    self.setplot_caller = None      # Set before calling setplot
-
-        self.mapc2p = None              # function to map computational
-	                                # points to physical
+        self.add_attribute('mapc2p',None)              # function to map computational
+	                                    # points to physical
 
 
-        self.beforeframe = None         # function called before all plots 
+        self.add_attribute('beforeframe',None)         # function called before all plots 
                                         # in each frame are done
-        self.afterframe = None          # function called after all plots 
+        self.add_attribute('afterframe',None)          # function called after all plots 
                                         # in each frame are done
 
-        self.plotfigure_dict = {}  
-        self.otherfigure_dict = {}  
+        self.add_attribute('plotfigure_dict',{})  
+        self.add_attribute('otherfigure_dict',{})  
 
-        self.framesoln_dict = {}        # dictionary for holding framesoln
+        self.add_attribute('framesoln_dict',{})        # dictionary for holding framesoln
                                         # objects associated with plots
 
-        self.gaugesoln_dict = {}        # dictionary for holding gaugesoln
+        self.add_attribute('gaugesoln_dict',{})        # dictionary for holding gaugesoln
                                         # objects associated with plots
                                         
-        self.save_frames = True         # True ==> Keep a copy of any frame
+        self.add_attribute('save_frames',True)         # True ==> Keep a copy of any frame
                                         # read in.  False ==> Clear the frame
                                         # solution dictionary before adding
                                         # another solution
 
-        self.save_figures = True        # True ==> Keep a copy of and figure
+        self.add_attribute('save_figures',True)        # True ==> Keep a copy of and figure
                                         # created.  False ==> Clear the 
                                         # figure dictionary before adding
                                         # another solution
 
-        self.refresh_frames = False     # False ==> don't re-read framesoln if 
+        self.add_attribute('refresh_frames',False)     # False ==> don't re-read framesoln if 
                                         # already in framesoln_dict
 
-        self.refresh_gauges = False     # False ==> don't re-read gaugesoln if 
+        self.add_attribute('refresh_gauges',False)     # False ==> don't re-read gaugesoln if 
                                         # already in gaugesoln_dict
 
+        self.add_attribute('timeframes_framenos',None)
+        self.add_attribute('timeframes_frametimes',None)
+        self.add_attribute('timeframes_fignos',None)
+        self.add_attribute('timeframes_fignames',None)
+
+
+
+        self.add_attribute('gauges_gaugenos',None)
+        self.add_attribute('gauges_fignos',None)
+        self.add_attribute('gauges_fignames',None)
 
         self._next_FIG = 1000
         self._fignames = []
@@ -138,12 +130,6 @@ class ClawPlotData(Data):
         self._figname_from_num = {}
         self._otherfignames = []
 
-        #if data_file_list is not None:
-        if len(data_files) > 0:
-            # values in data files may overwrite some default values
-            # or set parameter values in params dictionary
-            for data_file in data_files:
-                self.read(data_file)
 
     def new_plotfigure(self, name=None, figno=None, type='each_frame'):
         """
@@ -279,7 +265,7 @@ class ClawPlotData(Data):
     def getgauge(self, gaugeno, outdir=None):
         """
         ClawPlotData.getgauge:
-        Return an object of class GaugeSolution containing the solution
+        Return an object of class clawdata.Gauge containing the solution
         for gauge number gaugeno.
 
         If self.refresh_gauges == True then this gauge is read from the
@@ -287,111 +273,31 @@ class ClawPlotData(Data):
         the dictionary self.gaugesoln_dict has no key gaugeno.  If it does, the
         gauge has previously been read and the dictionary value is returned.
         """
-
-        gaugesoln_dict = self.gaugesoln_dict
-
+        # Construct path to file
         if outdir is None:
             outdir = self.outdir
         outdir = os.path.abspath(outdir)
+        
         key = (gaugeno, outdir)
 
-        if self.refresh_gauges or (not gaugesoln_dict.has_key(key)):
+        # Reread gauge data file
+        if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
             try:
-                gauges = self.read_gauges(outdir)
-            except:
+                gauge = clawdata.Gauge(gaugeno)
+                gauge.read(outdir)
+                # self.read_gauges(outdir)
+            except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
                 print '*** outdir = ', outdir
-                print '*** thisdir = ', thisdir
-                raise
-                return
+                raise e
 
-            try:
-                for (k,v) in gauges.iteritems():
-                    gaugesoln_dict[(k, outdir)] = v
-            except:
-                raise("*** Problem setting gaugesoln_dict in getgauge")
+            self.gaugesoln_dict[key] = gauge
 
-            #print '    Read all gauge data from %s/fort.gauge' % outdir
+        else:
+            # Attempt to fetch gauge requested
+            gauge = self.gaugesoln_dict[key]
 
-        try:
-            gaugesoln = gaugesoln_dict[key]
-        except:
-            print "*** Cannot find key = ",key
-            print "***   in gaugesoln_dict = ",gaugesoln_dict
-            raise("*** Problem getting gaugesoln in getgauge")
-                
-
-        return gaugesoln
-
-    def read_gauges(self, outdir='.'):
-        """
-        Read the gauge output in file fort.gauge in the directory specified by
-        outdir.
-    
-        Returns a dictionary *gauges* with an entry for each gauge number.
-        Each entry is an object of class GaugeSolution
-    
-        """
-    
-        import os
-        import numpy as np
-        from matplotlib.mlab import find
-        from clawpack.visclaw import gaugetools
-        from StringIO import StringIO
-    
-        fname = os.path.join(outdir,'fort.gauge')
-        if not os.path.isfile(fname):
-            print "*** Gauge file not found: ",fname
-            gauges = {}
-
-        print '    Reading gauge data from ',fname
-        try:
-            gdata = np.loadtxt(fname)
-        except:
-            try:
-                print "*** Warning: incomplete last line, computation may "
-                print "*** still be in progress "
-                gdata_lines = open(fname,'r').read()
-                gdata_end = gdata_lines.rfind('\n',-200,-1)
-                gdata_file = StringIO(gdata_lines[:gdata_end+1])
-                gdata = np.loadtxt(gdata_file)
-            except:
-                print "*** Problem reading file ",fname
-                #print "*** Possibly an incomplete last line if computation is still in progress"
-                raise Exception("Problem reading fort.gauge")
-                gauges = {}
-
-        gaugeno = np.array(gdata[:,0], dtype=int)
-        level = np.array(gdata[:,1], dtype=int)
-        t = gdata[:,2]
-        q = gdata[:,3:]  # all remaining columns are stored in q
-    
-        
-        setgauges = gaugetools.read_setgauges(datadir=outdir)
-    
-        gauges = {}
-        gaugenos = set(gaugeno)   # reduces to unique elements
-        for n in gaugenos:
-            n = int(n)
-            gauges[n] = GaugeSolution()
-            gauges[n].gaugeno = n
-            nn = find(gaugeno==n)
-            gauges[n].level = level[nn]
-            gauges[n].t = t[nn]
-            gauges[n].q = q[nn,:]
-    
-            # Locations:
-            try:
-                gauges[n].x = setgauges.x[n]
-                gauges[n].y = setgauges.y[n]
-                gauges[n].t1 = setgauges.t1[n]
-                gauges[n].t2 = setgauges.t2[n]
-            except:
-                print "*** Could not extract gauge locations for gaugeno = ",n
-    
-        print '    Found gauge numbers: ',gauges.keys()
-        return gauges
-    
+        return gauge
 
 
     def plotframe(self, frameno):
@@ -403,6 +309,7 @@ class ClawPlotData(Data):
         #frametools.printframes(self, verbose)
         print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
         print "*** for added capabilities."
+        raise DeprecationWarning("The method 'printframes' is deprecated.")
         
     def fignos(self):
         """
@@ -433,8 +340,8 @@ class ClawPlotData(Data):
         try:
             plotfigure = self.plotfigure_dict[figname]
         except:
-            print '*** Error accessing plotfigure_dict[%s]' % figname
-            return None
+            raise Exception('Error accessing plotfigure_dict[%s]' % figname)
+
         return plotfigure
 
     def getaxes(self,axesname,figname=None):
@@ -586,7 +493,7 @@ class ClawPlotData(Data):
 # ============================================================================
 #  Subclass ClawPlotFigure containing data for plotting a figure
 # ============================================================================
-class ClawPlotFigure(Data):
+class ClawPlotFigure(clawdata.ClawData):
     """
     
     Data subclass containing plot data needed to plot a single figure.
@@ -597,28 +504,24 @@ class ClawPlotFigure(Data):
     # ========================================================================
     #  Initialization routine
     # ========================================================================
-    def __init__(self, name, figno, type, plotdata):
+    def __init__(self, name, figno, fig_type, plotdata):
         """
         Initialize a ClawPlotFigure object
         """
 
-        attributes = ['name','figno','_plotdata','clf','plotaxes_dict', \
-                           '_axesnames','show','_show','kwargs','_handle',\
-			   '_type']
-
-        super(ClawPlotFigure, self).__init__(attributes = attributes)    
+        super(ClawPlotFigure, self).__init__()    
 
         self._plotdata = plotdata           # parent ClawPlotData object
-        self.name = name
-        self.figno = figno
-        self.kwargs = {}
-        self.clf_each_frame = True
-        self.clf_each_gauge = True
+        self.add_attribute('name',name)
+        self.add_attribute('figno',figno)
+        self.add_attribute('kwargs',{})
+        self.add_attribute('clf_each_frame',True)
+        self.add_attribute('clf_each_gauge',True)
         self._axesnames = []
-        self.show = True
+        self.add_attribute('show',True)
         self._show = True
-        self.plotaxes_dict  = {}
-        self.type = type   # = 'each_frame' or 'each_run' or 'each_gauge'
+        self.add_attribute('plotaxes_dict', {})
+        self.add_attribute('type',fig_type)   # = 'each_frame' or 'each_run' or 'each_gauge'
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
@@ -653,7 +556,7 @@ class ClawPlotFigure(Data):
 # ============================================================================
 #  Subclass ClawPlotAxes containing data for plotting axes within a figure
 # ============================================================================
-class ClawPlotAxes(Data):
+class ClawPlotAxes(clawdata.ClawData):
     """
     
     Data subclass containing plot data needed to plot a single axes.
@@ -669,34 +572,28 @@ class ClawPlotAxes(Data):
         Initialize a ClawPlotAxes object
         """
 
-        attributes = ['name','type','figno','plotdata','plotfigure','title',\
-                           'axescmd','xlimits','ylimits','plotitem_dict', 'user',\
-                           'afteraxes','_itemnames','show','_show','_handle', \
-                           '_plotfigure','_plotdata', 'scaled']
-        super(ClawPlotAxes, self).__init__(attributes = attributes)    
+        super(ClawPlotAxes, self).__init__()    
 
         self._plotfigure = plotfigure                   # figure this item is on
         self._plotdata = plotfigure._plotdata           # parent ClawPlotData object
 
-        self.name = name
-        self.title = name
-        self.title_with_t = True        # creates title of form 'title at time t = ...'
-        self.axescmd = 'subplot(1,1,1)'
-        self.user = Data()          # for user to pass things into
-                                        # afteraxes, for example
-					# Deprecated.
-        self.afteraxes = None
-        self.xlimits = None
-        self.ylimits = None
-        self.scaled = False              # true so x- and y-axis scaled same
-        self.plotitem_dict  = {}
-        self.type = 'each_frame'
+        self.add_attribute('name',name)
+        self.add_attribute('title',name)
+        self.add_attribute('title_with_t',True)  # creates title of form 'title at time t = ...'
+        self.add_attribute('axescmd','subplot(1,1,1)')
+
+        self.add_attribute('afteraxes',None)
+        self.add_attribute('xlimits',None)
+        self.add_attribute('ylimits',None)
+        self.add_attribute('scaled',False)   # true so x- and y-axis scaled same
+        self.add_attribute('plotitem_dict', {})
+        self.add_attribute('type','each_frame')
         self._itemnames = []
-        self.show = True
+        self.add_attribute('show',True)
         self._show = True
         self._handle = None
         self._next_ITEM = 0
-        self.figno = self._plotfigure.figno
+        self.add_attribute('figno', self._plotfigure.figno)
 
     def new_plotitem(self, name=None, plot_type=None):
         # Create a new entry in self.plotitem_dict
@@ -729,7 +626,7 @@ class ClawPlotAxes(Data):
 # ============================================================================
 #  Subclass ClawPlotItem containing data for plotting a single object
 # ============================================================================
-class ClawPlotItem(ClawData):
+class ClawPlotItem(clawdata.ClawData):
     """
     
     Data subclass containing plot data needed to plot a single object.
@@ -744,17 +641,8 @@ class ClawPlotItem(ClawData):
         """
         Initialize a ClawPlotItem object
         """
-        attributes = ['num_dim','outdir','refresh_frames',\
-                           'plot_var','plot_var_title', \
-                           'MappedGrid', 'mapc2p', \
-                           'figno', 'handle', 'params', \
-                           'afterpatch','afteritem','framesoln_dict', \
-                           '_pobjs','name','plot_type','plot_show','user', \
-                           'map_2d_to_1d','show','plotstyle','color', \
-                           'markersize','MappedPatch', \
-                           'contour_colors']
 
-        super(ClawPlotItem, self).__init__(attributes = attributes)    
+        super(ClawPlotItem, self).__init__()    
 
 
         self._plotaxes = plotaxes                       # axes this item is on
@@ -766,38 +654,36 @@ class ClawPlotItem(ClawData):
         except:
             print '*** Error: could not determine num_dim from plot_type = ',plot_type
 
-        self.num_dim = num_dim
-        self.name = name
-        self.figno = plotaxes.figno
+        self.add_attribute('num_dim',num_dim)
+        self.add_attribute('name',name)
+        self.add_attribute('figno',plotaxes.figno)
 
-        self.outdir = None              # indicates data comes from 
+        self.add_attribute('outdir',None)              # indicates data comes from 
                                         #   self._plotdata.outdir
 
-        self.plot_type = plot_type
-        self.plot_var = 0
-        self.plot_show = True
+        self.add_attribute('plot_type',plot_type)
+        self.add_attribute('plot_var',0)
+        self.add_attribute('plot_show',True)
 
-        self.MappedGrid = None          # False to plot on comput. patch even
+        self.add_attribute('MappedGrid',None)          # False to plot on comput. patch even
                                         # if _plotdata.mapc2p is not None.
 
-        self.mapc2p = None              # function to map computational
+        self.add_attribute('mapc2p',None)              # function to map computational
 	                                # points to physical (over-rides
 	                                # plotdata.mapc2p if set for item
 
 
-        self.afterpatch = None           # function called after each patch is
+        self.add_attribute('afterpatch',None)           # function called after each patch is
                                         # plotted within each single plotitem.
-        self.afteritem = None           # function called after the item is
+        self.add_attribute('afteritem',None)           # function called after the item is
                                         # plotted for each frame
 
-        self.user = Data()              # for user to pass things into
-                                        # afterpatch, for example
-                                        # Deprecated.
-
-        self.show = True                # False => suppress showing this item
+        self.add_attribute("show",True)                # False => suppress showing this item
         self._show = True               # Internal
 
         self._current_pobj = None
+
+        self.add_attribute('params',{})  # dictionary to hold optional parameters
 
 
         if num_dim == 1:
@@ -814,7 +700,7 @@ class ClawPlotItem(ClawData):
                 self.add_attribute('fill_where',None)
 
             if plot_type == '1d_from_2d_data':
-                self.add_attribute('map2d_to_1d',None)
+                self.add_attribute('map_2d_to_1d',None)
 
         elif num_dim == 2:
 
@@ -890,12 +776,10 @@ class ClawPlotItem(ClawData):
                  print '*** Warning 2d plot type %s not recognized' % plot_type
 
         elif num_dim == 3:
-            print '*** Warning- ClawPlotItem not yet set up for num_dim = 3'
+            raise NotImplementedError('ClawPlotItem not yet set up for num_dim = 3')
     
         else:
-            print '*** Warning- Unrecognized plot_type in ClawPlotItem'
-
-        self.params = {}  # dictionary to hold optional parameters
+            raise Warning('Unrecognized plot_type in ClawPlotItem')
         
 
     def getframe(self,frameno):
@@ -936,27 +820,10 @@ class ClawPlotItem(ClawData):
         return gaugesoln
 
 
-class GaugeSolution(Data):
-    """
-    Holds gaugeno, t, q, x, y, t1, t2 for a single gauge.
-    """
-
-    def __init__(self):
-
-        data_files = []
-        gauge_attrs = 'gaugeno level t q x y t1 t2'.split()
-
-        # Initialize the data object and read the data files
-        super(GaugeSolution,self).__init__(gauge_attrs)
-
-        # default values of attributes:
-        # none.
-
-
 # ============================================================================
 #  Subclass ClawOtherFigure containing data for plotting a figure
 # ============================================================================
-class ClawOtherFigure(Data):
+class ClawOtherFigure(clawdata.ClawData):
     """
     
     Data subclass containing plot data needed to plot a single figure.
@@ -972,11 +839,9 @@ class ClawOtherFigure(Data):
         Initialize a ClawOtherFigure object
         """
 
-        attributes = ['name','_plotdata','fname','makefig']
-
-        super(ClawOtherFigure, self).__init__(attributes = attributes)    
+        super(ClawOtherFigure, self).__init__()    
 
         self._plotdata = plotdata           # parent ClawPlotData object
-        self.name = name
-        self.fname = None            # name of png file
-        self.makefig = None          # function invoked to create figure
+        self.add_attribute('name',name)
+        self.add_attribute('fname',None)            # name of png file
+        self.add_attribute('makefig',None)          # function invoked to create figure
