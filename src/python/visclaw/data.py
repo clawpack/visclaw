@@ -723,6 +723,8 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('pcolor_cmin',None)
                 self.add_attribute('pcolor_cmax',None)
                 self.add_attribute('add_colorbar',True)
+                self.add_attribute('colorbar_shrink',1.0)
+                self.add_attribute('colorbar_label',None)
 
             elif plot_type == '2d_imshow':
                 from clawpack.visclaw import colormaps
@@ -730,6 +732,8 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('imshow_cmin',None)
                 self.add_attribute('imshow_cmax',None)
                 self.add_attribute('add_colorbar',True)
+                self.add_attribute('colorbar_shrink',1.0)
+                self.add_attribute('colorbar_label',None)
 
 
             elif plot_type == '2d_contour':
@@ -741,6 +745,8 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('contour_colors','k')
                 self.add_attribute('contour_cmap',None)
                 self.add_attribute('add_colorbar',False)
+                self.add_attribute('colorbar_shrink',1.0)
+                self.add_attribute('colorbar_label',None)
                 amr_attributes = """show colors cmap""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_contour_%s' % a, [])
@@ -751,6 +757,8 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('schlieren_cmin',None)
                 self.add_attribute('schlieren_cmax',None)
                 self.add_attribute('add_colorbar',False)
+                self.add_attribute('colorbar_shrink',1.0)
+                self.add_attribute('colorbar_label',None)
 
             elif plot_type == '2d_patch':
                 self.add_attribute('max_density',None)

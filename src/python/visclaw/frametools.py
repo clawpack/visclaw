@@ -269,7 +269,9 @@ def plotframe(frameno, plotdata, verbose=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        pylab.colorbar(pobj)
+                        cbar = pylab.colorbar(pobj,shrink=plotitem.colorbar_shrink)
+                        if plotitem.colorbar_label is not None:
+                            cbar.set_label(plotitem.colorbar_label)
                 except:
                     pass
 
