@@ -44,7 +44,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     if verbose:  
         gaugesoln = plotdata.getgauge(gaugeno)
-        print '    Plotting gauge %s  at x = %g, y = %g ... '  \
+        print '    Plotting gauge %s  at x = %s, y = %s ... '  \
                  % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
 
     if plotdata.mode() == 'iplotclaw':
@@ -98,7 +98,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
  
     if plotdata._mode == 'iplotclaw':
         gaugesoln = plotdata.getgauge(gaugeno)
-        print '    Plotting Gauge %s  at x = %g, y = %g ... '  \
+        print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
                  % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
         requested_fignos = plotdata.iplotclaw_fignos
     else:
