@@ -4,7 +4,7 @@ Useful things for plotting GeoClaw results.
 
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize 
-from geoclaw import topotools
+from clawpack.geoclaw import topotools
 from numpy import ma
 
 
