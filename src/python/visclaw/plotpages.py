@@ -2103,7 +2103,7 @@ def plotclaw_driver(plotdata, verbose=False):
     if gaugenos == 'all':
         # Read gauge numbers from setgauges.data if it exists:
         setgauges = gaugetools.read_setgauges(datadir)
-        gaugenos = setgauges.gaugenos
+        gaugenos = setgauges.gauge_numbers
 
     plotdata.gauges_gaugenos = gaugenos
     plotdata.gauges_fignos = fignos_each_gauge
