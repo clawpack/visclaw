@@ -28,6 +28,106 @@ try:
 except:
     print "*** Error: problem importing pylab"
 
+# Gauge solution class
+class GaugeSolution(object):
+    r"""Object representing a single gauge"""
+
+    def t1():
+        doc = "(float) - Beginning of gauge recording time interval."
+        def fget(self):
+            if self.t is not None:
+                return np.min(self.t)
+            else:
+                return None
+        def fset(self, value):
+            if self.q is None:
+                if self.t is not None:
+                    self.t[0] = value
+                else:
+                    self.t = [-np.infty,value]
+            else:
+                raise ValueError('Time interval already set.')
+        return locals()
+    t1 = property(**t1())
+
+    def t2():
+        doc = "(float) - End of gauge recording time interval."
+        def fget(self):
+            if self.t is not None:
+                return np.max(self.t)
+            else:
+                return None
+        def fset(self, value):
+            if self.q is None:
+                if self.t is not None:
+                    self.t[1] = value
+                else:
+                    self.t = [-np.infty,value]
+            else:
+                raise ValueError('Time interval already set.')
+        return locals()
+    t2 = property(**t2())
+
+    def location():
+        doc = "(tuple) - Location of this gauge."
+        def fget(self):
+            if self._location is None:
+                return ("Unknown","Unknown")
+            return self._location
+        def fset(self, value):
+            if isinstance(value,tuple) or isinstance(value,list):
+                self._location = value
+            else:
+                raise ValueError("Location information must be a list or tuple.")
+        return locals()
+    location = property(**location())
+
+    def __init__(self,number,location=None):
+        
+        # Gauge descriptors
+        self.number = number
+        self._location = None
+        if location is not None:
+            self.location = location
+
+        # Data written out (usually)
+        self.level = None
+        self.t = None
+        self.q = None
+
+    def __repr__(self):
+        # Make sure all necessary data has been set
+        if self._location is None or self.t1 is None or self.t2 is None:
+            output = None
+        else:
+            output = "%4i" % self.number
+            output = " ".join((output,"%19.10e" % self.location[0]))
+            output = " ".join((output,"%17.10e" % self.location[1]))
+            output = " ".join((output,"%13.6e" % self.t1))
+            output = " ".join((output,"%13.6e\n" % self.t2))
+        return output
+
+    def __str__(self):
+        return ("Gauge %s: location = %s, t = [%s,%s]" % 
+                                    (self.number,self.location,self.t1,self.t2))
+
+    def read(self,output_path='./',file_name='fort.gauge'):
+        r"""Read in the file at output_path/file_name and look for this gauge"""
+
+        file_path = os.path.join(output_path,file_name)
+        raw_data = np.loadtxt(file_path)
+
+        # Construct index array for this gauge
+        gauge_numbers = np.array([int(value) for value in raw_data[:,0]])
+        gauge_indices = np.nonzero(gauge_numbers == self.number)[0]
+        if len(gauge_indices) == 0:
+            raise Exception("Gauge number %s not found in %s" % 
+                                                        (self.number,file_path))
+
+        # Extract specific info for each time point
+        self.level = [int(value) for value in raw_data[gauge_indices,1]]
+        self.t = raw_data[gauge_indices,2]
+        self.q = raw_data[gauge_indices,3:].transpose()
 
 
 #==========================================
@@ -395,17 +495,16 @@ def plot_gauge_locations(plotdata, gaugenos='all', \
     if gaugenos=='all':
         gaugenos = setgauges.gauge_numbers
 
-
     for gauge in setgauges.gauges:
         try:
-            xn,yn = gauge.location
+            xn,yn = gauge[1:3]
             plot([xn], [yn], format_string, markersize=markersize)
             if add_labels: 
                 xn = xn + xoffset
                 yn = yn + yoffset
-                text(xn,yn,'  %s' % gauge.number, fontsize=fontsize)
+                text(xn,yn,'  %s' % gauge[0], fontsize=fontsize)
         except:
-            print "*** plot_gauge_locations: warning: did not find x,y data for gauge ",n
+            print "*** plot_gauge_locations: warning: did not find x,y data for gauge ",gauge[0]
 
 
 #------------------------------------------------------------------------
