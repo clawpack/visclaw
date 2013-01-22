@@ -10,7 +10,7 @@ For options during looping type:
 
 """
 
-import cmd, os, sys, string
+import cmd, os, sys
 
 
 if not sys.modules.has_key('matplotlib'):

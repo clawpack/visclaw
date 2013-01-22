@@ -1910,7 +1910,7 @@ def massage_gauges_data(plot_pages_data):
 
 
 #============================================
-def plotclaw_driver(plotdata, verbose=False):
+def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
     The ClawPlotData object plotdata will be initialized by a call to
@@ -2088,7 +2088,7 @@ def plotclaw_driver(plotdata, verbose=False):
 
     # Only grab times by loading in time
     for frameno in framenos:
-        frametimes[frameno] = plotdata.gettime(frameno, plotdata.outdir)
+        frametimes[frameno] = plotdata.gettime(frameno, plotdata.outdir, format=format)
     # for frameno in framenos:
     #     frametimes[frameno] = plotdata.getframe(frameno, plotdata.outdir).t
 
