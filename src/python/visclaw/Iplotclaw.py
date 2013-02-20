@@ -452,7 +452,7 @@ class Iplotclaw(cmd.Cmd):
 
             if n < len(gaugenos) - 1:
                 ans = raw_input("      Hit return for next gauge or q to quit ")
-                if ans != "q":
+                if ans == "q":
                     break
 
 
