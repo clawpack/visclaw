@@ -9,6 +9,7 @@ import copy
 import re
 import logging
 import clawpack.clawutil.clawdata as clawdata
+import gaugetools
 
 
 # ============================================================================
@@ -282,9 +283,33 @@ class ClawPlotData(clawdata.ClawData):
 
         # Reread gauge data file
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
+            # Attempt to fetch location and time data for checking
+            location = None
             try:
-                gauge = clawdata.Gauge(gaugeno)
+                gauge_data = clawdata.GaugeData()
+                gauge_data.read(outdir)
+
+                # Check to make sure the gauge requested is in the data file
+                if gaugeno not in gauge_data.gauge_numbers:
+                    raise Exception("Could not find guage %s in gauges data file.")
+            
+                # Extract location from gauge data file
+                for (n,gauge) in enumerate(gauge_data.gauges):
+                    if gaugeno == gauge[0]:
+                        location = gauge[1:3]
+                        gauge_index = n
+                        break
+            except:
+                raise Warning("Could not read gauges data file.")
+
+            try:
+                gauge = gaugetools.GaugeSolution(gaugeno,location=location)
                 gauge.read(outdir)
+                if gauge.t1 != gauge_data.gauges[gauge_index][3] and \
+                   gauge.t2 != gauge_data.gauges[gauge_index][4]:
+
+                   raise Warning("Time interval of gauge data does not match!")
+                
                 # self.read_gauges(outdir)
             except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
