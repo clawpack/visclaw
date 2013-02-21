@@ -34,6 +34,7 @@ except:
     print "problem importing pylab"
     sys.exit(1)
 
+import clawpack.clawutil.clawdata as clawdata
 from clawpack.visclaw import data, frametools, gaugetools
 
 #rundata = data.ClawData('claw.data')
@@ -433,54 +434,26 @@ class Iplotclaw(cmd.Cmd):
     # --------------
     def do_plotgauge(self, rest):
         gaugesoln_dict = self.plotdata.gaugesoln_dict
+        outdir = os.path.abspath(self.plotdata.outdir)
+
+        # Construct gaugeno list
         if rest in ['','all']:
-            if len(gaugesoln_dict) == 0:
-                outdir = os.path.abspath(self.plotdata.outdir)
-                try:
-                    gauges = self.plotdata.read_gauges(outdir)
-                except:
-                    print '*** Error reading gauges in Iplotclaw'
-                    gauges = {}
-
-                #print '+++ gauges.keys = ',gauges.keys()
-                #print '+++ gaugesoln_dict = ',gaugesoln_dict
-                try:
-                    for (k,v) in gauges.iteritems():
-                        gaugesoln_dict[(k, outdir)] = v
-                except:
-                    raise Exception("*** Problem setting gaugesoln_dict in Iplotclaw")
-
-            if len(gaugesoln_dict) > 0:
-                keys = gaugesoln_dict.keys()
-                #print '+++ keys = ',keys
-                gaugenos = set([keys[k][0] for k in range(len(keys))])
-                #print '+++ gaugenos = ',gaugenos
-                gaugenos = list(gaugenos)
-                gaugenos.sort()
-                n = 0
-                ans = ""
-                while (ans != "q") and (n<len(gaugenos)):
-                    gaugeno = gaugenos[n]
-                    try:
-                        gaugetools.plotgauge(gaugeno, self.plotdata)
-                    except:
-                        print "*** Problem executing gaugetools.plotgauge with gaugeno = ", gaugeno
-                    if n < len(gaugenos)-1:
-                        ans = raw_input("      Hit return for next gauge or q to quit ")
-                    n = n+1
-
+            gaugedata = clawdata.GaugeData()
+            gaugedata.read(self.plotdata.outdir)
+            gaugenos = gaugedata.gauge_numbers
         else:
+            gaugenos = [int(rest)]
 
-            try:
-                gaugeno = int(rest)
-            except:
-                print "Expected gauge number or 'all'"
-                gaugeno = None
+        # Loop through requested gauges and read in if not in gaugesoln_dict
+        for (n,gaugeno) in enumerate(gaugenos):
+            gauge = self.plotdata.getgauge(gaugeno,outdir)
+            
+            gaugetools.plotgauge(gaugeno,self.plotdata)
 
-            try:
-                gaugetools.plotgauge(gaugeno, self.plotdata)
-            except:
-                print "*** Problem executing gaugetools.plotgauge"
+            if n < len(gaugenos) - 1:
+                ans = raw_input("      Hit return for next gauge or q to quit ")
+                if ans == "q":
+                    break
 
 
     def help_plotgauge(self):
