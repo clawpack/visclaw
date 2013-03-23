@@ -300,7 +300,8 @@ class ClawPlotData(clawdata.ClawData):
                         gauge_index = n
                         break
             except:
-                raise Warning("Could not read gauges data file.")
+                print "*** WARNING *** Could not read gauges data file."
+                # raise Warning()
 
             try:
                 gauge = gaugetools.GaugeSolution(gaugeno,location=location)
@@ -308,7 +309,8 @@ class ClawPlotData(clawdata.ClawData):
                 if gauge.t1 != gauge_data.gauges[gauge_index][3] and \
                    gauge.t2 != gauge_data.gauges[gauge_index][4]:
 
-                   raise Warning("Time interval of gauge data does not match!")
+                   print "*** WARNING *** Time interval of gauge data does not match!"
+                   # raise Warning("Time interval of gauge data does not match!")
                 
                 # self.read_gauges(outdir)
             except Exception as e:
