@@ -457,7 +457,9 @@ def read_setgauges(datadir):
     Read the info from setgauges.data.
     """
 
-    setgauges = clawdata.GaugeData()
+    import clawpack.amrclaw.data as amrdata
+
+    setgauges = amrdata.GaugeData()
     try:
         setgauges.read(datadir)
     except IOError as e:
