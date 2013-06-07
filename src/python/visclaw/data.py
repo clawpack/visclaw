@@ -286,7 +286,8 @@ class ClawPlotData(clawdata.ClawData):
             # Attempt to fetch location and time data for checking
             location = None
             try:
-                gauge_data = clawdata.GaugeData()
+                import clawpack.amrclaw.data as amrclaw
+                gauge_data = amrclaw.GaugeData()
                 gauge_data.read(outdir)
 
                 # Check to make sure the gauge requested is in the data file
