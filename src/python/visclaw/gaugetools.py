@@ -487,6 +487,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', \
     """
 
     from pylab import figure, plot, clf, title, text
+    import pdb; pdb.set_trace()
 
     datadir = plotdata.rundir  # this should contain setgauges.data
 
