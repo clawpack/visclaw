@@ -457,7 +457,12 @@ def read_setgauges(datadir):
     Read the info from setgauges.data.
     """
 
-    import clawpack.amrclaw.data as amrdata
+    try:
+        import clawpack.amrclaw.data as amrclaw
+    except ImportError as e:
+        print "You must have AMRClaw installed to plot gauges."
+        print "continuing..."
+        return None
 
     setgauges = amrdata.GaugeData()
     try:

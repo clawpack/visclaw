@@ -286,7 +286,13 @@ class ClawPlotData(clawdata.ClawData):
             # Attempt to fetch location and time data for checking
             location = None
             try:
-                import clawpack.amrclaw.data as amrclaw
+                try:
+                    import clawpack.amrclaw.data as amrclaw
+                except ImportError as e:
+                    print "You must have AMRClaw installed to plot gauges."
+                    print "continuing..."
+                    return None
+                    
                 gauge_data = amrclaw.GaugeData()
                 gauge_data.read(outdir)
 
