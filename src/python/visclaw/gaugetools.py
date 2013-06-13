@@ -463,7 +463,7 @@ def read_setgauges(datadir):
         print "continuing..."
         return None
 
-    setgauges = amrdata.GaugeData()
+    setgauges = amrclaw.GaugeData()
     try:
         setgauges.read(datadir)
     except IOError as e:
