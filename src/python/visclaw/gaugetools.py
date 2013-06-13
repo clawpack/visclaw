@@ -412,7 +412,6 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     t = gaugesoln.t
     if type(plot_var) is int:
-        #import pdb pdb.set_trace()
         var = gaugesoln.q[plot_var,:]
     else:
         try:
@@ -487,7 +486,6 @@ def plot_gauge_locations(plotdata, gaugenos='all', \
     """
 
     from pylab import figure, plot, clf, title, text
-    import pdb; pdb.set_trace()
 
     datadir = plotdata.rundir  # this should contain setgauges.data
 
