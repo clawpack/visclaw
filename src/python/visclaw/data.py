@@ -6,9 +6,11 @@ data objects specific to plotting.
 """
 import os
 import copy
+import numpy as np
 import re
 import logging
 import clawpack.clawutil.clawdata as clawdata
+import gaugetools
 
 
 # ============================================================================
@@ -282,16 +284,55 @@ class ClawPlotData(clawdata.ClawData):
 
         # Reread gauge data file
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
+            # Attempt to fetch location and time data for checking
+            location = None
             try:
-                gauge = clawdata.Gauge(gaugeno)
-                gauge.read(outdir)
-                # self.read_gauges(outdir)
+                gauge_data = clawdata.GaugeData()
+                gauge_data.read(outdir)
+
+                # Check to make sure the gauge requested is in the data file
+                if gaugeno not in gauge_data.gauge_numbers:
+                    raise Exception("Could not find guage %s in gauges data file.")
+            
+                # Extract locations from gauge data file to be used with the
+                # solutions below
+                locations = {}
+                for (n,gauge) in enumerate(gauge_data.gauges):
+                    locations[gauge[0]] = gauge[1:3]
+
+            except:
+                raise Warning("Could not read gauges data file.")
+
+            # Read in all gauges
+            try:
+
+                file_path = os.path.join(outdir,'fort.gauge')
+                if not os.path.exists(file_path):
+                    pass
+                else:
+                    print "Reading gauge data from %s." % file_path
+                    raw_data = np.loadtxt(file_path)
+
+                    gauge_read_string = ""
+                    raw_numbers = np.array([int(value) for value in raw_data[:,0]])
+                    for n in gauge_data.gauge_numbers:
+                        gauge = gaugetools.GaugeSolution(gaugeno, 
+                                                         location=locations[n])
+                        gauge_indices = np.nonzero(n == raw_numbers)[0]
+
+                        gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
+                        gauge.t = raw_data[gauge_indices,2]
+                        gauge.q = raw_data[gauge_indices,3:].transpose()
+                        gauge_read_string = " ".join((gauge_read_string,str(n)))
+
+                        self.gaugesoln_dict[(n, outdir)] = gauge
+
+                    print "Read in gauges [%s]" % gauge_read_string[1:]
+                
             except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
                 print '*** outdir = ', outdir
                 raise e
-
-            self.gaugesoln_dict[key] = gauge
 
         else:
             # Attempt to fetch gauge requested
