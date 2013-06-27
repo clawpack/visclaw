@@ -111,24 +111,6 @@ class GaugeSolution(object):
         return ("Gauge %s: location = %s, t = [%s,%s]" % 
                                     (self.number,self.location,self.t1,self.t2))
 
-    def read(self,output_path='./',file_name='fort.gauge'):
-        r"""Read in the file at output_path/file_name and look for this gauge"""
-
-        file_path = os.path.join(output_path,file_name)
-        raw_data = np.loadtxt(file_path)
-
-        # Construct index array for this gauge
-        gauge_numbers = np.array([int(value) for value in raw_data[:,0]])
-        gauge_indices = np.nonzero(gauge_numbers == self.number)[0]
-        if len(gauge_indices) == 0:
-            raise Exception("Gauge number %s not found in %s" % 
-                                                        (self.number,file_path))
-
-        # Extract specific info for each time point
-        self.level = [int(value) for value in raw_data[gauge_indices,1]]
-        self.t = raw_data[gauge_indices,2]
-        self.q = raw_data[gauge_indices,3:].transpose()
-
 
 #==========================================
 def plotgauge(gaugeno, plotdata, verbose=False):
