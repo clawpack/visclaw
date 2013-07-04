@@ -407,6 +407,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     pylab.hold(True)
 
+    # Need to debug why gaugesoln.number always 1 here
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
                  gaugesoln.number))
 
