@@ -330,6 +330,7 @@ class ClawPlotData(clawdata.ClawData):
                         gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
                         gauge.t = raw_data[gauge_indices,2]
                         gauge.q = raw_data[gauge_indices,3:].transpose()
+                        gauge.number = gaugeno
                         gauge_read_string = " ".join((gauge_read_string,str(n)))
 
                         self.gaugesoln_dict[(n, outdir)] = gauge
@@ -344,6 +345,8 @@ class ClawPlotData(clawdata.ClawData):
         else:
             # Attempt to fetch gauge requested
             gauge = self.gaugesoln_dict[key]
+            # Need to debug why gauge.number is not set properly...
+            #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
 
         return gauge
 
