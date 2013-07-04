@@ -347,6 +347,8 @@ class ClawPlotData(clawdata.ClawData):
             gauge = self.gaugesoln_dict[key]
             # Need to debug why gauge.number is not set properly...
             #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
+            # For now, set it explicitly here:
+            gauge.number = gaugeno
 
         return gauge
 
