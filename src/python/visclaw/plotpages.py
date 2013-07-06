@@ -1757,13 +1757,14 @@ def plotclaw2html(plotdata):
             # list of all gauges at bottom:
 
             html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
-            for gaugeno2 in gaugenos:
-                if gaugeno2 == gaugeno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % gaugeno)
-                else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (gauge_allfigsfile[gaugeno2],gaugeno2))
+            if gaugenos is not 'all':
+                for gaugeno2 in gaugenos:
+                    if gaugeno2 == gaugeno:
+                        html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
+                                   % gaugeno)
+                    else:
+                        html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
+                               % (gauge_allfigsfile[gaugeno2],gaugeno2))
     
             html.write('\n</center></body></html>\n')
             html.close()
@@ -2104,7 +2105,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if gaugenos == 'all':
         # Read gauge numbers from setgauges.data if it exists:
         setgauges = gaugetools.read_setgauges(datadir)
-        gaugenos = setgauges.gauge_numbers
+        if setgauges is not None:
+            gaugenos = setgauges.gauge_numbers
 
     plotdata.gauges_gaugenos = gaugenos
     plotdata.gauges_fignos = fignos_each_gauge
