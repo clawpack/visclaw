@@ -137,9 +137,9 @@ class ClawPlotData(clawdata.ClawData):
         """
         Create a new figure for Clawpack plots.  
         If type='each_frame' it is a figure that will be plotted 
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
             print '*** Warning, figure named %s has already been created' % name
@@ -233,14 +233,15 @@ class ClawPlotData(clawdata.ClawData):
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	Does not clear the frames of solution data already read in.
-	  For that use clearframes.
+	    Does not clear the frames of solution data already read in.
+	    For that use clearframes.
         """
 
 	self.plotfigure_dict.clear()
 	self._fignames = []
 	self._fignos = []
 	self._next_FIG = 1000
+	self._otherfignames = []
 
 
     def clearframes(self, framenos='all'):
@@ -285,6 +286,7 @@ class ClawPlotData(clawdata.ClawData):
         # Reread gauge data file
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
             # Attempt to fetch location and time data for checking
+            print "+++ attempting to use amrclaw.GaugeData"
             location = None
             try:
                 try:
@@ -344,6 +346,7 @@ class ClawPlotData(clawdata.ClawData):
 
         else:
             # Attempt to fetch gauge requested
+            print "+++ Using gauge from gaugesoln_dict"
             gauge = self.gaugesoln_dict[key]
             # Need to debug why gauge.number is not set properly...
             #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
