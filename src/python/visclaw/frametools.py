@@ -13,12 +13,12 @@ if plotter == 'matplotlib':
         try:
             import matplotlib
             matplotlib.use('Agg')  # Use an image backend
-        except:
+        except ImportError:
             print "*** Error: problem importing matplotlib"
 
 try:
     import pylab
-except:
+except ImportError:
     print "*** Error: problem importing pylab"
 
 import clawpack.clawutil.clawdata as clawdata
@@ -52,14 +52,7 @@ def plotframe(frameno, plotdata, verbose=False):
         print '*** Warning in plotframe: plotdata has empty plotfigure_dict'
         print '*** Apparently no figures to plot'
 
-
-    try:
-        framesoln = plotdata.getframe(frameno, plotdata.outdir)
-    except IOError:
-        print '*** Cannot find frame number ',frameno
-        print '*** looking in directory ', plotdata.outdir
-        print '*** looking for format ', plotdata.format
-        return None
+    framesoln = plotdata.getframe(frameno, plotdata.outdir)
 
     t = framesoln.t
 
@@ -136,13 +129,7 @@ def plotframe(frameno, plotdata, verbose=False):
         if plotfigure.clf_each_frame:
             pylab.clf()
 
-
-        try:
-            plotaxes_dict = plotfigure.plotaxes_dict
-        except:
-            print '*** Error in plotframe: plotdata missing plotaxes_dict'
-            print '*** This should not happen'
-            return  None
+        plotaxes_dict = plotfigure.plotaxes_dict
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
             print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
@@ -178,13 +165,7 @@ def plotframe(frameno, plotdata, verbose=False):
             # loop over all outdirs:
 
             for outdir in plotdata._outdirs:
-                try:
-                    framesoln = plotdata.getframe(frameno, outdir)
-                except:
-                    print '*** Cannot find frame number ',frameno
-                    print '*** looking in directory ', outdir
-                    return current_data
-
+                framesoln = plotdata.getframe(frameno, outdir)
 
                 if framesoln.t != t:
                     print '*** Warning: t values do not agree for frame ',frameno
@@ -253,7 +234,7 @@ def plotframe(frameno, plotdata, verbose=False):
                             current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
     
                             if verbose:  
-                                    print '      Plotted  plotitem ', itemname
+                                print '      Plotted  plotitem ', itemname
     
                     # end of loop over plotitems
                 # end of loop over patches
@@ -440,7 +421,6 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
-        return None
 
     if pp['plot_type'] == '1d_fill_between':
         try: pylab.fill_between
@@ -509,7 +489,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 i1 = min(i1,len(gauget)-2)
                 slope = (gaugeq[i1+1]-gaugeq[i1]) / (gauget[i1+1]-gauget[i1])
                 qt = gaugeq[i1] + slope * (t-gauget[i1])
-            except:
+            except IndexError:
                 qt = gaugeq[0]
                 print "Warning: t out of range"
             pylab.plot([t], [qt], 'ro')
@@ -539,7 +519,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 current_data.xlower = patch.dimensions[0].lower
                 current_data.xupper = patch.dimensions[0].upper
                 current_data.x = p_centers # cell centers
-		current_data.dx = patch.delta[0]
+                current_data.dx = patch.delta[0]
                 output = pp['afterpatch'](current_data)
                 if output: current_data = output
             except:
@@ -548,7 +528,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     try:
         plotitem._current_pobj = pobj
-    except:
+    except NameError:
         pass # if no plot was done
 
     return current_data
@@ -856,7 +836,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     try:
         plotitem._current_pobj = pobj
-    except:
+    except NameError:
         pass # if no plot was done
 
 
@@ -909,7 +889,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         figno = 1
     pylab.figure(figno)
     if plotdir != '.':
-       fname = os.path.join(plotdir,fname)
+        fname = os.path.join(plotdir,fname)
     if verbose:  print '    Saving plot to file ', fname
     pylab.savefig(fname)
 
@@ -971,7 +951,7 @@ def printframes(plotdata=None, verbose=True):
         plotdir = plotdata.plotdir     # where to put png and html files
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
-    except:
+    except AttributeError:
         print '*** Error in printframes: plotdata missing attribute'
         print '  *** plotdata = ',plotdata
         return plotdata
@@ -995,19 +975,20 @@ def printframes(plotdata=None, verbose=True):
     rootdir = os.getcwd()
 
     # annoying fix needed when EPD is used for plotting under cygwin:
-    if rootdir[0:9] == 'C:\cygwin' and outdir[0:9] != 'C:\cygwin':
-        outdir = 'C:\cygwin' + outdir
+    cw_path = r'C:\cygwin'
+    if rootdir[0:9] == cw_path and outdir[0:9] != cw_path:
+        outdir = cw_path + outdir
         plotdata.outdir = outdir
-    if rootdir[0:9] == 'C:\cygwin' and rundir[0:9] != 'C:\cygwin':
-        rundir = 'C:\cygwin' + rundir
+    if rootdir[0:9] == cw_path and rundir[0:9] != cw_path:
+        rundir = cw_path + rundir
         plotdata.rundir = rundir
-    if rootdir[0:9] == 'C:\cygwin' and plotdir[0:9] != 'C:\cygwin':
-        plotdir = 'C:\cygwin' + plotdir
+    if rootdir[0:9] == cw_path and plotdir[0:9] != cw_path:
+        plotdir = cw_path + plotdir
         plotdata.plotdir = plotdir
 
     try:
         os.chdir(rundir)
-    except:
+    except OSError:
         print '*** Error: cannot move to run directory ',rundir
         print 'rootdir = ',rootdir
         return plotdata
@@ -1043,7 +1024,7 @@ def printframes(plotdata=None, verbose=True):
 
     try:
         os.chdir(outdir)
-    except:
+    except OSError:
         print '*** Error printframes: cannot move to outdir = ',outdir
         return plotdata
 
@@ -1305,7 +1286,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
     if outdir != '.':
         try:
             os.chdir(outdir)
-        except:
+        except OSError:
             print "*** Could not chdir to ", outdir
             return framenos
 
