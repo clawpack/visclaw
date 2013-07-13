@@ -196,12 +196,7 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if self.refresh_frames or (not framesoln_dict.has_key(key)):
-            try:
-                framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
-            except:
-                print '*** Error reading frame in ClawPlotData.getframe'
-                raise
-                return
+            framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
