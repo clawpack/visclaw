@@ -235,10 +235,13 @@ class Iplotclaw(cmd.Cmd):
         else:
             try:
                 newframeno = int(newframeno)
-                self.frameno = newframeno
-                self.current_data = frametools.plotframe(self.frameno, self.plotdata)
-            except:
+            except ValueError:
                 print '\n    *** Error: frameno must be an integer, n, or p'
+            self.frameno = newframeno
+            try:
+                self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+            except IOError:
+                print "Swallowing IOError to avoid crashing in interactive mode."
                 #print '\n Requested frameno = %s  %s' %(newframeno,type(newframeno))
     def help_j(self):
         print 'j N: jump to frame N\n'
