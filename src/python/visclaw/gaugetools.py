@@ -394,7 +394,6 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     t = gaugesoln.t
     if type(plot_var) is int:
-        #import pdb pdb.set_trace()
         var = gaugesoln.q[plot_var,:]
     else:
         try:
@@ -408,6 +407,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     pylab.hold(True)
 
+    # Need to debug why gaugesoln.number always 1 here
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
                  gaugesoln.number))
 
@@ -439,7 +439,14 @@ def read_setgauges(datadir):
     Read the info from setgauges.data.
     """
 
-    setgauges = clawdata.GaugeData()
+    try:
+        import clawpack.amrclaw.data as amrclaw
+    except ImportError as e:
+        print "You must have AMRClaw installed to plot gauges."
+        print "continuing..."
+        return None
+
+    setgauges = amrclaw.GaugeData()
     try:
         setgauges.read(datadir)
     except IOError as e:

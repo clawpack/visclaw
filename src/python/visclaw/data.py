@@ -287,7 +287,14 @@ class ClawPlotData(clawdata.ClawData):
             # Attempt to fetch location and time data for checking
             location = None
             try:
-                gauge_data = clawdata.GaugeData()
+                try:
+                    import clawpack.amrclaw.data as amrclaw
+                except ImportError as e:
+                    print "You must have AMRClaw installed to plot gauges."
+                    print "continuing..."
+                    return None
+                    
+                gauge_data = amrclaw.GaugeData()
                 gauge_data.read(outdir)
 
                 # Check to make sure the gauge requested is in the data file
@@ -301,11 +308,11 @@ class ClawPlotData(clawdata.ClawData):
                     locations[gauge[0]] = gauge[1:3]
 
             except:
-                raise Warning("Could not read gauges data file.")
+                print "*** WARNING *** Could not read gauges data file."
+                # raise Warning()
 
             # Read in all gauges
             try:
-
                 file_path = os.path.join(outdir,'fort.gauge')
                 if not os.path.exists(file_path):
                     pass
@@ -323,6 +330,7 @@ class ClawPlotData(clawdata.ClawData):
                         gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
                         gauge.t = raw_data[gauge_indices,2]
                         gauge.q = raw_data[gauge_indices,3:].transpose()
+                        gauge.number = gaugeno
                         gauge_read_string = " ".join((gauge_read_string,str(n)))
 
                         self.gaugesoln_dict[(n, outdir)] = gauge
@@ -337,6 +345,10 @@ class ClawPlotData(clawdata.ClawData):
         else:
             # Attempt to fetch gauge requested
             gauge = self.gaugesoln_dict[key]
+            # Need to debug why gauge.number is not set properly...
+            #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
+            # For now, set it explicitly here:
+            gauge.number = gaugeno
 
         return gauge
 

@@ -438,7 +438,14 @@ class Iplotclaw(cmd.Cmd):
 
         # Construct gaugeno list
         if rest in ['','all']:
-            gaugedata = clawdata.GaugeData()
+            try:
+                import clawpack.amrclaw.data as amrclaw
+            except ImportError as e:
+                print "You must have AMRClaw installed to plot gauges."
+                print "continuing..."
+                return
+            
+            gaugedata = amrclaw.GaugeData()
             gaugedata.read(self.plotdata.outdir)
             gaugenos = gaugedata.gauge_numbers
         else:
