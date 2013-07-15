@@ -205,7 +205,10 @@ class Iplotclaw(cmd.Cmd):
         from clawpack.visclaw import frametools, data
         #print '    frameno = ',self.frameno
         self.frameno = self.frameno+1
-	self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        try:
+            self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        except IOError:
+            print "Swallowing IOError to avoid crashing in interactive mode."
         pylab.draw()
     def help_n(self):
         print 'n: advance to next frame\n'
@@ -215,7 +218,10 @@ class Iplotclaw(cmd.Cmd):
     def do_p(self, rest):
         #print '    frameno = ',self.frameno
         self.frameno = max(self.frameno-1, 0)
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        try:
+            self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        except IOError:
+            print "Swallowing IOError to avoid crashing in interactive mode."
     def help_p(self):
         print 'p: go back to previous frame\n'
 
@@ -242,7 +248,6 @@ class Iplotclaw(cmd.Cmd):
                 self.current_data = frametools.plotframe(self.frameno, self.plotdata)
             except IOError:
                 print "Swallowing IOError to avoid crashing in interactive mode."
-                #print '\n Requested frameno = %s  %s' %(newframeno,type(newframeno))
     def help_j(self):
         print 'j N: jump to frame N\n'
         print 'j:   jump to some other frame (will prompt for N)\n'
