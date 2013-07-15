@@ -25,7 +25,7 @@ import clawpack.clawutil.clawdata as clawdata
 
 
 #==============================================================================
-def plotframe(frameno, plotdata, verbose=False):
+def plotframe(frameno, plotdata, verbose=False, simple=False):
 #==============================================================================
 
     """
@@ -37,6 +37,13 @@ def plotframe(frameno, plotdata, verbose=False):
     """
 
     if verbose:  print '    Plotting frame %s ... '  % frameno
+
+    if simple:
+        plotfun = plotdata.setplot
+        from clawpack.pyclaw import Solution
+        sol = Solution(frameno,path=plotdata.outdir,file_format=plotdata.format)
+        plotfun(sol)
+        return
 
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
