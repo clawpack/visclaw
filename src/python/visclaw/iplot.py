@@ -20,13 +20,15 @@ import matplotlib.pyplot as plt
 class Iplot(cmd.Cmd):
 #------------------------
     """
-    Class for interactively stepping through Clawpack plots.
-    Uses frametools.plotframe to actually plot each frame.
+    Class for interactively stepping through plots.
+    This is an abstraction of the Iplotclaw class, meant to
+    be flexible enough to deal with output from any simulation code
+    (or even experimental data).
 
     Usage:
     ------
-    >>> from clawpack.visclaw.Iplotclaw import Iplotclaw 
-    >>> ip = Iplotclaw()             # new instantiation
+    >>> from clawpack.visclaw.iplot import Iplot
+    >>> ip = Iplot()             # new instantiation
     >>> ip.plotloop()                # to start looping
     IPLOT > help                  # for list of available commands
     IPLOT > q                     # to quit looping and return to python
@@ -51,9 +53,22 @@ class Iplot(cmd.Cmd):
     prompt = 'IPLOT > '
     lastcmd = 'n'             # initialize so <return> advances frame'
 
-    def __init__(self, loadfun, plotfun, \
+    def __init__(self, load_frame, plot_frame, \
                  completekey='tab', stdin=None, stdout=None):
         """Instantiate a line-oriented interpreter framework.
+
+        The function load_frame should have the following signature:
+
+        frame = load_frame(frameno)
+
+        where frameno is an integer specifying the data to be loaded
+        and frame is the loaded data.
+
+        The function plot_frame should have the following signature:
+
+        plot_frame(frame)
+
+        where frame is the object returned by load_frame.
 
         The optional argument 'completekey' is the readline name of a
         completion key; it defaults to the Tab key. If completekey is
@@ -76,8 +91,8 @@ class Iplot(cmd.Cmd):
         self.cmdqueue = []
         self.completekey = completekey
  
-        self.load_frame = loadfun
-        self.plot_frame = plotfun
+        self.load_frame = load_frame
+        self.plot_frame = plot_frame
 
         self.restart = False
         self.prevframeno = 0
@@ -149,7 +164,6 @@ class Iplot(cmd.Cmd):
     # next frame:
     # -----------
     def do_n(self, rest):
-        #print '    frameno = ',self.frameno
         self.frameno = self.frameno+1
         self.plot_and_cache(self.frameno)
     def help_n(self):
@@ -204,6 +218,32 @@ class Iplot(cmd.Cmd):
     def help_rr(self):
         print 'r: redraw the current frame,  rr: reload and redraw\n'
 
+    # clearframes
+    # ---------
+    def do_clearframes(self, rest):
+        if rest=='':
+            self.frames.clear()
+            print 'Cleared all frames'
+        else:
+            for framestr in rest.split():
+                try:
+                    frameno = int(framestr)
+                except ValueError:
+                    print 'Error in clearframes: unrecognized input'
+                popped_frame = self.frames.pop(str(frameno),None)
+                if popped_frame is None:
+                   print 'No frame data to clear for frame ',frameno
+                else:
+                   print 'Cleared data for frame ',frameno
+
+    def help_clearframes(self):
+        print 'clearframes: delete frame data from cache to replot'
+        print '    use if you have rerun the code and want to plot the'
+        print '    latest results'
+        print '          clearframes framenos  clears one or more frames'
+        print '          clearframes           clears all frames'
+
+
     # save
     # ---------
     def do_save(self, rest):
@@ -215,8 +255,11 @@ class Iplot(cmd.Cmd):
                 print "*** Expected figure number, got: ",rest[0]
             fname = rest[1]
             plt.figure(figno)
-            plt.savefig(fname)
-            print "Saved figure number %s to file %s" % (figno,fname)
+            try:
+                plt.savefig(fname)
+                print "Saved figure number %s to file %s" % (figno,fname)
+            except ValueError:
+                print "Don't put quotes around the filename."
         else:
             print "*** save requires two arguments: figno, fname"
             print "*** got: ",rest
@@ -322,18 +365,3 @@ class Iplot(cmd.Cmd):
     # -------------------------
     def plotloop(self):
         self.cmdloop()
-
-
-    # Convenience functions for examining solution or making additional
-    # plots from the ipython command line:
-    # -----------------------------------------------------------------
-
-    def get_frame(self, frameno=None):
-        """
-        Return the framesoln for Frame for frameno.  
-        If frameno is not specified, use the most recently plotted frameno.
-        """
-        if frameno is None:
-            frameno = self.frameno
-
-        return self.frames[str(frameno)]
