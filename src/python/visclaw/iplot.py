@@ -6,21 +6,15 @@ For more instructions see the Usage notes in class Iplotclaw below.
 For options during looping type:
   >>> ip = iplot()
   >>> ip.plotloop()
-  PLOTCLAW> help
+  IPLOT> help
 
 """
 
-import cmd, os, sys
-
-
+import cmd, os
 import matplotlib
 matplotlib.rc('text', usetex=False)
 matplotlib.interactive(True)
-
 import matplotlib.pyplot as plt
-
-import clawpack.clawutil.clawdata as clawdata
-from clawpack.visclaw import data, frametools, gaugetools
 
 #------------------------
 class Iplot(cmd.Cmd):
@@ -34,8 +28,8 @@ class Iplot(cmd.Cmd):
     >>> from clawpack.visclaw.Iplotclaw import Iplotclaw 
     >>> ip = Iplotclaw()             # new instantiation
     >>> ip.plotloop()                # to start looping
-    PLOTCLAW > help                  # for list of available commands
-    PLOTCLAW > q                     # to quit looping and return to python
+    IPLOT > help                  # for list of available commands
+    IPLOT > q                     # to quit looping and return to python
     >>> ip.plotloop()                # to restart looping at previous frame,
                                      #    with data, outdir, etc. preserved.
     Arguments:
@@ -50,7 +44,6 @@ class Iplot(cmd.Cmd):
     Other arguments of Iplotclaw rarely need to be changed:
        completekey='tab', stdin=None, stdout=None
     """
-    from clawpack.visclaw import frametools, data
 
     # initialization:
     # ---------------
@@ -124,7 +117,7 @@ class Iplot(cmd.Cmd):
                     reload = raw_input('    Reload data for frame %s [no] ? ' \
                                     % self.frameno)
                     if reload in ('y','yes','Y'):
-                        self.frames.pop(str(frameno))
+                        self.frames.pop(str(self.frameno))
         else:
             try:
                 self.frameno = int(startframeno)
@@ -145,7 +138,7 @@ class Iplot(cmd.Cmd):
         self.prevframeno = self.frameno
 
 
-    # Commands that can be typed at the PLOTCLAW> prompt:
+    # Commands that can be typed at the IPLOT> prompt:
     # ---------------------------------------------------
 
     # help command:
@@ -249,6 +242,7 @@ class Iplot(cmd.Cmd):
         fname = rest
         for figno in plt.get_fignums():
             if len(fname)>0:
+                import string
                 # doesn't work properly!
                 plt.figure(figno)
                 name = fname.split('.')[0]+string.zfill(figno,4)+'.'+fname.split('.')[1]
@@ -260,7 +254,7 @@ class Iplot(cmd.Cmd):
         print 'print: print all figures for this frame to files of the form'
         print '      frame000NfigJ.png'
         print 'To print a single figure or with different style, try e.g.'
-        print '     PLOTCLAW > q'
+        print '     IPLOT > q'
         print '     figure(2)'
         print '     savefig("myname.jpg")\n'
         
@@ -274,8 +268,8 @@ class Iplot(cmd.Cmd):
 
     def help_vi(self):
         print 'Edit file using vi, for example to change the plot parameters:'
-        print '    PLOTCLAW> vi setplot.py '
-        print '    PLOTCLAW> resetplot '
+        print '    IPLOT> vi setplot.py '
+        print '    IPLOT> resetplot '
         print 'See also "help edit" for use of other editors.\n'
         
 
@@ -291,8 +285,8 @@ class Iplot(cmd.Cmd):
 
     def help_edit(self):
         print 'Edit file, for example to change the plot parameters:'
-        print '    PLOTCLAW> edit setplot.py '
-        print '    PLOTCLAW> resetplot '
+        print '    IPLOT> edit setplot.py '
+        print '    IPLOT> resetplot '
         print 'Specify the editor by setting environment variable EDITOR'
         print '  before starting Python shell.'
         print 'If you want to use vi, see also "help vi".\n'
@@ -343,8 +337,3 @@ class Iplot(cmd.Cmd):
             frameno = self.frameno
 
         return self.frames[str(frameno)]
-
-
-# end of Iplotclaw.
-#----------------------------------------------------------------------
-
