@@ -1,7 +1,7 @@
 """
-Module Iplotclaw for interactive plotting of Clawpack results.
+Module Iplot for interactive plotting.
 
-For more instructions see the Usage notes in class Iplotclaw below. 
+For more instructions see the Usage notes in class Iplot below. 
 
 For options during looping type:
   >>> ip = iplot()
@@ -28,22 +28,28 @@ class Iplot(cmd.Cmd):
     Usage:
     ------
     >>> from clawpack.visclaw.iplot import Iplot
-    >>> ip = Iplot()             # new instantiation
-    >>> ip.plotloop()                # to start looping
+    >>> ip = Iplot()              # new instantiation
+    >>> ip.plotloop()             # to start looping
     IPLOT > help                  # for list of available commands
     IPLOT > q                     # to quit looping and return to python
-    >>> ip.plotloop()                # to restart looping at previous frame,
-                                     #    with data, outdir, etc. preserved.
+    >>> ip.plotloop()             # to restart looping at previous frame
+
     Arguments:
     ----------
-    The defaults are:
-       Iplotclaw(setplot='setplot.py', outdir=None) 
-    The setplot argument gives the file providing the setplot function.
-    The outdir argument gives the directory providing the fort.* files.
-      If outdir==None, the file .output created by 'make .output' is
-      examined to determine where the most recent output might be found.
-      If .output does not exist, outdir defaults to '.', the current directory.
-    Other arguments of Iplotclaw rarely need to be changed:
+    - load_frame: a function with the following signature:
+
+        frame = load_frame(frameno)
+
+        where frameno is an integer specifying the data to be loaded
+        and frame is the loaded data.
+
+    - plot_frame: a function with the following signature:
+
+        plot_frame(frame)
+
+        where frame is the object returned by load_frame.
+
+    Other arguments of Iplot rarely need to be changed:
        completekey='tab', stdin=None, stdout=None
     """
 
@@ -281,7 +287,6 @@ class Iplot(cmd.Cmd):
     # print figure to a file:
     # -----------------------
     def do_print(self, rest):
-        #from clawpack.visclaw import frametools
         fname = rest
         for figno in plt.get_fignums():
             if len(fname)>0:
