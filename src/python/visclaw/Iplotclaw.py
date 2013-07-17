@@ -212,7 +212,6 @@ class Iplotclaw(cmd.Cmd):
         except IOError:
             print "Swallowing IOError to avoid crashing in interactive mode."
         pylab.draw()
-        plt.draw()
     def help_n(self):
         print 'n: advance to next frame\n'
 
