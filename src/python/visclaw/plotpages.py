@@ -9,6 +9,13 @@ latex/pdf pages displaying the plots.
 
 import os, time, string, glob
 
+# Required for new animation style modified MAY 2013
+import numpy as np
+import Image
+from matplotlib import pyplot as plt
+from matplotlib import animation
+from JSAnimation import HTMLWriter
+
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
 if clawdir is not None:
@@ -1665,14 +1672,16 @@ def plotclaw2html(plotdata):
             html.write('</center></body></html>')
             html.close()
     
-    # moviefigJ.html
-    #-------------------
-    if plotdata.html_movie:
-        for figno in fignos:
-            html = open('movie%s' % allframesfile[figno], 'w')
-            text = htmlmovie(plotdata,pngfile,framenos,figno)
-            html.write(text)
-            html.close()
+    # Modified May 2013 for new movie style.
+    # Uncomment for old movie style. Code:MAU01
+    ## moviefigJ.html
+    ##-------------------
+    #if plotdata.html_movie:
+        #for figno in fignos:
+            #html = open('movie%s' % allframesfile[figno], 'w')
+            #text = htmlmovie(plotdata,pngfile,framenos,figno)
+            #html.write(text)
+            #html.close()
     
     
 
@@ -2144,6 +2153,35 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
     
+    
+    # Movie:
+    
+    # MODIFIED FOR "JSAnimations" MODIFIED MAY 2013 (requires JSAnimation MODIFIED package)
+    # If unwanted, comment this lines and uncomment lines with reference code: MAU01.
+    # Makes Javascript movies for Clawpack for all figures
+    for figno in fignos:
+      fname = '*fig' + str(figno) + '.png'
+      filenames=sorted(glob.glob(fname))
+      fig = plt.figure()
+      ax = fig.add_subplot(111)
+      im = plt.imshow(Image.open(filenames[0]))
+      def init():
+	im.set_data(Image.open(filenames[0]))
+	return im,
+
+      def animate(i):
+	image=Image.open(filenames[i])
+	im.set_data(image)
+	#fig.canvas.draw() 
+	return im,
+
+      print "Created JSAnimation for figure", figno
+      anim = animation.FuncAnimation(fig, animate, init_func=init,
+				    frames=1, interval=20, blit=True)
+
+      #set embed_frames=True to embed base64-encoded frames directly in the HTML
+      anim.save('movie%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
+    #-------
 
     # Movie:
     #-------
