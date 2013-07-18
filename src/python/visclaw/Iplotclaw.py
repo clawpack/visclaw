@@ -76,7 +76,7 @@ class Iplotclaw(cmd.Cmd):
     lastcmd = 'n'             # initialize so <return> advances frame'
 
     def __init__(self, setplot='setplot.py', outdir=None, \
-                 completekey='tab', stdin=None, stdout=None):
+                 completekey='tab', stdin=None, stdout=None, simple=False):
         """Instantiate a line-oriented interpreter framework.
 
 
@@ -89,6 +89,9 @@ class Iplotclaw(cmd.Cmd):
 
         """
         import sys
+
+        self.simple = simple
+
         if stdin is not None:
             self.stdin = stdin
         else:
@@ -116,17 +119,17 @@ class Iplotclaw(cmd.Cmd):
         plotdata.outdir = outdir
         # Note also that outdir might be reset by setplot!
 
-        try:
-            plotdata = frametools.call_setplot(self.setplot,plotdata)
-        except:
-            print '*** Problem executing setplot in Iplotclaw'
-            #print '    plotdata = ', plotdata
-            print '    setplot = ', self.setplot
-            print '*** Either this file does not exist or '
-            print '    there is a problem executing the function setplot in this file.'
-            print '*** PLOT PARAMETERS MAY NOT BE SET! ***'
-            raise
-            #return
+        if not simple:
+            try:
+                plotdata = frametools.call_setplot(self.setplot,plotdata)
+            except:
+                print '*** Problem executing setplot in Iplotclaw'
+                print '    setplot = ', self.setplot
+                print '*** Either this file does not exist or '
+                print '    there is a problem executing the function setplot in this file.'
+                print '*** PLOT PARAMETERS MAY NOT BE SET! ***'
+                raise
+
         self.plotdata = plotdata
         self.prevplotdata = plotdata
         self.restart = False
@@ -171,7 +174,7 @@ class Iplotclaw(cmd.Cmd):
         
 
         if makeplot:
-            self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
             self.plotdata.refresh_frames=False
             #pylab.draw()
 
@@ -203,9 +206,11 @@ class Iplotclaw(cmd.Cmd):
     # -----------
     def do_n(self, rest):
         from clawpack.visclaw import frametools, data
-        #print '    frameno = ',self.frameno
         self.frameno = self.frameno+1
-	self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        try:
+            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
+        except IOError:
+            print "Swallowing IOError to avoid crashing in interactive mode."
         pylab.draw()
     def help_n(self):
         print 'n: advance to next frame\n'
@@ -213,9 +218,11 @@ class Iplotclaw(cmd.Cmd):
     # previous frame:
     # ---------------
     def do_p(self, rest):
-        #print '    frameno = ',self.frameno
         self.frameno = max(self.frameno-1, 0)
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        try:
+            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
+        except IOError:
+            print "Swallowing IOError to avoid crashing in interactive mode."
     def help_p(self):
         print 'p: go back to previous frame\n'
 
@@ -235,11 +242,13 @@ class Iplotclaw(cmd.Cmd):
         else:
             try:
                 newframeno = int(newframeno)
-                self.frameno = newframeno
-                self.current_data = frametools.plotframe(self.frameno, self.plotdata)
-            except:
+            except ValueError:
                 print '\n    *** Error: frameno must be an integer, n, or p'
-                #print '\n Requested frameno = %s  %s' %(newframeno,type(newframeno))
+            self.frameno = newframeno
+            try:
+                self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
+            except IOError:
+                print "Swallowing IOError to avoid crashing in interactive mode."
     def help_j(self):
         print 'j N: jump to frame N\n'
         print 'j:   jump to some other frame (will prompt for N)\n'
@@ -247,12 +256,11 @@ class Iplotclaw(cmd.Cmd):
     # redraw frame:
     # -------------
     def do_r(self, rest):
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
     def help_r(self):
         print 'r: redraw the current frame,  rr: reload and redraw\n'
 
     def do_rr(self, rest):
-        #self.plotdata.refresh_frames=True
         outdir = os.path.abspath(self.plotdata.outdir)
         key = (self.frameno, outdir)
         xxx = self.plotdata.framesoln_dict.pop(key,None)
@@ -261,7 +269,7 @@ class Iplotclaw(cmd.Cmd):
         else:
            print 'Cleared data for frame ',self.frameno
         print 'Reading data from outdir = ',self.plotdata.outdir
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata)
+        self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
         self.plotdata.refresh_frames=False
     def help_rr(self):
         print 'r: redraw the current frame,  rr: reload and redraw\n'
