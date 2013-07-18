@@ -11,7 +11,7 @@ import os, time, string, glob
 
 # Required for new animation style modified MAY 2013
 import numpy as np
-import Image
+from matplotlib import image as Image
 from matplotlib import pyplot as plt
 from matplotlib import animation
 from JSAnimation import HTMLWriter
@@ -2164,13 +2164,13 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
       filenames=sorted(glob.glob(fname))
       fig = plt.figure()
       ax = fig.add_subplot(111)
-      im = plt.imshow(Image.open(filenames[0]))
+      im = plt.imshow(Image.imread(filenames[0]))
       def init():
-	im.set_data(Image.open(filenames[0]))
+	im.set_data(Image.imread(filenames[0]))
 	return im,
 
       def animate(i):
-	image=Image.open(filenames[i])
+	image=Image.imread(filenames[i])
 	im.set_data(image)
 	#fig.canvas.draw() 
 	return im,
