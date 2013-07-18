@@ -299,7 +299,7 @@ class ClawPlotData(clawdata.ClawData):
                 # Extract locations from gauge data file to be used with the
                 # solutions below
                 locations = {}
-                for (n,gauge) in enumerate(gauge_data.gauges):
+                for gauge in gauge_data.gauges:
                     locations[gauge[0]] = gauge[1:3]
 
             except:
@@ -310,13 +310,14 @@ class ClawPlotData(clawdata.ClawData):
             try:
                 file_path = os.path.join(outdir,'fort.gauge')
                 if not os.path.exists(file_path):
+                    print '*** Warning: cannot find gauge data file %s'%file_path
                     pass
                 else:
-                    print "Reading gauge data from %s." % file_path
+                    print "Reading gauge data from %s" % file_path
                     raw_data = np.loadtxt(file_path)
 
                     gauge_read_string = ""
-                    raw_numbers = np.array([int(value) for value in raw_data[:,0]])
+                    raw_numbers = np.array(raw_data[:,0], dtype=int)    # Convert type for equality comparison
                     for n in gauge_data.gauge_numbers:
                         gauge = gaugetools.GaugeSolution(gaugeno, 
                                                          location=locations[n])
@@ -325,7 +326,7 @@ class ClawPlotData(clawdata.ClawData):
                         gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
                         gauge.t = raw_data[gauge_indices,2]
                         gauge.q = raw_data[gauge_indices,3:].transpose()
-                        gauge.number = gaugeno
+                        gauge.number = n
                         gauge_read_string = " ".join((gauge_read_string,str(n)))
 
                         self.gaugesoln_dict[(n, outdir)] = gauge
@@ -337,15 +338,13 @@ class ClawPlotData(clawdata.ClawData):
                 print '*** outdir = ', outdir
                 raise e
 
-        else:
-            # Attempt to fetch gauge requested
-            gauge = self.gaugesoln_dict[key]
-            # Need to debug why gauge.number is not set properly...
-            #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
-            # For now, set it explicitly here:
-            gauge.number = gaugeno
-
-        return gauge
+        # Attempt to fetch gauge requested
+        try:
+            return self.gaugesoln_dict[key]
+        except Exception as e:
+            print '*** Unable to find gauge %d in solution dictionary'%gaugeno
+            print '*** Lookup key was %s'%str(key)
+            raise e
 
 
     def plotframe(self, frameno):
