@@ -1018,9 +1018,6 @@ def massage_frames_data(plot_pages_data):
             htmlfile[frameno,figno] = '%s%sfig%s.html' % (prefix,framef,figno)
         allfigsfile[frameno] = '%s_allfigs%s.html' % (prefix,framef)
 
-    for figno in fignos:
-        allframesfile[frameno] = '%s_allframes%s.html' % (prefix,figno)
-
     ppd.timeframes_framenos = framenos
     ppd.timeframes_fignos = fignos
     ppd.timeframes_fignames = fignames
