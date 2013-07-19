@@ -278,7 +278,6 @@ class ClawPlotData(clawdata.ClawData):
         # Reread gauge data file
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
             # Attempt to fetch location and time data for checking
-            print "+++ attempting to use amrclaw.GaugeData"
             location = None
             try:
                 try:
