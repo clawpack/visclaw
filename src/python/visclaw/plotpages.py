@@ -991,7 +991,7 @@ def massage_frames_data(plot_pages_data):
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
         allframesfile[figno] = '%s_allframesfig%s.html'  % (prefix,figno)
-            
+       
     numframes = len(framenos)
     numfigs = len(fignos)
 
@@ -1381,7 +1381,7 @@ def plotclaw2html(plotdata):
         html.write('\n   <td><a href="%s.pdf">%s.pdf</a></td>' \
                % (plotdata.latex_fname,plotdata.latex_fname))
         html.write('</tr>\n')
-
+        
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
@@ -1683,7 +1683,7 @@ def plotclaw2html(plotdata):
             #html.write(text)
             #html.close()
     
-    
+ 
 
     #----------------------------------------------------------------------
     fignos = plotdata.gauges_fignos
@@ -2180,7 +2180,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 				    frames=1, interval=20, blit=True)
 
       #set embed_frames=True to embed base64-encoded frames directly in the HTML
-      anim.save('movie%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
+      anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
     #-------
 
     # Movie:
