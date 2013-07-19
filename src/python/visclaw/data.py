@@ -134,9 +134,9 @@ class ClawPlotData(clawdata.ClawData):
         """
         Create a new figure for Clawpack plots.  
         If type='each_frame' it is a figure that will be plotted 
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
             print '*** Warning, figure named %s has already been created' % name
@@ -225,14 +225,15 @@ class ClawPlotData(clawdata.ClawData):
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	Does not clear the frames of solution data already read in.
-	  For that use clearframes.
+	    Does not clear the frames of solution data already read in.
+	    For that use clearframes.
         """
 
 	self.plotfigure_dict.clear()
 	self._fignames = []
 	self._fignos = []
 	self._next_FIG = 1000
+	self._otherfignames = []
 
 
     def clearframes(self, framenos='all'):
