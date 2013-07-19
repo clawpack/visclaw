@@ -108,9 +108,6 @@ class ClawPlotData(clawdata.ClawData):
                                         # figure dictionary before adding
                                         # another solution
 
-        self.add_attribute('refresh_frames',False)     # False ==> don't re-read framesoln if 
-                                        # already in framesoln_dict
-
         self.add_attribute('refresh_gauges',False)     # False ==> don't re-read gaugesoln if 
                                         # already in gaugesoln_dict
 
@@ -167,13 +164,13 @@ class ClawPlotData(clawdata.ClawData):
         return plotfigure
 
 
-    def getframe(self,frameno,outdir=None):
+    def getframe(self,frameno,outdir=None,refresh=False):
         """
         ClawPlotData.getframe:
         Return an object of class Solution containing the solution
         for frame number frameno.
 
-        If self.refresh_frames == True then this frame is read from the fort
+        If refresh == True then this frame is read from the fort
         files, otherwise it is read from the fort files only if the
         the dictionary self.framesoln_dict has no key frameno.  If it does, the
         frame has previously been read and the dictionary value is returned.
@@ -195,7 +192,7 @@ class ClawPlotData(clawdata.ClawData):
         outdir = os.path.abspath(outdir)
         key = (frameno, outdir)
 
-        if self.refresh_frames or (not framesoln_dict.has_key(key)):
+        if refresh or (not framesoln_dict.has_key(key)):
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
@@ -301,7 +298,7 @@ class ClawPlotData(clawdata.ClawData):
                 # Extract locations from gauge data file to be used with the
                 # solutions below
                 locations = {}
-                for (n,gauge) in enumerate(gauge_data.gauges):
+                for gauge in gauge_data.gauges:
                     locations[gauge[0]] = gauge[1:3]
 
             except:
@@ -312,13 +309,14 @@ class ClawPlotData(clawdata.ClawData):
             try:
                 file_path = os.path.join(outdir,'fort.gauge')
                 if not os.path.exists(file_path):
+                    print '*** Warning: cannot find gauge data file %s'%file_path
                     pass
                 else:
-                    print "Reading gauge data from %s." % file_path
+                    print "Reading gauge data from %s" % file_path
                     raw_data = np.loadtxt(file_path)
 
                     gauge_read_string = ""
-                    raw_numbers = np.array([int(value) for value in raw_data[:,0]])
+                    raw_numbers = np.array(raw_data[:,0], dtype=int)    # Convert type for equality comparison
                     for n in gauge_data.gauge_numbers:
                         gauge = gaugetools.GaugeSolution(gaugeno, 
                                                          location=locations[n])
@@ -327,7 +325,7 @@ class ClawPlotData(clawdata.ClawData):
                         gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
                         gauge.t = raw_data[gauge_indices,2]
                         gauge.q = raw_data[gauge_indices,3:].transpose()
-                        gauge.number = gaugeno
+                        gauge.number = n
                         gauge_read_string = " ".join((gauge_read_string,str(n)))
 
                         self.gaugesoln_dict[(n, outdir)] = gauge
@@ -339,16 +337,13 @@ class ClawPlotData(clawdata.ClawData):
                 print '*** outdir = ', outdir
                 raise e
 
-        else:
-            # Attempt to fetch gauge requested
-            print "+++ Using gauge from gaugesoln_dict"
-            gauge = self.gaugesoln_dict[key]
-            # Need to debug why gauge.number is not set properly...
-            #print "gaugeno = %s and gauge.number = %s" % (gaugeno, gauge.number)
-            # For now, set it explicitly here:
-            gauge.number = gaugeno
-
-        return gauge
+        # Attempt to fetch gauge requested
+        try:
+            return self.gaugesoln_dict[key]
+        except Exception as e:
+            print '*** Unable to find gauge %d in solution dictionary'%gaugeno
+            print '*** Lookup key was %s'%str(key)
+            raise e
 
 
     def plotframe(self, frameno):
@@ -841,13 +836,13 @@ class ClawPlotItem(clawdata.ClawData):
             raise Warning('Unrecognized plot_type in ClawPlotItem')
         
 
-    def getframe(self,frameno):
+    def getframe(self,frameno,refresh=False):
         """
         ClawPlotItem.getframe:
         Return an object of class Solution containing the solution
         for frame number frameno.
 
-        If self.refresh_frames == True then this frame is read from the fort
+        If refresh == True then this frame is read from the fort
         files, otherwise it is read from the fort files only if the
         the dictionary self.framesoln_dict has key frameno.  If it does, the
         frame has previously been read and the dictionary value is returned.
@@ -855,7 +850,7 @@ class ClawPlotItem(clawdata.ClawData):
 
         plotdata = self._plotdata
         outdir = self.outdir
-        framesoln = plotdata.getframe(frameno, outdir)
+        framesoln = plotdata.getframe(frameno, outdir,refresh=refresh)
 
         return framesoln
 
