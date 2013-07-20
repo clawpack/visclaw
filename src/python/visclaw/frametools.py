@@ -25,7 +25,7 @@ import clawpack.clawutil.clawdata as clawdata
 
 
 #==============================================================================
-def plotframe(frameno, plotdata, verbose=False, simple=False):
+def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 #==============================================================================
 
     """
@@ -59,7 +59,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False):
         print '*** Warning in plotframe: plotdata has empty plotfigure_dict'
         print '*** Apparently no figures to plot'
 
-    framesoln = plotdata.getframe(frameno, plotdata.outdir)
+    framesoln = plotdata.getframe(frameno, plotdata.outdir, refresh=refresh)
 
     t = framesoln.t
 

@@ -10,37 +10,23 @@ For options during looping type:
 
 """
 
-import cmd, os, sys
-
+import sys
 
 if not sys.modules.has_key('matplotlib'):
-    try:
-        import matplotlib
-        # Override system defaults before importing pylab
-        # If you set the backend here, you must start ipython w/o pylab
-        # before importing this package.
-        #matplotlib.use('Agg')  # Use an image backend
-        #matplotlib.use('TkAgg')
-        matplotlib.rc('text', usetex=False)
-        matplotlib.interactive(True)
+    import matplotlib
+    # Override system defaults before importing pylab
+    # If you set the backend here, you must start ipython w/o pylab
+    # before importing this package.
+    #matplotlib.use('Agg')  # Use an image backend
+    #matplotlib.use('TkAgg')
+    matplotlib.rc('text', usetex=False)
+    matplotlib.interactive(True)
 
-    except:
-        print "problem importing matplotlib"
-        sys.exit(1)
-
-try:
-    import pylab 
-except:
-    print "problem importing pylab"
-    sys.exit(1)
-
-import clawpack.clawutil.clawdata as clawdata
-from clawpack.visclaw import data, frametools, gaugetools
-
-#rundata = data.ClawData('claw.data')
+from clawpack.visclaw import frametools
+from iplot import Iplot
 
 #------------------------
-class Iplotclaw(cmd.Cmd):
+class Iplotclaw(Iplot):
 #------------------------
     """
     Class for interactively stepping through Clawpack plots.
@@ -67,7 +53,6 @@ class Iplotclaw(cmd.Cmd):
     Other arguments of Iplotclaw rarely need to be changed:
        completekey='tab', stdin=None, stdout=None
     """
-    from clawpack.visclaw import frametools, data
 
     # initialization:
     # ---------------
@@ -88,7 +73,7 @@ class Iplotclaw(cmd.Cmd):
         sys.stdin and sys.stdout are used.
 
         """
-        import sys
+        from clawpack.visclaw import data
 
         self.simple = simple
 
@@ -135,144 +120,27 @@ class Iplotclaw(cmd.Cmd):
         self.restart = False
         self.prevframeno = 0
 
+        self.frames = {}
 
-    def preloop(self):
+    def plot_and_cache(self,frameno):
+        try:
+            if frameno not in self.frames.keys():
+                frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=True)
+                self.frames[str(frameno)] = ''
+            else:
+                frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=False)
+        except IOError:
+            print "Swallowing IOError to avoid crashing in interactive mode."
+    def help_n(self):
+        print 'n: advance to next frame\n'
 
-        print '\nInteractive plotting for Clawpack output... '
-        print '\nPlotting data from outdir = ', self.plotdata.outdir
-        print 'Type ? at PLOTCLAW prompt for list of commands'
-
-        startframeno = raw_input('\n    Start at which frame [default=%i] ? '\
-                                % self.prevframeno)
-
-        makeplot = True 
-
-        if startframeno == '':
-            self.frameno = self.prevframeno
-            self.plotdata = self.prevplotdata
-            if self.restart:
-                replot = raw_input('    Replot data for frame %s [no] ? ' \
-                                % self.frameno)
-
-                if replot not in ['y','yes','Y']:
-                    makeplot = False
-
-                if makeplot:
-                    reload = raw_input('    Reload data for frame %s [no] ? ' \
-                                    % self.frameno)
-                    if reload in ['y','yes','Y']:
-                        self.plotdata.refresh_frames = True
-                    else:
-                        self.plotdata.refresh_frames = False
-        else:
-            self.plotdata = self.prevplotdata
-            try:
-                self.frameno = int(startframeno)
-            except:
-                print '\n    *** Error: frameno must be an integer, resetting to 0'
-                self.frameno = 0
-        
-
-        if makeplot:
-            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-            self.plotdata.refresh_frames=False
-            #pylab.draw()
-
-        self.lastcmd = 'n'
-        self.restart = True 
-
-    # end of initialization 
-    # ---------------------
-
-    def postloop(self):
-        #self.framedata = self.plotdata.getframe(self.frameno)
-        #patch0 = self.framedata.patches[0]
-        #self.q = patch0.q
-        #self.mx = patch0.mx
-        #if self.num_dim > 1:
-        #    self.my = patch0.my
-        self.prevframeno = self.frameno
+    def load_frame(self,frameno):
+        frame = self.plotdata.getframe(frameno, self.plotdata.outdir)
+        return frame
 
 
     # Commands that can be typed at the PLOTCLAW> prompt:
     # ---------------------------------------------------
-
-    # help command:
-    # -------------
-    def help_help(self):
-        print 'print this list of valid commands\n'
-
-    # next frame:
-    # -----------
-    def do_n(self, rest):
-        from clawpack.visclaw import frametools, data
-        self.frameno = self.frameno+1
-        try:
-            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-        except IOError:
-            print "Swallowing IOError to avoid crashing in interactive mode."
-        pylab.draw()
-    def help_n(self):
-        print 'n: advance to next frame\n'
-
-    # previous frame:
-    # ---------------
-    def do_p(self, rest):
-        self.frameno = max(self.frameno-1, 0)
-        try:
-            self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-        except IOError:
-            print "Swallowing IOError to avoid crashing in interactive mode."
-    def help_p(self):
-        print 'p: go back to previous frame\n'
-
-    # jump to arbitrary frame:
-    # ------------------------
-    def do_j(self, rest):
-        try:
-            newframeno = int(rest)
-        except:
-            newframeno = raw_input('\n    Jump to which frame? ')
-        if newframeno == 'n': 
-            self.do_n(rest)
-            self.lastcmd = 'n'
-        elif newframeno == 'p': 
-            self.do_p(rest)
-            self.lastcmd = 'p'
-        else:
-            try:
-                newframeno = int(newframeno)
-            except ValueError:
-                print '\n    *** Error: frameno must be an integer, n, or p'
-            self.frameno = newframeno
-            try:
-                self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-            except IOError:
-                print "Swallowing IOError to avoid crashing in interactive mode."
-    def help_j(self):
-        print 'j N: jump to frame N\n'
-        print 'j:   jump to some other frame (will prompt for N)\n'
-
-    # redraw frame:
-    # -------------
-    def do_r(self, rest):
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-    def help_r(self):
-        print 'r: redraw the current frame,  rr: reload and redraw\n'
-
-    def do_rr(self, rest):
-        outdir = os.path.abspath(self.plotdata.outdir)
-        key = (self.frameno, outdir)
-        xxx = self.plotdata.framesoln_dict.pop(key,None)
-        if xxx is None:
-           print 'No frame data to clear for frame ',self.frameno
-        else:
-           print 'Cleared data for frame ',self.frameno
-        print 'Reading data from outdir = ',self.plotdata.outdir
-        self.current_data = frametools.plotframe(self.frameno, self.plotdata, simple=self.simple)
-        self.plotdata.refresh_frames=False
-    def help_rr(self):
-        print 'r: redraw the current frame,  rr: reload and redraw\n'
 
     # call setplot again
     # --------------------
@@ -283,7 +151,7 @@ class Iplotclaw(cmd.Cmd):
             self.plotdata.setplot = self.setplot
         print 'Executing setplot from ',self.setplot
         try:
-            plotdata = frametools.call_setplot(self.setplot,self.plotdata)
+            frametools.call_setplot(self.setplot,self.plotdata)
         except:
             print '*** Problem re-executing setplot'
             raise
@@ -305,32 +173,6 @@ class Iplotclaw(cmd.Cmd):
     def help_show(self):
         print 'show: show the current plot items'
 
-    # clearframes
-    # ---------
-    def do_clearframes(self, rest):
-        if rest=='':
-            self.plotdata.framesoln_dict.clear()
-            print 'Cleared all frames'
-        else:
-            try:
-                for framestr in rest.split():
-                    frameno = int(framestr)
-                    outdir = os.path.abspath(self.plotdata.outdir)
-                    key = (frameno, outdir)
-                    xxx = self.plotdata.framesoln_dict.pop(key,None)
-                    if xxx is None:
-                       print 'No frame data to clear for frame ',frameno
-                    else:
-                       print 'Cleared data for frame ',frameno
-            except:
-                print 'Error in clearframes: unrecognized input'
-
-    def help_clearframes(self):
-        print 'clearframes: delete frame data from cache to replot'
-        print '    use if you have rerun the code and want to plot the'
-        print '    latest results'
-        print '          clearframes framenos  clears one or more frames'
-        print '          clearframes           clears all frames'
 
     # cleargauges
     # ---------
@@ -346,102 +188,12 @@ class Iplotclaw(cmd.Cmd):
         print '    use if you have rerun the code and want to plot the'
         print '    latest results'
 
-    # save
-    # ---------
-    def do_save(self, rest):
-        rest = rest.split()
-        if len(rest)==2:
-            try:
-                figno = int(rest[0])
-            except:
-                print "*** Expected figure number, got: ",rest[0]
-            try:
-                fname = rest[1]
-                pylab.figure(figno)
-                pylab.savefig(fname)
-                print "Saved figure number %s to file %s" % (figno,fname)
-            except:
-                print "*** Problem executing savefig"
-        else:
-            print "*** save requires two arguments: figno, fname"
-            print "*** got: ",rest
 
-    def help_save(self):
-        print 'save figno fname: save figure figno to file fname using savefig.'
-
-
-    # print working directory:
-    # ------------------------
-    def do_pwd(self, rest):
-        print '  now in directory: ',os.getcwd()
-        print '  data from outdir: ',self.plotdata.outdir
-    def help_pwd(self):
-        print 'pwd: print current working directory and outdir'
-        print '     fort.* files in outdir provide frame data\n'
-
-
-
-    # print figure to a file:
-    # -----------------------
-    def do_print(self, rest):
-        #from clawpack.visclaw import frametools
-        fname = rest
-        try:
-            for figno in self.plotdata._fignos:
-                if len(fname)>0:
-                    # doesn't work properly!
-                    frametools.printfig(fname, self.frameno, figno)
-                else:
-                    frametools.printfig(frameno=self.frameno, figno=figno)
-        except:
-            print '    *** Error saving figure to file'
-
-    def help_print(self):
-        print 'print: print all figures for this frame to files of the form'
-        print '      frame000NfigJ.png'
-        print 'To print a single figure or with different style, try e.g.'
-        print '     PLOTCLAW > q'
-        print '     figure(2)'
-        print '     savefig("myname.jpg")\n'
-        
-
-    # use vi e.g. to edit setplot.py:
-    # -------------------------------
-    def do_vi(self, rest):
-        exitcode = os.system('vi %s' % rest)
-        if exitcode != 0:
-            print '*** System vi command failed.  Try "help edit"'
-
-    def help_vi(self):
-        print 'Edit file using vi, for example to change the plot parameters:'
-        print '    PLOTCLAW> vi setplot.py '
-        print '    PLOTCLAW> resetplot '
-        print 'See also "help edit" for use of other editors.\n'
-        
-
-    # edit a file using editor specified by environment variable EDITOR:
-    # -----------------------------------------------------------------
-    def do_edit(self, rest):
-        try:
-            editor = os.environ['EDITOR']
-            eval("os.system('%s %s')" % (editor,rest))
-        except:
-            print '*** Environment variable EDITOR not set... '
-            print '*** Type "help edit" for more info'
-
-    def help_edit(self):
-        print 'Edit file, for example to change the plot parameters:'
-        print '    PLOTCLAW> edit setplot.py '
-        print '    PLOTCLAW> resetplot '
-        print 'Specify the editor by setting environment variable EDITOR'
-        print '  before starting Python shell.'
-        print 'If you want to use vi, see also "help vi".\n'
-
-        
     # plotgauge commands:
     # --------------
     def do_plotgauge(self, rest):
-        gaugesoln_dict = self.plotdata.gaugesoln_dict
+        from clawpack.visclaw import gaugetools
+        import os
         outdir = os.path.abspath(self.plotdata.outdir)
 
         # Construct gaugeno list
@@ -461,6 +213,7 @@ class Iplotclaw(cmd.Cmd):
 
         # Loop through requested gauges and read in if not in gaugesoln_dict
         for (n,gaugeno) in enumerate(gaugenos):
+            # Is the next line necessary or can we delete it?
             gauge = self.plotdata.getgauge(gaugeno,outdir)
             
             gaugetools.plotgauge(gaugeno,self.plotdata)
@@ -477,39 +230,6 @@ class Iplotclaw(cmd.Cmd):
         print 'plotgauge    : loop through plots of all gauges'
         
         
-
-    # quit commands:
-    # --------------
-    def do_quit(self, rest):
-        print 'quitting...'
-        return True
-    def help_quit(self):
-        print 'q or quit: terminates the command loop\n'
-        
-    def do_q(self, rest):
-        print 'quitting...'
-        return True
-    def help_q(self):
-        print 'q or quit: terminates the command loop\n'
-        
-    def do_k(self, rest):
-        print 'quitting...'
-        return True
-    def help_k(self):
-        print 'k: terminates the command loop\n'
-        
-    def do_EOF(self, rest):
-        print "quitting..."
-        return True
-    def help_EOF(self):
-        print "Terminates the command loop\n"
-        
-    # alias plotloop = cmdloop:
-    # -------------------------
-    def plotloop(self):
-        self.cmdloop()
-
-
     # Convenience functions for examining solution or making additional
     # plots from the ipython command line:
     # -----------------------------------------------------------------
@@ -589,7 +309,6 @@ class Iplotclaw(cmd.Cmd):
                             print "    for otherfigure ",name
                 else:
                     print "No makefig function specified for ",name
-
 
 
 # end of Iplotclaw.

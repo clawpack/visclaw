@@ -108,9 +108,6 @@ class ClawPlotData(clawdata.ClawData):
                                         # figure dictionary before adding
                                         # another solution
 
-        self.add_attribute('refresh_frames',False)     # False ==> don't re-read framesoln if 
-                                        # already in framesoln_dict
-
         self.add_attribute('refresh_gauges',False)     # False ==> don't re-read gaugesoln if 
                                         # already in gaugesoln_dict
 
@@ -137,9 +134,9 @@ class ClawPlotData(clawdata.ClawData):
         """
         Create a new figure for Clawpack plots.  
         If type='each_frame' it is a figure that will be plotted 
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
             print '*** Warning, figure named %s has already been created' % name
@@ -167,13 +164,13 @@ class ClawPlotData(clawdata.ClawData):
         return plotfigure
 
 
-    def getframe(self,frameno,outdir=None):
+    def getframe(self,frameno,outdir=None,refresh=False):
         """
         ClawPlotData.getframe:
         Return an object of class Solution containing the solution
         for frame number frameno.
 
-        If self.refresh_frames == True then this frame is read from the fort
+        If refresh == True then this frame is read from the fort
         files, otherwise it is read from the fort files only if the
         the dictionary self.framesoln_dict has no key frameno.  If it does, the
         frame has previously been read and the dictionary value is returned.
@@ -195,7 +192,7 @@ class ClawPlotData(clawdata.ClawData):
         outdir = os.path.abspath(outdir)
         key = (frameno, outdir)
 
-        if self.refresh_frames or (not framesoln_dict.has_key(key)):
+        if refresh or (not framesoln_dict.has_key(key)):
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
@@ -228,14 +225,15 @@ class ClawPlotData(clawdata.ClawData):
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	Does not clear the frames of solution data already read in.
-	  For that use clearframes.
+	    Does not clear the frames of solution data already read in.
+	    For that use clearframes.
         """
 
 	self.plotfigure_dict.clear()
 	self._fignames = []
 	self._fignos = []
 	self._next_FIG = 1000
+	self._otherfignames = []
 
 
     def clearframes(self, framenos='all'):
@@ -837,13 +835,13 @@ class ClawPlotItem(clawdata.ClawData):
             raise Warning('Unrecognized plot_type in ClawPlotItem')
         
 
-    def getframe(self,frameno):
+    def getframe(self,frameno,refresh=False):
         """
         ClawPlotItem.getframe:
         Return an object of class Solution containing the solution
         for frame number frameno.
 
-        If self.refresh_frames == True then this frame is read from the fort
+        If refresh == True then this frame is read from the fort
         files, otherwise it is read from the fort files only if the
         the dictionary self.framesoln_dict has key frameno.  If it does, the
         frame has previously been read and the dictionary value is returned.
@@ -851,7 +849,7 @@ class ClawPlotItem(clawdata.ClawData):
 
         plotdata = self._plotdata
         outdir = self.outdir
-        framesoln = plotdata.getframe(frameno, outdir)
+        framesoln = plotdata.getframe(frameno, outdir,refresh=refresh)
 
         return framesoln
 
