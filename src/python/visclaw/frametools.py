@@ -1037,15 +1037,12 @@ def printframes(plotdata=None, verbose=True):
 
 
     fortfile = {}
-    pngfile = {}
     frametimes = {}
 
     import glob
     for file in glob.glob('fort.q*'):
-        frameno = int(file[6:9])
+        frameno = int(file[6:])
         fortfile[frameno] = file
-        for figno in fignos:
-            pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
     
     if len(fortfile) == 0:
         print '*** No fort.q files found in directory ', os.getcwd()
@@ -1299,14 +1296,14 @@ def only_most_recent(framenos,outdir='.',verbose=True):
 
     fortfile = {}
     for file in glob.glob('fort.q*'):
-        frameno = int(file[6:9])
+        frameno = int(file[6:])
         fortfile[frameno] = file
 
     #DK: In PetClaw, we don't output fort.q* files.  Instead count the
     #claw.pkl* files.
     if len(fortfile) == 0:
         for file in glob.glob('claw.pkl*'):
-            frameno = int(file[8:11])
+            frameno = int(file[8:])
             fortfile[frameno] = file
     
     if len(fortfile) == 0:
