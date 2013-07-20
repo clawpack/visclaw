@@ -1037,15 +1037,12 @@ def printframes(plotdata=None, verbose=True):
 
 
     fortfile = {}
-    pngfile = {}
     frametimes = {}
 
     import glob
     for file in glob.glob('fort.q*'):
         frameno = int(file[6:])
         fortfile[frameno] = file
-        for figno in fignos:
-            pngfile[frameno,figno] = 'frame' + file[6:] + 'fig%s.png' % figno
     
     if len(fortfile) == 0:
         print '*** No fort.q files found in directory ', os.getcwd()
