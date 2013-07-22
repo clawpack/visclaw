@@ -26,6 +26,9 @@ class _Icons(object):
 
 JS_INCLUDE = """
 <script language="javascript">
+  /*Add link for CLAWPACK plotting system*/
+  document.writeln('<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>');
+  
   /* Define the Animation class */
   function Animation(frames, img_id, slider_id, loop_select_id){{
     this.img_id = img_id;
@@ -165,7 +168,7 @@ JS_INCLUDE = """
 
 DISPLAY_TEMPLATE = """
 <div class="animation" align="center">
-    <img id="_anim_img{id}">
+    <img id="_anim_img{id}" style="width:450px" >
     <br>
     <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
     <br>
@@ -179,8 +182,8 @@ DISPLAY_TEMPLATE = """
     <button onclick="anim{id}.last_frame()"><img class="anim_icon" src="{icons.last}"></button>
     <button onclick="anim{id}.faster()">+</button>
   <form action="#n" name="_anim_loop_select{id}" class="anim_control">
-    <input type="radio" name="state" value="once"> Once </input>
-    <input type="radio" name="state" value="loop" checked> Loop </input>
+    <input type="radio" name="state" value="once" checked> Once </input>
+    <input type="radio" name="state" value="loop"> Loop </input>
     <input type="radio" name="state" value="reflect"> Reflect </input>
   </form>
 </div>
@@ -299,7 +302,7 @@ class HTMLWriter(FileMovieWriter):
                                            self.frame_format,self.figno)
 
         with open(self.outfile, 'w') as of:
-            of.write(JS_INCLUDE.format(interval=30))
+            of.write(JS_INCLUDE.format(interval=20))
             of.write(DISPLAY_TEMPLATE.format(id=self.anim_id,
                                              Nframes=len(self._temp_names),
                                              fill_frames=fill_frames,
