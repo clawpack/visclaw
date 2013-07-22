@@ -302,7 +302,7 @@ def print_html_pointers(path_to_html_index):
     print "\n--------------------------------------------------------"
     print "\nPoint your browser to:"
     print "    file://%s" % path_to_html_index
-    clawdir = os.getenv('CLAW')
+    clawdir = os.getenv('CLAW','')
     if clawdir in path_to_html_index:
         path_to_html_index = path_to_html_index.replace(clawdir,'')
         print "\nOr, if you have the Clawpack server running, point your browser to:"
@@ -1292,7 +1292,11 @@ def plotclaw2html(plotdata):
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
-    plotdata = massage_gauges_data(plotdata)
+    if plotdata.gauges_fignos is not None:
+        plotdata = massage_gauges_data(plotdata)
+        gauge_pngfile = plotdata._gauge_pngfile
+        gauge_htmlfile = plotdata._gauge_htmlfile
+        gauge_allfigsfile = plotdata._gauge_allfigsfile
 
     framenos = plotdata.timeframes_framenos
     frametimes = plotdata.timeframes_frametimes
@@ -1303,9 +1307,6 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
-    gauge_pngfile = plotdata._gauge_pngfile
-    gauge_htmlfile = plotdata._gauge_htmlfile
-    gauge_allfigsfile = plotdata._gauge_allfigsfile
             
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -1355,9 +1356,13 @@ def plotclaw2html(plotdata):
     html.write('<p>\n<b>Go to:</b>\n')
     #html.write('<p>\n&nbsp;&nbsp; <a href="#timeframes">Time Frames</a>\n')
     gaugenos = plotdata.gauges_gaugenos
-    numgauges = len(gaugenos)
-    if (numgauges>0) & (len(plotdata.gauges_fignos)>0):
-        html.write('&nbsp;&nbsp; <a href="#gauges">Gauges</a>\n')
+    if gaugenos is None:
+        numgauges = 0
+    else:
+        numgauges = len(gaugenos)
+    if (numgauges>0):
+        if (len(plotdata.gauges_fignos)>0):
+            html.write('&nbsp;&nbsp; <a href="#gauges">Gauges</a>\n')
     html.write('&nbsp;&nbsp; <a href="#eachrun">Other plots</a>\n')
 
     html.write('<p>\n<a name="timeframes"><h3>Time frames:</h3></a>\n')
@@ -1405,33 +1410,32 @@ def plotclaw2html(plotdata):
 
     # Gauges:
     #----------------
-    gaugenos = plotdata.gauges_gaugenos
-    numgauges = len(gaugenos)
     fignos = plotdata.gauges_fignos
     fignames = plotdata.gauges_fignames
-    if (numgauges>0) & (len(fignos)>0):
-        html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
-        html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
-        html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
-        for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
-                           % (fignos[ifig],fignames[fignos[ifig]]))
-        html.write('</tr>\n')
-        html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
-    
-        for gaugeno in gaugenos:
-    
-            html.write('\n <tr><td>Gauge %s:</td>' \
-                        % (gaugeno))
-            for figno in fignos:
-                figname = fignames[figno]
-                html.write('\n   <td><a href="%s">%s</a></td>' \
-                           % (gauge_htmlfile[gaugeno,figno],figname))
-            if numfigs > 1:
-                html.write('\n<td><a href="%s">All figures</a></td>' \
-                           % gauge_allfigsfile[gaugeno])
+    if (numgauges>0):
+        if (len(fignos)>0):
+            html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
+            html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
+            html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
+            for ifig in range(len(fignos)):
+                html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
+                               % (fignos[ifig],fignames[fignos[ifig]]))
             html.write('</tr>\n')
-        html.write('</table>\n')
+            html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
+        
+            for gaugeno in gaugenos:
+        
+                html.write('\n <tr><td>Gauge %s:</td>' \
+                            % (gaugeno))
+                for figno in fignos:
+                    figname = fignames[figno]
+                    html.write('\n   <td><a href="%s">%s</a></td>' \
+                               % (gauge_htmlfile[gaugeno,figno],figname))
+                if numfigs > 1:
+                    html.write('\n<td><a href="%s">All figures</a></td>' \
+                               % gauge_allfigsfile[gaugeno])
+                html.write('</tr>\n')
+            html.write('</table>\n')
     #else:
     #   html.write('<p>None\n')   
 
@@ -1678,6 +1682,8 @@ def plotclaw2html(plotdata):
     
     # allgaugesfigJ.html
     #-------------------
+    if fignos is None:
+        fignos = []
     for figno in fignos:
         html = open('allgaugesfig%s.html' % figno, 'w')
         html.write('<html><meta http-equiv="expires" content="0">')
@@ -1874,7 +1880,6 @@ def massage_gauges_data(plot_pages_data):
 
     startdir = os.getcwd()
         
-
     for figno in fignos:
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
@@ -2097,16 +2102,16 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Gauges:
     # -------
-    gaugenos = plotdata.print_gaugenos
-    if gaugenos == 'all':
-        # Read gauge numbers from setgauges.data if it exists:
-        setgauges = gaugetools.read_setgauges(datadir)
-        gaugenos = setgauges.gauge_numbers
+    if os.path.exists(os.path.join(datadir,"gauge.data")):
+        gaugenos = plotdata.print_gaugenos
+        if gaugenos == 'all':
+            # Read gauge numbers from setgauges.data if it exists:
+            setgauges = gaugetools.read_setgauges(datadir)
+            gaugenos = setgauges.gauge_numbers
 
-    plotdata.gauges_gaugenos = gaugenos
-    plotdata.gauges_fignos = fignos_each_gauge
-    plotdata.gauges_fignames = fignames
-
+        plotdata.gauges_gaugenos = gaugenos
+        plotdata.gauges_fignos = fignos_each_gauge
+        plotdata.gauges_fignames = fignames
 
     # Make html files for time frame figures:
     # ---------------------------------------
@@ -2130,9 +2135,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             frametools.plotframe(frameno, plotdata, verbose)
             print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
-        for gaugeno in gaugenos:
-            gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print 'Gauge %i ' % gaugeno
+        if gaugenos is not 'all':
+            for gaugeno in gaugenos:
+                gaugetools.plotgauge(gaugeno, plotdata, verbose)
+                print 'Gauge %i ' % gaugeno
 
 
     if plotdata.latex:
