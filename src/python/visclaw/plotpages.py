@@ -302,7 +302,7 @@ def print_html_pointers(path_to_html_index):
     print "\n--------------------------------------------------------"
     print "\nPoint your browser to:"
     print "    file://%s" % path_to_html_index
-    clawdir = os.getenv('CLAW')
+    clawdir = os.getenv('CLAW','')
     if clawdir in path_to_html_index:
         path_to_html_index = path_to_html_index.replace(clawdir,'')
         print "\nOr, if you have the Clawpack server running, point your browser to:"
@@ -1754,13 +1754,14 @@ def plotclaw2html(plotdata):
             # list of all gauges at bottom:
 
             html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
-            for gaugeno2 in gaugenos:
-                if gaugeno2 == gaugeno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % gaugeno)
-                else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (gauge_allfigsfile[gaugeno2],gaugeno2))
+            if gaugenos is not 'all':
+                for gaugeno2 in gaugenos:
+                    if gaugeno2 == gaugeno:
+                        html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
+                                   % gaugeno)
+                    else:
+                        html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
+                               % (gauge_allfigsfile[gaugeno2],gaugeno2))
     
             html.write('\n</center></body></html>\n')
             html.close()
@@ -2101,7 +2102,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if gaugenos == 'all':
         # Read gauge numbers from setgauges.data if it exists:
         setgauges = gaugetools.read_setgauges(datadir)
-        gaugenos = setgauges.gauge_numbers
+        if setgauges is not None:
+            gaugenos = setgauges.gauge_numbers
 
     plotdata.gauges_gaugenos = gaugenos
     plotdata.gauges_fignos = fignos_each_gauge
@@ -2130,9 +2132,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             frametools.plotframe(frameno, plotdata, verbose)
             print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
-        for gaugeno in gaugenos:
-            gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print 'Gauge %i ' % gaugeno
+        if gaugenos is not 'all':
+            for gaugeno in gaugenos:
+                gaugetools.plotgauge(gaugeno, plotdata, verbose)
+                print 'Gauge %i ' % gaugeno
 
 
     if plotdata.latex:
