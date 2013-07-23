@@ -628,7 +628,7 @@ def timeframes2html(plot_pages_data):
     if ppd.html_movie:
         for figno in fignos:
             html = open('movie%s' % allframesfile[figno], 'w')
-            text = htmlmovie(plot_pages_data,pngfile,framenos,figno)
+            text = htmlmovie(plot_pages_data.html_index_fname,pngfile,framenos,figno)
             html.write(text)
             html.close()
     
@@ -645,7 +645,7 @@ def timeframes2html(plot_pages_data):
     
 
 #=====================================
-def htmlmovie(plot_pages_data,pngfile,framenos,figno):
+def htmlmovie(html_index_fname,pngfile,framenos,figno):
 #=====================================
     """
     Input:
@@ -763,7 +763,7 @@ def htmlmovie(plot_pages_data,pngfile,framenos,figno):
 
         </body>
         </html>
-        """ % (plot_pages_data.html_index_fname,pngfile[framenos[0],figno])
+        """ % (html_index_fname,pngfile[framenos[0],figno])
 
     return text
     # end of htmlmovie
@@ -789,8 +789,6 @@ def plots2latex(plot_pages_data):
         print 'No latex file generated'
         return 
         
-
-    ppd =plot_pages_data
 
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
@@ -910,36 +908,35 @@ def cd_with_mkdir(newdir, overwrite=False, verbose=True):
 
 
 #======================================================================
-def cd_plotdir(plot_pages_data):
+def cd_plotdir(plotdir, overwrite):
 #======================================================================
 
     verbose = False
-    ppd = plot_pages_data
-    if os.path.isfile(ppd.plotdir):
+    if os.path.isfile(plotdir):
         print "*** Error in cd_plotdir: plotdir specified is a file"
         raise
-    elif (os.path.isdir(ppd.plotdir) & ppd.overwrite):
+    elif (os.path.isdir(plotdir) & overwrite):
         if verbose:
-            print "Directory '%s' " % ppd.plotdir
+            print "Directory '%s' " % plotdir
             print "    already exists, files may be overwritten "
-    elif (os.path.isdir(ppd.plotdir) & (not ppd.overwrite)):
-        print "Directory '%s'" % ppd.plotdir
+    elif (os.path.isdir(plotdir) & (not overwrite)):
+        print "Directory '%s'" % plotdir
         print "  already exists"
-        print "Remove directory with \n '  rm -r %s' " % ppd.plotdir
+        print "Remove directory with \n '  rm -r %s' " % plotdir
         print "  and try again, or set overwrite=True "
         print "*** Error in cd_plotdir"
         raise
     else:
         try:
-            os.mkdir(ppd.plotdir)
+            os.mkdir(plotdir)
         except:
-            print "Cannot make directory ",ppd.plotdir
+            print "Cannot make directory ",plotdir
             print  "*** Error in cd_plotdir"
             raise
     try:
-        os.chdir(ppd.plotdir)
+        os.chdir(plotdir)
     except:
-        print "*** Error trying to cd to ",ppd.plotdir
+        print "*** Error trying to cd to ",plotdir
 
 
 #=====================================
@@ -1670,7 +1667,7 @@ def plotclaw2html(plotdata):
     if plotdata.html_movie:
         for figno in fignos:
             html = open('movie%s' % allframesfile[figno], 'w')
-            text = htmlmovie(plotdata,pngfile,framenos,figno)
+            text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
             html.write(text)
             html.close()
     
@@ -2023,7 +2020,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     try:
-        plotpages.cd_plotdir(plotdata)
+        plotpages.cd_plotdir(plotdata.plotdir, plotdata.overwrite)
     except:
         print "*** Error, aborting plotframes"
         return plotdata
