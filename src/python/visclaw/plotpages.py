@@ -2172,7 +2172,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
       def animate(i):
 	image=Image.imread(filenames[i])
 	im.set_data(image)
-	#fig.canvas.draw() 
 	return im,
 
       print "Created JSAnimation for figure", figno
