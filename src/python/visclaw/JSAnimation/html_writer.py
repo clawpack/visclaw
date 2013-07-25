@@ -170,7 +170,7 @@ JS_INCLUDE = """
 # Added style="width:450px" to make animation window slightly smaller for clawpack CODE:maojrs 
 DISPLAY_TEMPLATE = """
 <div class="animation" align="center">
-    <img id="_anim_img{id}" style="width:500px">
+    <img id="_anim_img{id}" style="width:{frame_width}px">
     <br>
     <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
     <br>
@@ -242,13 +242,14 @@ class HTMLWriter(FileMovieWriter):
     args_key = 'animation.ffmpeg_args'
     supported_formats = ['png', 'jpeg', 'tiff', 'svg']
     
-    # Added frame_suffix and add_html to init. CODE:maojrs
-    def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None,
-                 metadata=None, embed_frames=False, frame_suffix='', add_html=''):
+    # Added frame_suffix, add_html and frame_width to init. CODE:maojrs
+    def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None, metadata=None, 
+                 embed_frames=False, frame_suffix='', add_html='', frame_width=650):
         self.embed_frames = embed_frames
         self._saved_frames = list()
         self.frame_suffix = frame_suffix
         self.add_html = add_html
+        self.frame_width = frame_width
         super(HTMLWriter, self).__init__(fps=fps, codec=codec,
                                          bitrate=bitrate,
                                          extra_args=extra_args,
@@ -310,7 +311,8 @@ class HTMLWriter(FileMovieWriter):
             of.write(DISPLAY_TEMPLATE.format(id=self.anim_id,
                                              Nframes=len(self._temp_names),
                                              fill_frames=fill_frames,
-                                             icons=_Icons()))
+                                             icons=_Icons(),
+                                             frame_width=self.frame_width))
 
         # Increment the counter, so that if multiple animations are made the
         # variables and element ids won't conflict.

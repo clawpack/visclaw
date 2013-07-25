@@ -2182,7 +2182,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
       #set embed_frames=True to embed base64-encoded frames directly in the HTML
       pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
       anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False, frame_suffix=fsuffix,
-									    add_html=pre_html))
+									    add_html=pre_html, frame_width=500))
       #anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
     #-------
 
