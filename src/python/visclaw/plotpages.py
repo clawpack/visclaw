@@ -2161,6 +2161,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Makes Javascript movies for Clawpack for all figures
     for figno in fignos:
       fname = '*fig' + str(figno) + '.png'
+      fsuffix = 'fig' + str(figno)
       filenames=sorted(glob.glob(fname))
       fig = plt.figure()
       ax = fig.add_subplot(111)
@@ -2176,10 +2177,13 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
       print "Created JSAnimation for figure", figno
       anim = animation.FuncAnimation(fig, animate, init_func=init,
-				    frames=1, interval=20, blit=True)
+				    frames=11, interval=20, blit=True)
 
       #set embed_frames=True to embed base64-encoded frames directly in the HTML
-      anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
+      pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
+      anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False, frame_suffix=fsuffix,
+									    add_html=pre_html))
+      #anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
     #-------
 
     # Movie:

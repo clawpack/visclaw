@@ -1,5 +1,6 @@
+# Modified version of original html_writer.py by @jakvdp 
+# from JSAnimation class. All modification commented under CODE:maojrs
 import os
-import glob
 from matplotlib.animation import writers, FileMovieWriter
 import tempfile
 import random
@@ -22,13 +23,14 @@ class _Icons(object):
         data = open(os.path.join(self.icon_dir, filename), 'rb').read()
         return 'data:image/{0};base64,{1}'.format(self.extension,
                                                   data.encode('base64'))
-
+                                                  
+#Added PREV_INCLUDE to add html before figure. CODE:maojrs
+PREV_INCLUDE = """
+{add_html}
+"""                                                 
 
 JS_INCLUDE = """
 <script language="javascript">
-  /*Add link for CLAWPACK plotting system*/
-  document.writeln('<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>');
-  
   /* Define the Animation class */
   function Animation(frames, img_id, slider_id, loop_select_id){{
     this.img_id = img_id;
@@ -165,10 +167,10 @@ JS_INCLUDE = """
 </script>
 """
 
-
+# Added style="width:450px" to make animation window slightly smaller for clawpack CODE:maojrs 
 DISPLAY_TEMPLATE = """
 <div class="animation" align="center">
-    <img id="_anim_img{id}" style="width:450px" >
+    <img id="_anim_img{id}" style="width:500px">
     <br>
     <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
     <br>
@@ -205,19 +207,21 @@ DISPLAY_TEMPLATE = """
   }}, 0);
 </script>
 """
-# MODIFIED ORIGINAL CODE<=, ADDED FIGNO FOR CLAWPACK FIGURE NUMBER
+
+# Added frame suffix and changed the number of zeros and slice to 4. CODE:maojrs
 INCLUDED_FRAMES = """
   for (var i=0; i<{Nframes}; i++){{
-    frames[i] = "{frame_dir}/frame" + ("0000" + i).slice(-4) + "fig{fig_num}.{frame_format}";
+    frames[i] = "{frame_dir}/frame" + ("0000" + i).slice(-4) + "{frame_suffix}" + ".{frame_format}";
   }}
 """
-# MODIFIED ORIGINAL CODE<=, ADDED FIGNO FOR CLAWPACK FIGURE NUMBER
-def _included_frames(frame_list, frame_format, figno):
+
+# Added frame_suffix to included_frames CODE:maojrs
+def _included_frames(frame_list, frame_format, frame_suffix):
     """frame_list should be a list of filenames"""
     return INCLUDED_FRAMES.format(Nframes=len(frame_list),
                                   frame_dir=os.path.dirname(frame_list[0]),
                                   frame_format=frame_format,
-                                  fig_num=str(figno))
+                                  frame_suffix=frame_suffix)
 
 def _embedded_frames(frame_list, frame_format):
     """frame_list should be a list of base64-encoded png files"""
@@ -238,13 +242,13 @@ class HTMLWriter(FileMovieWriter):
     args_key = 'animation.ffmpeg_args'
     supported_formats = ['png', 'jpeg', 'tiff', 'svg']
     
-    # MODIFIED ORIGINAL CODE<=, ADDED FIGNO FOR CLAWPACK FIGURE NUMBER
+    # Added frame_suffix and add_html to init. CODE:maojrs
     def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None,
-                 metadata=None, embed_frames=False,figno=None,dirname=None):
+                 metadata=None, embed_frames=False, frame_suffix='', add_html=''):
         self.embed_frames = embed_frames
         self._saved_frames = list()
-        self.figno = figno
-        self.dirname = dirname
+        self.frame_suffix = frame_suffix
+        self.add_html = add_html
         super(HTMLWriter, self).__init__(fps=fps, codec=codec,
                                          bitrate=bitrate,
                                          extra_args=extra_args,
@@ -257,12 +261,13 @@ class HTMLWriter(FileMovieWriter):
 
         if not self.embed_frames:
             if frame_dir is None:
-	        # MODIFIED ORIGINAL CODE TO CHANGE DIRECTORY TO _plots
+	        # Modified to change to right directory _plots. CODE:maojrs
+	        frame_dir= os.getcwd()
                 #frame_dir= outfile.rstrip('.html') + '_frames'
-                frame_dir= '_p'
             #if not os.path.exists(frame_dir):
                 #os.makedirs(frame_dir)
             frame_prefix = os.path.join(frame_dir, 'frame')
+
         else:
             frame_prefix = None
 
@@ -276,9 +281,8 @@ class HTMLWriter(FileMovieWriter):
                                  dpi=self.dpi, **savefig_kwargs)
                 self._saved_frames.append(
                     open(f.name, 'rb').read().encode('base64'))
-        # MODIFIED ORIGINAL CODE TO NOT SAVE OUTPUT FRAMES!            
-        #else:
-            #return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
+        else:
+            return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
 
     def _run(self):
         # make a ducktyped subprocess standin
@@ -295,14 +299,14 @@ class HTMLWriter(FileMovieWriter):
                                            self.frame_format)
         else:
             # temp names is filled by FileMovieWriter
-            # MODIFIED ORIGINAL CODE, instead of using self.temp_names,
-            # used the filenmaes from _plots folder
-            filenames=sorted(glob.glob(self.dirname + '/*fig' + str(self.figno) + '.png'))
-            fill_frames = _included_frames(filenames,
-                                           self.frame_format,self.figno)
+            fill_frames = _included_frames(self._temp_names,
+                                           self.frame_format,self.frame_suffix)
 
         with open(self.outfile, 'w') as of:
-            of.write(JS_INCLUDE.format(interval=20))
+	    # Added PREV_INCLUDE to incorporate an html string at the beggining of the file CODE:maojrs
+	    if (self.add_html != ''):
+	      of.write(PREV_INCLUDE.format(add_html=self.add_html))
+            of.write(JS_INCLUDE.format(interval=30))
             of.write(DISPLAY_TEMPLATE.format(id=self.anim_id,
                                              Nframes=len(self._temp_names),
                                              fill_frames=fill_frames,
