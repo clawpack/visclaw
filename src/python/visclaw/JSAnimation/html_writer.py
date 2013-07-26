@@ -1,5 +1,3 @@
-# Modified version of original html_writer.py by @jakvdp 
-# from JSAnimation class. All modification commented under CODE:maojrs
 import os
 from matplotlib.animation import writers, FileMovieWriter
 import tempfile
@@ -24,7 +22,6 @@ class _Icons(object):
         return 'data:image/{0};base64,{1}'.format(self.extension,
                                                   data.encode('base64'))
                                                   
-#Added PREV_INCLUDE to add html before figure. CODE:maojrs
 PREV_INCLUDE = """
 {add_html}
 """                                                 
@@ -32,9 +29,10 @@ PREV_INCLUDE = """
 JS_INCLUDE = """
 <script language="javascript">
   /* Define the Animation class */
-  function Animation(frames, img_id, slider_id, loop_select_id){{
+  function Animation(frames, img_id, slider_id, frame_id, loop_select_id){{
     this.img_id = img_id;
     this.slider_id = slider_id;
+    this.frame_id = frame_id;
     this.loop_select_id = loop_select_id;
     this.interval = {interval};
     this.current_frame = 0;
@@ -66,6 +64,7 @@ JS_INCLUDE = """
     this.current_frame = frame;
     document.getElementById(this.img_id).src = this.frames[this.current_frame].src;
     document.getElementById(this.slider_id).value = this.current_frame;
+    document.getElementById(this.frame_id).value = this.current_frame;
   }}
 
   Animation.prototype.next_frame = function()
@@ -167,7 +166,6 @@ JS_INCLUDE = """
 </script>
 """
 
-# Added style="width:450px" to make animation window slightly smaller for clawpack CODE:maojrs 
 DISPLAY_TEMPLATE = """
 <div class="animation" align="center">
     <img id="_anim_img{id}" style="width:{frame_width}px">
@@ -184,6 +182,7 @@ DISPLAY_TEMPLATE = """
     <button onclick="anim{id}.last_frame()"><img class="anim_icon" src="{icons.last}"></button>
     <button onclick="anim{id}.faster()">+</button>
   <form action="#n" name="_anim_loop_select{id}" class="anim_control">
+    <input id="_frameno_id" type="textbox" size="1" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
     <input type="radio" name="state" value="once" checked> Once </input>
     <input type="radio" name="state" value="loop"> Loop </input>
     <input type="radio" name="state" value="reflect"> Reflect </input>
@@ -196,6 +195,7 @@ DISPLAY_TEMPLATE = """
   /* The IDs given should match those used in the template above. */
   var img_id = "_anim_img{id}";
   var slider_id = "_anim_slider{id}";
+  var frame_id = "_frameno_id"
   var loop_select_id = "_anim_loop_select{id}";
   var frames = new Array({Nframes});
   {fill_frames}
@@ -203,25 +203,19 @@ DISPLAY_TEMPLATE = """
   /* set a timeout to make sure all the above elements are created before
      the object is initialized. */
   setTimeout(function() {{
-      anim{id} = new Animation(frames, img_id, slider_id, loop_select_id);
+      anim{id} = new Animation(frames, img_id, slider_id, frame_id, loop_select_id);
   }}, 0);
 </script>
 """
 
-# Added frame suffix and changed the number of zeros and slice to 4. CODE:maojrs
 INCLUDED_FRAMES = """
-  for (var i=0; i<{Nframes}; i++){{
-    frames[i] = "{frame_dir}/frame" + ("0000" + i).slice(-4) + "{frame_suffix}" + ".{frame_format}";
-  }}
+  frames = {frame_list}
 """
 
-# Added frame_suffix to included_frames CODE:maojrs
-def _included_frames(frame_list, frame_format, frame_suffix):
+def _included_frames(frame_fullnames):
     """frame_list should be a list of filenames"""
-    return INCLUDED_FRAMES.format(Nframes=len(frame_list),
-                                  frame_dir=os.path.dirname(frame_list[0]),
-                                  frame_format=frame_format,
-                                  frame_suffix=frame_suffix)
+    return INCLUDED_FRAMES.format(Nframes=len(frame_fullnames),
+                                  frame_list=frame_fullnames)
 
 def _embedded_frames(frame_list, frame_format):
     """frame_list should be a list of base64-encoded png files"""
@@ -242,39 +236,49 @@ class HTMLWriter(FileMovieWriter):
     args_key = 'animation.ffmpeg_args'
     supported_formats = ['png', 'jpeg', 'tiff', 'svg']
     
-    # Added frame_suffix, add_html and frame_width to init. CODE:maojrs
+    
     def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None, metadata=None, 
-                 embed_frames=False, frame_suffix='', add_html='', frame_width=650):
+                 embed_frames=False, frame_dir=None, add_html='',frame_width=650,interval=30):
         self.embed_frames = embed_frames
         self._saved_frames = list()
-        self.frame_suffix = frame_suffix
+        self.frame_dir = frame_dir
         self.add_html = add_html
         self.frame_width = frame_width
+        self.interval  = interval
         super(HTMLWriter, self).__init__(fps=fps, codec=codec,
                                          bitrate=bitrate,
                                          extra_args=extra_args,
                                          metadata=metadata)
                                          
 
-    def setup(self, fig, outfile, dpi, frame_dir=None):
+    def setup(self, fig, outfile, dpi):
         if os.path.splitext(outfile)[-1] not in ['.html', '.htm']:
             raise ValueError("outfile must be *.htm or *.html")
 
         if not self.embed_frames:
-            if frame_dir is None:
-	        # Modified to change to right directory _plots. CODE:maojrs
-	        frame_dir= os.getcwd()
-                #frame_dir= outfile.rstrip('.html') + '_frames'
-            #if not os.path.exists(frame_dir):
-                #os.makedirs(frame_dir)
-            frame_prefix = os.path.join(frame_dir, 'frame')
+            if self.frame_dir is None:
+                self.frame_dir= outfile.rstrip('.html') + '_frames'
+            if not os.path.exists(self.frame_dir):
+                os.makedirs(self.frame_dir)
+            frame_prefix = os.path.join(self.frame_dir, 'frame')
 
         else:
             frame_prefix = None
 
         super(HTMLWriter, self).setup(fig, outfile, dpi,
                                       frame_prefix, clear_temp=False)
-
+                                      
+    # Set frame fullname; it can be replaced in child class
+    def set_framename(self):
+      frame_fullname = self._temp_names
+      for i in range(len(self._temp_names)):
+	frame_name = 'frame' + str(i).zfill(4) + "." + self.frame_format
+        frame_fullname[i] = os.path.join(self.frame_dir, frame_name)
+      return frame_fullname
+    
+    #def set_framenum(self):
+      #frame_num = self._temp_names
+                                      
     def grab_frame(self, **savefig_kwargs):
         if self.embed_frames:
             with tempfile.NamedTemporaryFile(suffix='.png') as f:
@@ -300,14 +304,13 @@ class HTMLWriter(FileMovieWriter):
                                            self.frame_format)
         else:
             # temp names is filled by FileMovieWriter
-            fill_frames = _included_frames(self._temp_names,
-                                           self.frame_format,self.frame_suffix)
+            frame_fullname = self.set_framename()
+            fill_frames = _included_frames(frame_fullname)
 
         with open(self.outfile, 'w') as of:
-	    # Added PREV_INCLUDE to incorporate an html string at the beggining of the file CODE:maojrs
 	    if (self.add_html != ''):
 	      of.write(PREV_INCLUDE.format(add_html=self.add_html))
-            of.write(JS_INCLUDE.format(interval=30))
+            of.write(JS_INCLUDE.format(interval=self.interval))
             of.write(DISPLAY_TEMPLATE.format(id=self.anim_id,
                                              Nframes=len(self._temp_names),
                                              fill_frames=fill_frames,
