@@ -1248,32 +1248,6 @@ def current_time(addtz=False):
     return current_time
 
 
-def write_other_plots_index(otherfigure_dict):
-    html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
-    html.write('<p><ul>\n')  
-    for name in plotdata.otherfigure_dict.iterkeys():
-        otherfigure = plotdata.otherfigure_dict[name]
-        fname = otherfigure.fname
-        makefig = otherfigure.makefig
-        if makefig:
-            if type(makefig)==str:
-                try:
-                    exec(makefig)
-                except:
-                    print "*** Problem executing makefig "
-                    print "    for otherfigure ",name
-            else:
-                try:
-                    makefig(plotdata)
-                except:
-                    print "*** Problem executing makefig function"
-                    print "    for otherfigure ",name
-                    raise
-
-            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
-    html.write('<p></ul>\n')  
-
-
 #======================================================================
 def plotclaw2html(plotdata):
 #======================================================================
@@ -1458,7 +1432,29 @@ def plotclaw2html(plotdata):
     # Other plots:
     #----------------
     if len(plotdata.otherfigure_dict)>0:
-        write_other_plots_index(plotdata.otherfigure_dict)
+        html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
+        html.write('<p><ul>\n')  
+        for name in plotdata.otherfigure_dict.iterkeys():
+            otherfigure = plotdata.otherfigure_dict[name]
+            fname = otherfigure.fname
+            makefig = otherfigure.makefig
+            if makefig:
+                if type(makefig)==str:
+                    try:
+                        exec(makefig)
+                    except:
+                        print "*** Problem executing makefig "
+                        print "    for otherfigure ",name
+                else:
+                    try:
+                        makefig(plotdata)
+                    except:
+                        print "*** Problem executing makefig function"
+                        print "    for otherfigure ",name
+                        raise
+
+                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
+        html.write('<p></ul>\n')  
     
     html.write('</body></html>')
 
