@@ -1248,6 +1248,55 @@ def current_time(addtz=False):
     return current_time
 
 
+def write_gauges_index(gaugenos,fignos,fignames):
+    html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
+    html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
+    html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
+    for ifig in range(len(fignos)):
+        html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
+                       % (fignos[ifig],fignames[fignos[ifig]]))
+    html.write('</tr>\n')
+    html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
+
+    for gaugeno in gaugenos:
+
+        html.write('\n <tr><td>Gauge %s:</td>' % (gaugeno))
+        for figno in fignos:
+            figname = fignames[figno]
+            html.write('\n   <td><a href="%s">%s</a></td>' \
+                       % (gauge_htmlfile[gaugeno,figno],figname))
+        if numfigs > 1:
+            html.write('\n<td><a href="%s">All figures</a></td>' \
+                       % gauge_allfigsfile[gaugeno])
+        html.write('</tr>\n')
+    html.write('</table>\n')
+
+
+def write_other_plots_index(otherfigure_dict):
+    html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
+    html.write('<p><ul>\n')  
+    for name in plotdata.otherfigure_dict.iterkeys():
+        otherfigure = plotdata.otherfigure_dict[name]
+        fname = otherfigure.fname
+        makefig = otherfigure.makefig
+        if makefig:
+            if type(makefig)==str:
+                try:
+                    exec(makefig)
+                except:
+                    print "*** Problem executing makefig "
+                    print "    for otherfigure ",name
+            else:
+                try:
+                    makefig(plotdata)
+                except:
+                    print "*** Problem executing makefig function"
+                    print "    for otherfigure ",name
+                    raise
+
+            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
+    html.write('<p></ul>\n')  
+
 
 #======================================================================
 def plotclaw2html(plotdata):
@@ -1312,7 +1361,6 @@ def plotclaw2html(plotdata):
     eagle = getattr(plotdata,'html_eagle',False)
 
     
-    
     # Create the index page:
     #-----------------------
     
@@ -1351,15 +1399,13 @@ def plotclaw2html(plotdata):
     html.write('</center><p>\n')
 
     html.write('<p>\n<b>Go to:</b>\n')
-    #html.write('<p>\n&nbsp;&nbsp; <a href="#timeframes">Time Frames</a>\n')
+
     gaugenos = plotdata.gauges_gaugenos
-    if gaugenos is None:
-        numgauges = 0
-    else:
+    if gaugenos is not None:
         numgauges = len(gaugenos)
-    if (numgauges>0):
         if (len(plotdata.gauges_fignos)>0):
             html.write('&nbsp;&nbsp; <a href="#gauges">Gauges</a>\n')
+
     html.write('&nbsp;&nbsp; <a href="#eachrun">Other plots</a>\n')
 
     html.write('<p>\n<a name="timeframes"><h3>Time frames:</h3></a>\n')
@@ -1407,72 +1453,16 @@ def plotclaw2html(plotdata):
 
     # Gauges:
     #----------------
-    fignos = plotdata.gauges_fignos
-    fignames = plotdata.gauges_fignames
-    if (numgauges>0):
+    if gaugenos is not None:
+        fignos = plotdata.gauges_fignos
+        fignames = plotdata.gauges_fignames
         if (len(fignos)>0):
-            html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
-            html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
-            html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
-            for ifig in range(len(fignos)):
-                html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
-                               % (fignos[ifig],fignames[fignos[ifig]]))
-            html.write('</tr>\n')
-            html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
-        
-            for gaugeno in gaugenos:
-        
-                html.write('\n <tr><td>Gauge %s:</td>' \
-                            % (gaugeno))
-                for figno in fignos:
-                    figname = fignames[figno]
-                    html.write('\n   <td><a href="%s">%s</a></td>' \
-                               % (gauge_htmlfile[gaugeno,figno],figname))
-                if numfigs > 1:
-                    html.write('\n<td><a href="%s">All figures</a></td>' \
-                               % gauge_allfigsfile[gaugeno])
-                html.write('</tr>\n')
-            html.write('</table>\n')
-    #else:
-    #   html.write('<p>None\n')   
+            write_gauges_index(gaugenos,fignos,fignames)
 
-    html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
-    if len(plotdata.otherfigure_dict)==0:
-        html.write('<p>None\n')  
-    else:
-        html.write('<p><ul>\n')  
-        for name in plotdata.otherfigure_dict.iterkeys():
-            otherfigure = plotdata.otherfigure_dict[name]
-            fname = otherfigure.fname
-            makefig = otherfigure.makefig
-            if makefig:
-                if type(makefig)==str:
-                    try:
-                        exec(makefig)
-                    except:
-                        print "*** Problem executing makefig "
-                        print "    for otherfigure ",name
-                else:
-                    try:
-                        makefig(plotdata)
-                    except:
-                        print "*** Problem executing makefig function"
-                        print "    for otherfigure ",name
-                        raise
-
-                # Assume that makefig saves the file if needed, so removing the 
-                # following lines.  
-                # For fixed grid plots, fname is an html file.  In other
-                # cases it may already exist...
-                #try:
-                    #from pylab import savefig
-                    #savefig(fname)
-                #except:
-                    #print "*** Problem importing pylab or executing savefig"
-
-                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
-        html.write('<p></ul>\n')  
-
+    # Other plots:
+    #----------------
+    if len(plotdata.otherfigure_dict)>0:
+        write_other_plots_index(plotdata.otherfigure_dict)
     
     html.write('</body></html>')
 
@@ -1704,158 +1694,159 @@ def plotclaw2html(plotdata):
     
     # allfigsgaugeN.html
     #-------------------
-    if numfigs > 1:
+    if gaugenos is not None:
+        if numfigs > 1:
+            for igauge in range(numgauges):
+                gaugeno = gaugenos[igauge]
+                html = open(gauge_allfigsfile[gaugeno], 'w')
+                html.write('<html><meta http-equiv="expires" content="0">')
+                html.write('<title>Plots</title>')
+                html.write('<body>\n<center><h3>All Figures -- Gauge %s' \
+                     % gaugenos[igauge])
+                html.write('<p>\n')
+
+                # Write link commands to previous and next gauge:
+
+                html.write('<p> <a href="%s">' % gauge_allfigsfile[gaugenos[0]])
+                html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
+                if igauge==0:
+                    html.write('&#060; &nbsp; &nbsp; ')
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    if numgauges > 1:
+                        html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
+                            % gauge_allfigsfile[gaugenos[1]])
+
+                elif igauge==numgauges-1:
+                    if numgauges > 1:
+                        html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
+                            % gauge_allfigsfile[gaugenos[igauge-1]])
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    html.write(' &nbsp; &nbsp; &#062; ')
+
+                else:
+                    html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
+                            % gauge_allfigsfile[gaugenos[igauge-1]])
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    html.write('\n&nbsp; &nbsp; <a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
+                            % gauge_allfigsfile[gaugenos[igauge+1]])
+
+                html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
+                          % gauge_allfigsfile[gaugenos[numgauges-1]])
+                html.write('&#062; &#062;</a>  \n') 
+
+                html.write('</h3><p>\n')
+                html.write('<h3>Click on a figure to enlarge</h3>\n')
+                html.write('<p>\n')
+        
+                for figno in fignos:
+                    html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
+                            % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
+
+                # list of all gauges at bottom:
+
+                html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
+                for gaugeno2 in gaugenos:
+                    if gaugeno2 == gaugeno:
+                        html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
+                                   % gaugeno)
+                    else:
+                        html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
+                               % (gauge_allfigsfile[gaugeno2],gaugeno2))
+        
+                html.write('\n</center></body></html>\n')
+                html.close()
+    
+    
+        # gaugeNfigJ.html  -- individual files for each gauge/fig combo
+        #----------------
+        
         for igauge in range(numgauges):
             gaugeno = gaugenos[igauge]
-            html = open(gauge_allfigsfile[gaugeno], 'w')
-            html.write('<html><meta http-equiv="expires" content="0">')
-            html.write('<title>Plots</title>')
-            html.write('<body>\n<center><h3>All Figures -- Gauge %s' \
-                 % gaugenos[igauge])
-            html.write('<p>\n')
-
-            # Write link commands to previous and next gauge:
-
-            html.write('<p> <a href="%s">' % gauge_allfigsfile[gaugenos[0]])
-            html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
-            if igauge==0:
-                html.write('&#060; &nbsp; &nbsp; ')
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                if numgauges > 1:
-                    html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
-                        % gauge_allfigsfile[gaugenos[1]])
-
-            elif igauge==numgauges-1:
-                if numgauges > 1:
-                    html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % gauge_allfigsfile[gaugenos[igauge-1]])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                html.write(' &nbsp; &nbsp; &#062; ')
-
-            else:
-                html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % gauge_allfigsfile[gaugenos[igauge-1]])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                html.write('\n&nbsp; &nbsp; <a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
-                        % gauge_allfigsfile[gaugenos[igauge+1]])
-
-            html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
-                      % gauge_allfigsfile[gaugenos[numgauges-1]])
-            html.write('&#062; &#062;</a>  \n') 
-
-            html.write('</h3><p>\n')
-            html.write('<h3>Click on a figure to enlarge</h3>\n')
-            html.write('<p>\n')
-    
             for figno in fignos:
-                html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
-                        % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
+                html = open(gauge_htmlfile[gaugeno,figno],'w')
+                html.write('<html><meta http-equiv="expires" content="0">\n')
+                html.write('<title>Plots</title>')
+                html.write('<body><center>\n')
+                html.write('\n<h3>Gauge %i ' % gaugeno)
+                if numfigs > 1:
+                    html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
+            
+                # Write link commands to previous and next gauge:
 
-            # list of all gauges at bottom:
+                html.write('<p> <a href="%s">' % gauge_htmlfile[gaugenos[0],figno])
+                html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
+                if igauge==0:
+                    html.write('&#060; &nbsp; &nbsp; ')
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    if numgauges > 1:
+                        html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
+                            % gauge_htmlfile[gaugenos[1],figno])
 
-            html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
-            for gaugeno2 in gaugenos:
-                if gaugeno2 == gaugeno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % gaugeno)
+                elif igauge==numgauges-1:
+                    if numgauges > 1:
+                        html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
+                            % gauge_htmlfile[gaugenos[igauge-1],figno])
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    html.write(' &nbsp; &nbsp; &#062; ')
+
                 else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (gauge_allfigsfile[gaugeno2],gaugeno2))
-    
-            html.write('\n</center></body></html>\n')
-            html.close()
-    
-    
-    # gaugeNfigJ.html  -- individual files for each gauge/fig combo
-    #----------------
-    
-    for igauge in range(numgauges):
-        gaugeno = gaugenos[igauge]
-        for figno in fignos:
-            html = open(gauge_htmlfile[gaugeno,figno],'w')
-            html.write('<html><meta http-equiv="expires" content="0">\n')
-            html.write('<title>Plots</title>')
-            html.write('<body><center>\n')
-            html.write('\n<h3>Gauge %i ' % gaugeno)
-            if numfigs > 1:
-                html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
-        
-            # Write link commands to previous and next gauge:
-
-            html.write('<p> <a href="%s">' % gauge_htmlfile[gaugenos[0],figno])
-            html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
-            if igauge==0:
-                html.write('&#060; &nbsp; &nbsp; ')
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                if numgauges > 1:
-                    html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
-                        % gauge_htmlfile[gaugenos[1],figno])
-
-            elif igauge==numgauges-1:
-                if numgauges > 1:
                     html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % gauge_htmlfile[gaugenos[igauge-1],figno])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                html.write(' &nbsp; &nbsp; &#062; ')
+                            % gauge_htmlfile[gaugenos[igauge-1],figno])
+                    html.write('\n<a href="%s">Index</a> ' \
+                         % plotdata.html_index_fname)
+                    html.write('\n &nbsp; &nbsp;<a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
+                            % gauge_htmlfile[gaugenos[igauge+1],figno])
 
-            else:
-                html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % gauge_htmlfile[gaugenos[igauge-1],figno])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % plotdata.html_index_fname)
-                html.write('\n &nbsp; &nbsp;<a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
-                        % gauge_htmlfile[gaugenos[igauge+1],figno])
+                html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
+                          % gauge_htmlfile[gaugenos[numgauges-1],figno])
+                html.write('&#062; &#062;</a>  \n') 
+            
+                # image:
+                html.write('\n\n <p><img src="%s"><p>  \n ' \
+                            % gauge_pngfile[gaugeno,figno])
 
-            html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
-                      % gauge_htmlfile[gaugenos[numgauges-1],figno])
-            html.write('&#062; &#062;</a>  \n') 
-        
-            # image:
-            html.write('\n\n <p><img src="%s"><p>  \n ' \
-                        % gauge_pngfile[gaugeno,figno])
+                html.write('\n\nImage source: &nbsp; %s'  \
+                       % os.path.join(os.getcwd(),gauge_pngfile[gaugeno,figno]))
 
-            html.write('\n\nImage source: &nbsp; %s'  \
-                   % os.path.join(os.getcwd(),gauge_pngfile[gaugeno,figno]))
+                # list of all figures at bottom of page:
 
-            # list of all figures at bottom of page:
+                if numfigs > 1:
+                    html.write('\n<p><b>Other figures at this time:</b> &nbsp;&nbsp;')
+                    for figno2 in fignos:
+                        if figno2 == figno:
+                            html.write('\n<font color=red>%s</font>&nbsp;&nbsp;' \
+                                   % fignames[figno])
+                        else:
+                            html.write('\n<a href="%s">%s</a>  &nbsp; &nbsp; ' \
+                               % (gauge_htmlfile[gaugeno,figno2],fignames[figno2]))
+                    html.write('\n<a href="%s"> All Figures </a>' \
+                         % gauge_allfigsfile[gaugeno])
 
-            if numfigs > 1:
-                html.write('\n<p><b>Other figures at this time:</b> &nbsp;&nbsp;')
-                for figno2 in fignos:
-                    if figno2 == figno:
-                        html.write('\n<font color=red>%s</font>&nbsp;&nbsp;' \
-                               % fignames[figno])
+                # list of all gauges at bottom of page:
+
+                html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
+                for gaugeno2 in gaugenos:
+                    if gaugeno2 == gaugeno:
+                        html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
+                                   % gaugeno)
                     else:
-                        html.write('\n<a href="%s">%s</a>  &nbsp; &nbsp; ' \
-                           % (gauge_htmlfile[gaugeno,figno2],fignames[figno2]))
-                html.write('\n<a href="%s"> All Figures </a>' \
-                     % gauge_allfigsfile[gaugeno])
-
-            # list of all gauges at bottom of page:
-
-            html.write('\n<p><b>Other gauges:</b></a> &nbsp;&nbsp;')
-            for gaugeno2 in gaugenos:
-                if gaugeno2 == gaugeno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % gaugeno)
-                else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (gauge_htmlfile[gaugeno2,figno],gaugeno2))
-            html.write('\n<a href="allgaugesfig%s.html">  All Gauges </a>' \
-                     % figno)
-        
-            html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
-                      % (plotdata.html_index_fname))
-            if eagle:
-                html.write("""<p><h3><a href="../eaglemenu.html">Main Menu for
-                this run-directory</a></h3>  """)
-            html.write('</center></body></html>')
-            html.close()
+                        html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
+                               % (gauge_htmlfile[gaugeno2,figno],gaugeno2))
+                html.write('\n<a href="allgaugesfig%s.html">  All Gauges </a>' \
+                         % figno)
+            
+                html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
+                          % (plotdata.html_index_fname))
+                if eagle:
+                    html.write("""<p><h3><a href="../eaglemenu.html">Main Menu for
+                    this run-directory</a></h3>  """)
+                html.write('</center></body></html>')
+                html.close()
 
     os.chdir(startdir)
     # end of plotclaw2html
@@ -2109,6 +2100,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         plotdata.gauges_gaugenos = gaugenos
         plotdata.gauges_fignos = fignos_each_gauge
         plotdata.gauges_fignames = fignames
+    else:
+        gaugenos = []
 
     # Make html files for time frame figures:
     # ---------------------------------------
@@ -2132,10 +2125,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             frametools.plotframe(frameno, plotdata, verbose)
             print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
-        if gaugenos is not 'all':
-            for gaugeno in gaugenos:
-                gaugetools.plotgauge(gaugeno, plotdata, verbose)
-                print 'Gauge %i ' % gaugeno
+        for gaugeno in gaugenos:
+            gaugetools.plotgauge(gaugeno, plotdata, verbose)
+            print 'Gauge %i ' % gaugeno
 
 
     if plotdata.latex:
