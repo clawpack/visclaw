@@ -213,13 +213,15 @@ class ClawPlotData(clawdata.ClawData):
         
         This method only works for ascii and petsc formatted files
         """
-
         if format=='petsc':
-            format_module = __import__('clawpack.petclaw.io.%s' % format, fromlist=['petclaw','io'])
-        else:
-            format_module = __import__('clawpack.pyclaw.io.%s' % format, fromlist=['pyclaw','io'])
-        format_read_t = getattr(format_module, 'read_%s_t' % format)
-        t,meqn,npatches,maux,num_dim = format_read_t(frameno,path=outdir)
+            from clawpack.petclaw import io
+            read_t = io.petsc.read_t
+        elif format=='ascii': 
+            from clawpack.pyclaw import io
+            read_t = io.ascii.read_t
+
+
+        t,meqn,npatches,maux,num_dim = read_t(frameno,path=outdir)
         return t
 
     def clearfigures(self):
