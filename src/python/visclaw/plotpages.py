@@ -1248,30 +1248,6 @@ def current_time(addtz=False):
     return current_time
 
 
-def write_gauges_index(gaugenos,fignos,fignames):
-    html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
-    html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
-    html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
-    for ifig in range(len(fignos)):
-        html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
-                       % (fignos[ifig],fignames[fignos[ifig]]))
-    html.write('</tr>\n')
-    html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
-
-    for gaugeno in gaugenos:
-
-        html.write('\n <tr><td>Gauge %s:</td>' % (gaugeno))
-        for figno in fignos:
-            figname = fignames[figno]
-            html.write('\n   <td><a href="%s">%s</a></td>' \
-                       % (gauge_htmlfile[gaugeno,figno],figname))
-        if numfigs > 1:
-            html.write('\n<td><a href="%s">All figures</a></td>' \
-                       % gauge_allfigsfile[gaugeno])
-        html.write('</tr>\n')
-    html.write('</table>\n')
-
-
 def write_other_plots_index(otherfigure_dict):
     html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
     html.write('<p><ul>\n')  
@@ -1457,7 +1433,27 @@ def plotclaw2html(plotdata):
         fignos = plotdata.gauges_fignos
         fignames = plotdata.gauges_fignames
         if (len(fignos)>0):
-            write_gauges_index(gaugenos,fignos,fignames)
+            html.write('<p>\n<a name="gauges"><h3>Gauges:</h3></a>\n')
+            html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
+            html.write('<p>\n<tr><td><b>All Gauges:</b></td> ')
+            for ifig in range(len(fignos)):
+                html.write('\n   <td><a href="allgaugesfig%s.html">%s</a></td>' \
+                               % (fignos[ifig],fignames[fignos[ifig]]))
+            html.write('</tr>\n')
+            html.write('<p>\n<tr><td><b>Individual Gauges:</b></td> </tr>\n')
+
+            for gaugeno in gaugenos:
+
+                html.write('\n <tr><td>Gauge %s:</td>' % (gaugeno))
+                for figno in fignos:
+                    figname = fignames[figno]
+                    html.write('\n   <td><a href="%s">%s</a></td>' \
+                               % (gauge_htmlfile[gaugeno,figno],figname))
+                if numfigs > 1:
+                    html.write('\n<td><a href="%s">All figures</a></td>' \
+                               % gauge_allfigsfile[gaugeno])
+                html.write('</tr>\n')
+            html.write('</table>\n')
 
     # Other plots:
     #----------------
@@ -2090,7 +2086,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Gauges:
     # -------
-    if os.path.exists(os.path.join(datadir,"gauge.data")):
+    if os.path.exists(os.path.join(datadir,"gauges.data")):
         gaugenos = plotdata.print_gaugenos
         if gaugenos == 'all':
             # Read gauge numbers from setgauges.data if it exists:
