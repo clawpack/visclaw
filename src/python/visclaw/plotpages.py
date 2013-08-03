@@ -205,10 +205,10 @@ def plots2html(plot_pages_data):
         html.write('\n<title>%s</title>' % ppd.html_index_title)
         html.write('\n<body><center><h1>%s</h1></center>\n' \
                    % ppd.html_index_title)
-	homelink = getattr(ppd,'html_homelink',None)
+        homelink = getattr(ppd,'html_homelink',None)
         if homelink:
-	    html.write('<center><a href="%s">Back to %s</a></center>\n' \
-	               % (homelink, homelink))
+            html.write('<center><a href="%s">Back to %s</a></center>\n' \
+                       % (homelink, homelink))
 
     html.write('<p>\n')
     html.write('<center>Plots created: %s &nbsp;&nbsp; ' % creationtime )
@@ -396,10 +396,10 @@ def timeframes2html(plot_pages_data):
         html.write('\n<title>%s</title>\n<body>' % ppd.html_index_title)
         html.write('\n<center><h1>%s</h1></center>\n' \
                    % ppd.html_index_title)
-	homelink = getattr(ppd,'html_homelink',None)
+        homelink = getattr(ppd,'html_homelink',None)
         if homelink:
-	    html.write('<center><a href="%s">Back to %s</a></center>\n' \
-	               % (homelink, homelink))
+            html.write('<center><a href="%s">Back to %s</a></center>\n' \
+                       % (homelink, homelink))
 
     html.write('<p>\n')
     html.write('<center>Plots created: %s &nbsp;&nbsp; ' % creationtime )
@@ -1346,10 +1346,10 @@ def plotclaw2html(plotdata):
         html.write('\n<title>%s</title>' % plotdata.html_index_title)
         html.write('\n<body><center><h1>%s</h1></center>\n' \
                    % plotdata.html_index_title)
-	homelink = getattr(plotdata,'html_homelink',None)
+        homelink = getattr(plotdata,'html_homelink',None)
         if homelink:
-	    html.write('<center><a href="%s">Back to %s</a></center>\n' \
-	               % (homelink, homelink))
+            html.write('<center><a href="%s">Back to %s</a></center>\n' \
+                       % (homelink, homelink))
 
     html.write('<p>\n')
     html.write('<center>Plots created: %s &nbsp;&nbsp; ' % creationtime )
@@ -2126,54 +2126,54 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     
     # Movie:
     # MODIFIED FOR "JSAnimations" MODIFIED MAY 2013 (requires JSAnimation MODIFIED package)
-    # If unwanted, comment this lines and uncomment lines with reference code: MAU01.
     # Makes Javascript movies for Clawpack for all figures
     
     # Creates child class
     class myHTMLWriter(HTMLWriter):
-      def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None, metadata=None, 
-                   embed_frames=False, frame_dir=None, add_html='', frame_width=650,interval=30,
-                   figno=None):
-	self.figno=figno
-	super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
-					   extra_args=extra_args, metadata=metadata, 
-					   embed_frames=embed_frames, frame_dir=frame_dir, 
-		                           add_html=add_html, frame_width=frame_width,interval=interval)
+        def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None,\
+               metadata=None, embed_frames=False, frame_dir=None, add_html='', \
+               frame_width=650,interval=30, figno=None):
+            self.figno=figno
+            super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
+               extra_args=extra_args, metadata=metadata, 
+               embed_frames=embed_frames, frame_dir=frame_dir, 
+               add_html=add_html, frame_width=frame_width,interval=interval)
       
-      def set_framename(self):
-	frame_fullname = self._temp_names
-	for i in range(len(self._temp_names)):
-	  frame_name = 'frame' + str(i).zfill(4) + "fig" + str(self.figno) + "." + self.frame_format
-	  frame_fullname[i] = os.path.join(self.frame_dir, frame_name)
-	return frame_fullname
+        def set_framename(self):
+            frame_fullname = self._temp_names
+            for i in range(len(self._temp_names)):
+                frame_name = 'frame' + str(i).zfill(4) + "fig" + \
+                      str(self.figno) + "." + self.frame_format
+                frame_fullname[i] = os.path.join(self.frame_dir, frame_name)
+            return frame_fullname
     
-    # Create Animations
-    for figno in fignos:
-      fname = '*fig' + str(figno) + '.png'
-      filenames=sorted(glob.glob(fname))
-      fig = plt.figure()
-      im = plt.imshow(Image.imread(filenames[0]))
-      def init():
-	im.set_data(Image.imread(filenames[0]))
-	return im,
-
-      def animate(i):
-	image=Image.imread(filenames[i])
-	im.set_data(image)
-	return im,
-
-      print "Created JSAnimation for figure", figno
-      anim = animation.FuncAnimation(fig, animate, init_func=init,
-				    frames=len(filenames), interval=20, blit=True)
-
-      #set embed_frames=True to embed base64-encoded frames directly in the HTML
-      pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
-      anim.save('movieframe_allframesfig%s.html' % figno, writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(),
-							                      figno=figno, add_html=pre_html, 
-							                      frame_width=500,interval=50))
-      #anim.save('movieframe_allframesfig%s.html' % figno, writer=HTMLWriter(embed_frames=False,figno=figno,dirname=os.getcwd()))
+    if plotdata.html_movie:
+        # Create Animations
+        for figno in fignos_each_frame:
+            fname = '*fig' + str(figno) + '.png'
+            filenames=sorted(glob.glob(fname))
+            fig = plt.figure()
+            im = plt.imshow(Image.imread(filenames[0]))
+            def init():
+                im.set_data(Image.imread(filenames[0]))
+                return im,
+      
+            def animate(i):
+                image=Image.imread(filenames[i])
+                im.set_data(image)
+                return im,
+      
+            print "Created JSAnimation for figure", figno
+            anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                          frames=len(filenames), interval=20, blit=True)
+      
+            #set embed_frames=True to embed base64-encoded frames directly in the HTML
+            pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
+            anim.save('movieframe_allframesfig%s.html' % figno, \
+                 writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
+      		   figno=figno, add_html=pre_html, frame_width=500,interval=200))
+  
     #-------
-
     # Movie:
     #-------
     

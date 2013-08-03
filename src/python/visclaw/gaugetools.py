@@ -456,7 +456,7 @@ def read_setgauges(datadir):
     return setgauges
 
 
-def plot_gauge_locations(plotdata, gaugenos='all', \
+def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
                 format_string='ko',add_labels=True, \
                 markersize=5, fontsize=15, xoffset=0, yoffset=0):
     """
@@ -487,6 +487,8 @@ def plot_gauge_locations(plotdata, gaugenos='all', \
     for gauge in setgauges.gauges:
         try:
             xn,yn = gauge[1:3]
+            if mapc2p:
+                xn,yn = mapc2p(xn,yn)
             plot([xn], [yn], format_string, markersize=markersize)
             if add_labels: 
                 xn = xn + xoffset
