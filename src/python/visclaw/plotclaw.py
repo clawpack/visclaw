@@ -3,13 +3,13 @@
 Generic code for plotting Clawpack results.
 
 Execute from unix by
-    $ python $VISCLAW/src/python/visclaw/plotclaw.py
+    $ python $CLAW/visclaw/src/python/visclaw/plotclaw.py
 from a directory that contains a file setplot.py that sets other
 parameters to specify the desired plots, location of data, etc.
 
 If a different file is to be used to define the function setplot, this can
 be given as an argument, e.g.
-    $ python $VISCLAW/src/python/visclaw/plotclaw.py setplot_alternative.py
+    $ python $CLAW/visclaw/src/python/visclaw/plotclaw.py setplot_alternative.py
 
 From most Clawpack applications directories the command
     $ make .plots
