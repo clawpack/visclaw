@@ -9,7 +9,7 @@ import copy
 import numpy as np
 import re
 import logging
-import clawpack.clawutil.clawdata as clawdata
+import clawpack.clawutil.data as clawdata
 import gaugetools
 
 

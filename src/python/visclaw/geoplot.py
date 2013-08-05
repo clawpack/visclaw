@@ -234,8 +234,7 @@ def plot_topo_file(topoplotdata):
 
     import os
     import pylab
-    from clawpack.visclaw.data import Data
-    from clawpack.clawutil.clawdata import Data
+    from clawpack.clawutil.data import ClawData
 
     fname = topoplotdata.fname 
     topotype = topoplotdata.topotype
@@ -376,7 +375,7 @@ def plot_topo_file(topoplotdata):
         fname2 = os.path.splitext(fname)[0]
         pylab.text(xllcorner+cellsize, yllcorner+cellsize, fname2, color='m')
 
-    topodata = Data()
+    topodata = ClawData()
     topodata.x = x
     topodata.y = y
     topodata.topo = topo

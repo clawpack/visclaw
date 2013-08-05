@@ -21,7 +21,7 @@ try:
 except ImportError:
     print "*** Error: problem importing pylab"
 
-import clawpack.clawutil.clawdata as clawdata
+import clawpack.clawutil.data as clawdata
 
 
 #==============================================================================
