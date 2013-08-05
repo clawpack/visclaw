@@ -9,7 +9,7 @@ import traceback
 
 import numpy as np
 
-import clawpack.clawutil.clawdata as clawdata
+import clawpack.clawutil.data as clawdata
 
 from clawpack.visclaw import plotpages
 from clawpack.visclaw.frametools import set_show

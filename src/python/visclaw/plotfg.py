@@ -19,10 +19,10 @@ from clawpack.visclaw import geoplot, colormaps, plotpages
 
 import os
 from numpy import ma
-from clawpack.clawutil.oldclawdata import Data
+from clawpack.clawutil.data import ClawData
 
 
-class ClawPlotFGData(Data):
+class ClawPlotFGData(ClawData):
 
     def __init__(self,fgno=1):
         super(ClawPlotFGData,self).__init__()
@@ -88,7 +88,7 @@ class ClawPlotFGData(Data):
             raise IOError("Missing fixed grid output file")
         
 
-        self.grid = Data()
+        self.grid = ClawData()
         grid = self.grid
 
         # Read parameters from header:
@@ -129,7 +129,7 @@ class ClawPlotFGData(Data):
 
         d = loadtxt(fname, skiprows=8)
 
-        solution = Data()
+        solution = ClawData()
         solution.t = t
         solution.ncols = d.shape[1]
         solution.h = reshape(d[:,0], (grid.my,grid.mx))
