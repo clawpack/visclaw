@@ -5,7 +5,7 @@ function pressure = pressure(data)
 % and components of momentum in between.
 %
 % Assumes a gamma-law ideal gas.
-% gamma = 1.4 is hardwired here, but you can change this or modify 
+% gamma = 1.4 is hardwired here, but you can change this or modify
 % to read in the proper value from setprob.data, for example.
 %
 % This routine can be modified for a different equation of state,
@@ -18,4 +18,3 @@ mom = data(:,2:end-1);
 mom2 = mom .* mom;
 kinetic = 0.5 * sum(mom2,2) ./ rho;
 pressure = (gamma-1) * (energy - kinetic);
-

@@ -1,4 +1,4 @@
-function h = create_clines(c,sval,sdir,mappedgrid,manifold)
+function h = create_clines(c,sval,sdir,mappedgrid,manifold,blockno)
 
 % Internal matlab routine for Clawpack graphics.
 
@@ -40,10 +40,12 @@ while (1)
                            % are being generated: may want to shift off
                            % manifold slightly to avoid hidden line removal
                            % causing apparent gaps in contours.
+      set_blocknumber(blockno);
       [xdata, ydata, zdata] = mapc2m(xdata,ydata);
       creatingclines = 0;
     end;
   end;
+  udata.phys_vertices = [xdata', ydata', zdata'];
 
   h(line_cnt) = line('XData',xdata,'YData',ydata,'ZData',zdata,'Color','k');
   set(h(line_cnt),'Tag','on');
@@ -54,3 +56,5 @@ while (1)
     return;
   end;
 end;
+
+set_clines(h);

@@ -61,17 +61,19 @@ end
 % MAIN LOOP ON FRAMES:
 %=============================================
 
-Frame = -1;  % initialize frame counter
-
 if ~exist('MaxFrames')
    disp('MaxFrames parameter not set... you may need to execute setplot2')
    break
    end
 
+set_value('frameinc','plot_interval',1);
 set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
+set_value('outputprefix','plot_prefix','pltstate');
+set_value('readblocknumber','ReadBlockNumber',0);
 
 amrdata = [];
+Frame = -frameinc;  % Initialize frame counter
 while Frame <= MaxFrames
 
   % pause for input from user to determine if we go to next frame,
@@ -81,7 +83,8 @@ while Frame <= MaxFrames
   queryframe;  % this sets Frame
 
   if (Frame ~= Frame_old | isempty(amrdata))
-    [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag);
+    [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
+	outputprefix,readblocknumber);
   end;
 
   plotframe2;

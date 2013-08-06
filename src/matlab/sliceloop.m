@@ -40,7 +40,7 @@ notdone = 1;
 next_slice = 0;
 last_slice = 0;
 while (notdone)
-  s = input('Hit <return> for next slice, or type k, r, j, i, q, or ? ','s');
+  s = input('SLICELOOP : Hit <return> for next slice, or type k, j, or q : ','s');
 
   if (isempty(s))
     next_slice = mod(next_slice+1,length(slices)+1);
@@ -57,11 +57,12 @@ while (notdone)
   showslices(sdir,next_slice);
 
   last_slice = next_slice;
-  if exist('afterslice')==2
+
+  if exist('afterslice') == 2
     % make an m-file with this name for any other commands you
     % want executed at the end of drawing each slice, for example
     % to print a gif file for use in making an animation of a sweep-through
     afterslice;
-    end
+  end
 
 end;

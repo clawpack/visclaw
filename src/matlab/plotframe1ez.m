@@ -33,12 +33,12 @@ function [q,xc,h]  = plotframe1ez(amrdata,mq,plotstyle,...
 %
 %    PLOTFRAME1EZ returns the 1d Q and X data.
 %
-%   [Q,X] = PLOTFRAME1EZ(AMRDATA,MQ,PLOTSTYLE) uses default values
-%   ('') for USERVARIABLEFILE and MAPC2PFILE.
+%   [Q,X] = PLOTFRAME1EZ(AMRDATA,MQ,PLOTSTYLE) does not use a
+%        user variable file or a mapped grid file.
 %
-%   [Q,X] = PLOTFRAME1EZ(AMRDATA,MQ) sets PLOTSTYLE = 'b';
+%   [Q,X] = PLOTFRAME1EZ(AMRDATA,MQ) sets PLOTSTYLE = 'r-';
 %
-%   [Q,X] = PLOTFRAME1EZ(AMRDATA) sets MQ = 1.
+%   [Q,X] = PLOTFRAME1EZ(AMRDATA) sets MQ = 1, PLOTSTYLE = 'r-'
 %
 %   [Q,X,P] = PLOTFRAME1EZ(....) returns a handle P to the 1d line plot.
 %
@@ -58,7 +58,7 @@ function [q,xc,h]  = plotframe1ez(amrdata,mq,plotstyle,...
 %    See also SETPLOT, MappedGrid, READAMRDATA.
 
 if (length(amrdata) == 0)
-  disp('*** plotframe1ez : ''amrdata'' is empty');
+  disp('*** plotframe1ez : Input ''amrdata'' is empty');
   return;
 end;
 
@@ -93,9 +93,6 @@ data = amrdata(1).data';
 
 xc = xlow + ((1:mx) - 0.5)*dx;
 
-% for compatibility with old matlab41/plotframe1 convention:
-x = xc;
-
 if (uservariable == 1)
   % User has supplied a function to convert original q variables to
   % the variable which is to be plotted, e.g. Mach number, entropy.
@@ -104,7 +101,7 @@ else
   q = data(:,mq);
 end;
 
-if mappedgrid
+if (mappedgrid == 1)
   % coordinate mapping must be applied
   xc = feval(mapc2pfile,xc);
 end
@@ -115,6 +112,6 @@ p = line('XData',xc,'YData',q,'LineStyle',lstyle{1},...
     'Color',lcolors{1},'Marker',mstyle{1});
 
 if (nargout == 3)
-  % sent out plot handle.
+  % send out plot handle.
   h = p;
 end;

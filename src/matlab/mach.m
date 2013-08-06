@@ -5,7 +5,7 @@ function mach = mach(data)
 % and components of momentum in between.
 %
 % Assumes a gamma-law ideal gas.
-% gamma = 1.4 is hardwired here, but you can change this or modify 
+% gamma = 1.4 is hardwired here, but you can change this or modify
 % to read in the proper value from setprob.data, for example.
 %
 % This routine can be modified for a different equation of state,
@@ -21,4 +21,3 @@ pressure = (gamma-1) * (energy - kinetic);
 c2 = (gamma*pressure./rho);
 speed2 = sum(mom2,2) ./ (rho.^2);
 mach = sqrt(speed2 ./ c2);
-

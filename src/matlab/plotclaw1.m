@@ -69,6 +69,7 @@ if ~exist('MaxFrames')
   break
 end
 
+set_value('frameinc','plot_interval',1);
 set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
 
@@ -80,14 +81,14 @@ while Frame <= MaxFrames
 
   Frame_old = Frame;
   queryframe;  % changes value of Frame
-  
+
   if (Frame ~= Frame_old | isempty(amrdata))
     [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag);
   end;
 
   % produce the plot:
 
-  plotframe1   % routine claw/matlab/plotframe1.m 
+  plotframe1   % routine claw/matlab/plotframe1.m
                % does the plotting for this frame
 
 end % main loop on frames

@@ -330,6 +330,7 @@ for ng = 1:ngrids,
 	end;
       end;
     end;
+    hidelevels(find(~PlotData));
 
     % Add cube to plot - whether it is visible or not depends on how user
     % set PlotCubeEdges.
@@ -347,13 +348,8 @@ for ng = 1:ngrids,
     [xcm,ycm,zcm] = meshgrid(xcenter,ycenter,zcenter);
 
     if (usermap1d == 1)
-    if (usermap1d == 1)
-      if (mappedgrid == 1)
-	[xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
-        [rvec,qvec] = map1d(xpm,ypm,zpm,qmesh);
-      else
-        [rvec,qvec] = map1d(xcm,ycm,zcm,qmesh);
-      end
+      % User should call mapc2p from inside of map1d
+      [rvec,qvec] = map1d(xcm,ycm,zcm,qmesh);
       [rs,cs] = size(rvec);
       [rq,cq] = size(qvec);
       if (cs > 1 | cq > 1)
@@ -376,11 +372,11 @@ for ng = 1:ngrids,
 
   end;  % end of plotting for PlotType == 4
 
-if exist('aftergrid')==2
-  % make an m-file with this name for any other commands you
-  % want executed at the end of drawing each grid
-  aftergrid;
-end;
+  if exist('aftergrid') == 2
+    % make an m-file with this name for any other commands you
+    % want executed at the end of drawing each grid
+    aftergrid;
+  end;
 
 end % loop on ng (plot commands for each grid)
 % -----------------------------------------------------
@@ -418,4 +414,3 @@ if exist('afterframe')==2
   % for example to change the axes, or add a curve for a
   % boundary
 end;
-end

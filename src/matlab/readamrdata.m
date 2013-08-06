@@ -1,4 +1,4 @@
-function [amr,t] = readamrdata(dim,Frame,dir,flag);
+function [amr,t] = readamrdata(dim,Frame,dir,outputflag,outputprefix,readblocknumber);
 
 % READAMRDATA reads amr data produced by Clawpack output routines.
 %
@@ -14,14 +14,10 @@ function [amr,t] = readamrdata(dim,Frame,dir,flag);
 %   DIR.  Default is the current working directory.
 %
 %   [...] = READAMRDATA(...,FLAG) uses FLAG to determine what kind of data
-%   to read.  
-%       FLAG = 'ascii' means read the standard ascii output files
-%               fort.q00NN produced by Clawpack.  
-%       FLAG = 'hdf' will read HDF files.  
-%       FLAG = 'aux' will read the files fort.aXXXX instead of fort.qXXXX
-%                    (assumed to be ascii) and return this data, which 
-%                    contains the maux values of the aux array instead of q.
-%   The default option is FLAG='ascii'.
+%   to read.  FLAG = 'ascii' means read the standard ascii output files
+%   fort.q00NN produced by Clawpack.  FLAG = 'hdf' will read HDF4 files
+%   produced by Clawpack.  FLAG='chombo' will read the HDF5 files produced
+%   by ChomboClaw.  The default option is FLAG='ascii'.
 %
 %   The output argument AMRDATA is an array of structures whose fields are
 %   some or all of :
@@ -54,27 +50,32 @@ function [amr,t] = readamrdata(dim,Frame,dir,flag);
 %              fprintf('Cells at level % d : %d\n',level,lvec(level));
 %           end;
 %
-%   For help on the Clawpack graphing routines, type 'help clawgraph'.
+%   See CLAWGRAPH, CHOMBOCLAW.
+%
 
-if (nargin < 4)
-  flag = 'ascii'; % assume ascii files are read
-  if (nargin < 3)
-    dir = './';
+if (nargin < 5)
+  outputprefix = '';
+  if (nargin < 4)
+    outputflag = 'ascii';
+    if (nargin < 3)
+      dir = './';
+    end;
   end;
 end;
+
 
 if (strcmp(dir(end),'/') == 0)
   dir = [dir, '/'];
 end;
 
-if (strcmp(lower(flag),'ascii') == 1)
-  [amr,t] = readamrdata_ascii(dim,Frame,dir);
-elseif (strcmp(lower(flag),'hdf') == 1)
+if (strcmp(lower(outputflag),'ascii') == 1)
+  [amr,t] = readamrdata_ascii(dim,Frame,dir,readblocknumber);
+elseif (strcmp(lower(outputflag),'hdf') == 1)
   [amr,t] = readamrdata_hdf(dim,Frame,dir);
-elseif (strcmp(lower(flag),'aux') == 1)
-  [amr,t] = readamrdata_aux(dim,Frame,dir);
+elseif (strcmp(lower(outputflag),'chombo') == 1)
+  [amr,t] = readamrdata_chombo(dim,Frame,dir,outputprefix);
 else
   str = sprintf(['readamrdata : ''%s'' is not a valid OutputFlag. Use ',...
-	'flag = ''ascii'' or ''hdf'' or ''aux''.'],flag);
+	'flag = ''ascii'' or flag = ''hdf''.'],flag);
   error(str);
 end

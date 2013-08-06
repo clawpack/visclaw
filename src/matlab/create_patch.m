@@ -1,5 +1,5 @@
 function p = create_patch(xc,yc,zc,xe,ye,ze,qcm2,sdir,sval,...
-    contourlevels,mappedgrid,manifold,grid_number)
+    contourlevels,mappedgrid,manifold,grid_number,blockno)
 
 % Internal matlab routine for Clawpack graphics.
 
@@ -71,6 +71,7 @@ end;
 % vertices to physical coordinates.
 v = get(p,'Vertices');
 userdata.cartCoords = v;
+
 if (mappedgrid == 1 | manifold == 1)
   if (mappedgrid == 1)
     if (nargin('mapc2p') == 2)
@@ -84,7 +85,7 @@ if (mappedgrid == 1 | manifold == 1)
   end;
   set(p,'Vertices',v);
 end;
-
+userdata.phys_vertices = v;
 
 % -------------------------------------------------------
 % Now create and store some other graphic objects that are associated with
@@ -94,7 +95,7 @@ end;
 userdata.contourLines = [];
 if (~isempty(contourlevels))
   c = contourc(yc_like,zc_like,qcm2,contourlevels);
-  userdata.contourLines = create_clines(c,sval,sdir,mappedgrid,manifold);
+  userdata.contourLines = create_clines(c,sval,sdir,mappedgrid,manifold,blockno);
 end;
 
 % Mesh data for showing coarsened mesh later...
@@ -106,12 +107,16 @@ userdata.mesh.ylines = [];
 % Lines at intersections of x,y,z planes - for 3d only.  These are actually
 % created after all slices have been plotted.
 userdata.grid_number = grid_number;  % For computing intersections
+userdata.blockno = blockno;
 userdata.xyIntersect = [];
 userdata.xzIntersect = [];
 userdata.yzIntersect = [];
 
 % Patch borders,
 userdata.border  = create_border(sdir, sval, xe,ye,ze,mappedgrid,manifold);
+
+% Gridline colors
+userdata.edgecolor = 'k';
 
 % Set patch UserData.
 set(p,'UserData',userdata);

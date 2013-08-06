@@ -14,7 +14,7 @@ if exist('NoQuery')
     % be printed out for an animation (put a command like makeframegif
     % in afterframe.m and set NoQuery=1)
     pause(1)
-    Frame = Frame + 1;
+    Frame = Frame + frameinc;
     if Frame > MaxFrames
       break;   % break out of plotclawN after last frame
     end
@@ -40,7 +40,7 @@ while strcmp(inp,'k')
     keyboard
   elseif strcmp(inp,'r')
     % redraw:  leave Frame counter alone
-    if Frame==-1
+    if Frame == -frameinc
       disp('Cannot redraw yet')
       inp = 'k';
     end
@@ -75,7 +75,7 @@ while strcmp(inp,'k')
     inp = 'k';
   elseif isempty(inp)
     % go to next frame
-    Frame = Frame + 1;
+    Frame = Frame + frameinc;
   elseif (~strcmp(inp,'q'))
     % quit handled separately below.
     % Otherwise unrecognized input, go back and try again

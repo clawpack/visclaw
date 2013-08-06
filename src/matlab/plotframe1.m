@@ -38,7 +38,7 @@ end
 
 set_value('maxlevels','MaxLevels',6);
 
-if (~exist('PlotStyle') & exist('plotstyle'))
+if (exist('plotstyle'))
   % Parse line spec style
   disp([' *** plotframe1 : ''plotstyle'' should be replaced by ',...
         '''PlotStyle''.  Set SETPLOTSTYLE.']);
@@ -101,14 +101,16 @@ for ng = 1:length(amrdata),
 
   amrdata(ng).q = q;
 
-  xcenter = xlow + dx/2 + (0:(mx-1))*dx;
-  xedge = xcenter(1:mx) + dx/2;
+  ax = xlow;
+  bx = xlow + mx*dx;
+  xedge = linspace(ax,bx,mx+1);
+  xcenter = xedge(1:end-1) + dx/2;
 
   % for compatibility with old matlab41/plotframe1 convention:
   x = xcenter;
 
-  qmin = min([min(q), qmin]);
-  qmax = max([max(q), qmax]);
+  qmin = min([q, qmin]);
+  qmax = max([q, qmax]);
 
   nplots = size(q,2);
   if (mappedgrid == 1)
@@ -129,16 +131,17 @@ for ng = 1:length(amrdata),
 	linecolors{level},linestyle{level});
   end;
 
-if exist('aftergrid')==2
-  % make an m-file with this name for any other commands you
-  % want executed at the end of drawing each grid
-  aftergrid;
-end;
+  if exist('aftergrid') == 2
+    % make an m-file with this name for any other commands you
+    % want executed at the end of drawing each grid
+    aftergrid;
+  end;
 
 end  % loop on ng
 
 % add title and labels:
 if UserVariable == 1
+  % q has been computed using user's file.
   str = sprintf('%s at time %8.4f',UserVariableFile,t);
   title(str,'fontsize',15);
 elseif (nplots == 1)
