@@ -255,7 +255,7 @@ for ng = 1:ngrids,
   if PlotType <= 3
 
     % Add amr patch of manifold into current plot.
-    sval = -level;      % Subtract one so that levels correspond to levels
+    sval = level;      % Subtract one so that levels correspond to levels
     zedge = [sval sval];
     zcenter = [sval sval];
     sdir = 'z';
