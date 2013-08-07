@@ -227,11 +227,10 @@ ngrids = length(amrdata);  % length of structure array
 for ng = 1:ngrids,
 
   gridno = amrdata(ng).gridno;
+  blockno = amrdata(ng).blockno;
   level = amrdata(ng).level;
 
-  % bn_plotframeN is a global variable used in mapc2p.m if the grid
-  % mapping varies across the blocks.
-  set_blocknumber(gridno);
+  set_blocknumber(blockno);
 
   if (PlotData(level) == 0)
     % Continue to next patch
@@ -326,7 +325,7 @@ for ng = 1:ngrids,
 	  % This command adds a patch to the appropriate slice
 	  add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
 	      xedge,yedge,zedge,qcm2,level,...
-	      cvalues,mappedgrid, manifold,maskflag,ng);
+	      cvalues,mappedgrid, manifold,maskflag,ng,blockno);
 	end;
       end;
     end;
@@ -337,8 +336,8 @@ for ng = 1:ngrids,
     add_cube2plot(xedge,yedge,zedge,level,mappedgrid);
 
     % Add isosurfaces to plot
-    add_isosurface2plot(xcenter,ycenter,zcenter,q,level,isosurfvalues,...
-	isosurfcolors,isosurfalphas,mappedgrid);
+    add_isosurface2plot(xcenter,ycenter,zcenter,q,level,...
+	isosurfvalues,isosurfcolors,isosurfalphas,mappedgrid);
 
   end;  % End plotting for PlotType == 3
 
