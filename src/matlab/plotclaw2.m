@@ -17,6 +17,7 @@
 %
 % generic plotting routine for clawpack and amrclaw output in matlab
 % R. J. LeVeque, 1999
+% Donna Calhoun 2002
 %
 % Various parameters are set in setplot2.m
 % The default version in claw/matlab/setplot2.m can be copied to your
@@ -71,6 +72,7 @@ set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
 set_value('outputprefix','plot_prefix','pltstate');
 set_value('readblocknumber','ReadBlockNumber',0);
+set_value('forestclaw','ForestClaw',0);
 
 amrdata = [];
 Frame = -frameinc;  % Initialize frame counter
