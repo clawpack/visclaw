@@ -255,14 +255,21 @@ for ng = 1:ngrids,
   if PlotType <= 3
 
     % Add amr patch of manifold into current plot.
-    sval = level;      % Subtract one so that levels correspond to levels
+    if (forestclaw)
+      sval = -level;      % Subtract one so that levels correspond to levels
+    else
+      sval = level;
+    end
     zedge = [sval sval];
     zcenter = [sval sval];
     sdir = 'z';
     snum = 1;   % only one slice in 2d plot
     % only mask patches underneath if we are plotting a Manifold
-    maskflag = (manifold == 1);
-    maskflag = 0;
+    if (forestclaw)
+      maskflag = 0;
+    else
+      maskflag = (manifold == 1);
+    end
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
 	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,maskflag,ng,blockno);
   end;  % end of plotting for PlotType == 3
