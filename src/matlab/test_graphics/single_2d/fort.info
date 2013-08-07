@@ -1,0 +1,90 @@
+tend =     0.1000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.1000E+00
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.2000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.3000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.4000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.5000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.6000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.7000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.8000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.9000E+00
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
+tend =     0.1000E+01
+info =    0
+smallest dt =     0.4500E-02
+largest dt =     0.4500E-02
+last dt =     0.4500E-02
+largest cfl =     0.9000E+00
+last cfl =     0.2000E+00
+steps taken =  23
+
