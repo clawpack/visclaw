@@ -53,15 +53,18 @@ function [amr,t] = readamrdata(dim,Frame,dir,outputflag,outputprefix,readblocknu
 %   See CLAWGRAPH, CHOMBOCLAW.
 %
 
-if (nargin < 5)
-  outputprefix = '';
-  if (nargin < 4)
-    outputflag = 'ascii';
-    if (nargin < 3)
-      dir = './';
+if (nargin < 6)
+  readblocknumber = 0;
+  if (nargin < 5)
+    outputprefix = '';
+    if (nargin < 4)
+      outputflag = 'ascii';
+      if (nargin < 3)
+	dir = './';
+      end;
     end;
   end;
-end;
+end
 
 
 if (strcmp(dir(end),'/') == 0)
