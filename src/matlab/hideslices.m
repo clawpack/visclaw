@@ -30,6 +30,7 @@ for idir = 1:length(sdirs),
     for level = 1:length(slice),
       pvec = slice{level};
       for k = 1:length(pvec),
+	% This sets the visibility of the whole slice, not the level.
 	set_patch_visibility(pvec(k),'off');
       end; % Patches loop
     end; % level loop

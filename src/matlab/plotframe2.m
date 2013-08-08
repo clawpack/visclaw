@@ -154,6 +154,19 @@ if PlotType == 4
 
 end;  % end of input checking for PlotType == 4
 
+if (PlotType == 5)
+  set_value('mappedgrid','MappedGrid',0);
+  if (mappedgrid == 1 & ~exist('mapc2p'))
+    error('*** MappedGrid = 1 but no ''mapc2p'' function was found.');
+  end;
+
+  set_value('manifold','Manifold',0);
+  if (manifold == 1 & ~exist('mapc2m'))
+    error('*** Manifold = 1, but no ''mapc2m'' function was found.');
+  end;
+  set_value('view_arg','UserView',3);
+end;
+
 qmin = [];
 qmax = [];
 ncells = [];
@@ -166,6 +179,7 @@ ngrids = length(amrdata);  % length of structure array
 for ng = 1:ngrids,
 
   gridno = amrdata(ng).gridno;
+  blockno = amrdata(ng).blockno;   % == 0 if there is only one block
   level = amrdata(ng).level;
 
   % if we're not plotting data at this level, skip to next grid
@@ -174,7 +188,9 @@ for ng = 1:ngrids,
   end;
 
   % Set block number for multi-block calculations.
-  set_blocknumber(gridno);
+  if (readblocknumber)
+    set_blocknumber(blockno);
+  end;
 
   mx = amrdata(ng).mx;
   my = amrdata(ng).my;
@@ -239,16 +255,23 @@ for ng = 1:ngrids,
   if PlotType <= 3
 
     % Add amr patch of manifold into current plot.
-    sval = level - 6;  % for top down viewing
+    if (forestclaw)
+      sval = -level;      % Subtract one so that levels correspond to levels
+    else
+      sval = level;
+    end
     zedge = [sval sval];
     zcenter = [sval sval];
     sdir = 'z';
     snum = 1;   % only one slice in 2d plot
     % only mask patches underneath if we are plotting a Manifold
-    maskflag = (manifold == 1);
+    if (forestclaw)
+      maskflag = 0;
+    else
+      maskflag = (manifold == 1);
+    end
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
-	xedge,yedge,zedge,qmesh,level,...
-	cvalues,mappedgrid,manifold,maskflag,ng);
+	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,maskflag,ng,blockno);
   end;  % end of plotting for PlotType == 3
 
   if (PlotType == 4)
@@ -257,12 +280,8 @@ for ng = 1:ngrids,
     [xcm,ycm] = meshgrid(xcenter,ycenter);
 
     if (usermap1d == 1)
-      if (mappedgrid == 1)
-	[xpm,ypm] = mapc2p(xcm,ycm);
-        [rvec,qvec] = map1d(xpm,ypm,qmesh);
-      else
-        [rvec,qvec] = map1d(xcm,ycm,qmesh);
-      end
+      % Users should call mapc2p from inside of map1d.
+      [rvec,qvec] = map1d(xcm,ycm,qmesh);
       [rs,cs] = size(rvec);
       [rq,cq] = size(qvec);
       if (cs > 1 | cq > 1)
@@ -285,11 +304,21 @@ for ng = 1:ngrids,
 
   end; % end of plotting for PlotType == 4
 
-if exist('aftergrid')==2
-  % make an m-file with this name for any other commands you
-  % want executed at the end of drawing each grid
-  aftergrid;
-end;
+  if (PlotType == 5)
+    if (manifold == 1)
+      [xpcenter,ypcenter] = mapc2m(xcenter,ycenter);
+    else
+      xpcenter = xcenter;
+      ypcenter = ycenter;
+    end;
+    h = surf(xpcenter,ypcenter,q);
+  end;
+
+  if exist('aftergrid') == 2
+    % make an m-file with this name for any other commands you
+    % want executed at the end of drawing each grid
+    aftergrid;
+  end;
 
 end % loop on ng (plot commands for each grid)
 %=============================================
@@ -314,6 +343,11 @@ if (PlotType <= 3)
   if (manifold == 0 & view_arg == 2)
     % To really make sure we get a 2d view and can see all levels.
     set(gca,'ZLimMode','auto');
+    zlim = get(gca,'zlim');
+    % Increase it sligtly to make sure that we can see all the patches
+    % plotted at the different z levels
+    zlim = [min(zlim)-0.001 max(zlim)+0.001];
+    set(gca,'zlim',zlim);
   end;
   xlabel('x')
   ylabel('y')

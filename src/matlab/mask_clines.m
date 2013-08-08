@@ -4,7 +4,8 @@ function mask_clines(p,sdir,xlow,xhigh,ylow,yhigh,zlow,zhigh)
 
 udata = get(p,'UserData');
 
-s = 1e-5;
+ds = min([udata.dx, udata.dy, udata.dz]);
+s = 1e-5*ds;
 
 [xlow_like, ylow_like, zlow_like]    = get_xyzlike(xlow,ylow,zlow,sdir);
 [xhigh_like, yhigh_like, zhigh_like] = get_xyzlike(xhigh,yhigh,zhigh,sdir);

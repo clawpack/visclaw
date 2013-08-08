@@ -20,6 +20,14 @@ for i = 1:length(pstyle),
   else
     mstyle{i} = m;
   end;
+
+  % This is in case the user has set the plotstyle to just a color,
+  % say 'b' or 'r', thinking that this will draw a line (as is the
+  % default with the PLOT command.
+  if (strcmp(lstyle{i},'none') & strcmp(mstyle{i},'none'))
+    lstyle{i} = '-';
+  end;
+
   if (isempty(c))
     lcolors{end+1} = 'b';
   else

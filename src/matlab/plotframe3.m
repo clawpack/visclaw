@@ -227,11 +227,10 @@ ngrids = length(amrdata);  % length of structure array
 for ng = 1:ngrids,
 
   gridno = amrdata(ng).gridno;
+  blockno = amrdata(ng).blockno;
   level = amrdata(ng).level;
 
-  % bn_plotframeN is a global variable used in mapc2p.m if the grid
-  % mapping varies across the blocks.
-  set_blocknumber(gridno);
+  set_blocknumber(blockno);
 
   if (PlotData(level) == 0)
     % Continue to next patch
@@ -319,25 +318,26 @@ for ng = 1:ngrids,
 
       % Loop over all slices that cube of data qmesh might intersect
       for n = 1:length(slicevals),
-	sval = slicevals(n);
-	[isect,qcm2] = interp_data_3d(xcenter,ycenter,zcenter,...
-	    xedge,yedge,zedge,qmesh,sdir,sval,interpmethod);
-	if (isect == 1)  % qmesh intersects a user specified slice.
-	  % This command adds a patch to the appropriate slice
-	  add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
-	      xedge,yedge,zedge,qcm2,level,...
-	      cvalues,mappedgrid, manifold,maskflag,ng);
-	end;
+          sval = slicevals(n);
+          [isect,qcm2] = interp_data_3d(xcenter,ycenter,zcenter,...
+              xedge,yedge,zedge,qmesh,sdir,sval,interpmethod);
+          if (isect == 1)  % qmesh intersects a user specified slice.
+              % This command adds a patch to the appropriate slice
+              add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
+                  xedge,yedge,zedge,qcm2,level,...
+                  cvalues,mappedgrid, manifold,maskflag,ng,blockno);
+          end;
       end;
     end;
+    hidelevels(find(~PlotData));
 
     % Add cube to plot - whether it is visible or not depends on how user
     % set PlotCubeEdges.
     add_cube2plot(xedge,yedge,zedge,level,mappedgrid);
 
     % Add isosurfaces to plot
-    add_isosurface2plot(xcenter,ycenter,zcenter,q,level,isosurfvalues,...
-	isosurfcolors,isosurfalphas,mappedgrid);
+    add_isosurface2plot(xcenter,ycenter,zcenter,q,level,...
+	isosurfvalues,isosurfcolors,isosurfalphas,mappedgrid);
 
   end;  % End plotting for PlotType == 3
 
@@ -347,13 +347,8 @@ for ng = 1:ngrids,
     [xcm,ycm,zcm] = meshgrid(xcenter,ycenter,zcenter);
 
     if (usermap1d == 1)
-    if (usermap1d == 1)
-      if (mappedgrid == 1)
-	[xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
-        [rvec,qvec] = map1d(xpm,ypm,zpm,qmesh);
-      else
-        [rvec,qvec] = map1d(xcm,ycm,zcm,qmesh);
-      end
+      % User should call mapc2p from inside of map1d
+      [rvec,qvec] = map1d(xcm,ycm,zcm,qmesh);
       [rs,cs] = size(rvec);
       [rq,cq] = size(qvec);
       if (cs > 1 | cq > 1)
@@ -362,10 +357,10 @@ for ng = 1:ngrids,
       end;
     else
       if (mappedgrid == 1)
-	[xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
-	r = sqrt((xpm - x0).^2 + (ypm - y0).^2 + (zpm - z0).^2);
+          [xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
+          r = sqrt((xpm - x0).^2 + (ypm - y0).^2 + (zpm - z0).^2);
       else
-	r = sqrt((xcm - x0).^2 + (ycm - y0).^2 + (zcm - z0).^2);
+          r = sqrt((xcm - x0).^2 + (ycm - y0).^2 + (zcm - z0).^2);
       end;
       rvec = reshape(r,prod(size(r)),1);
       qvec = reshape(qmesh,prod(size(qmesh)),1);
@@ -376,11 +371,11 @@ for ng = 1:ngrids,
 
   end;  % end of plotting for PlotType == 4
 
-if exist('aftergrid')==2
-  % make an m-file with this name for any other commands you
-  % want executed at the end of drawing each grid
-  aftergrid;
-end;
+  if exist('aftergrid') == 2
+    % make an m-file with this name for any other commands you
+    % want executed at the end of drawing each grid
+    aftergrid;
+  end;
 
 end % loop on ng (plot commands for each grid)
 % -----------------------------------------------------
@@ -418,4 +413,3 @@ if exist('afterframe')==2
   % for example to change the axes, or add a curve for a
   % boundary
 end;
-end

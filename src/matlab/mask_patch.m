@@ -1,4 +1,4 @@
-function mask_patches(p,sdir,xlow,xhigh,ylow,yhigh,zlow,zhigh)
+function mask_patch(p,sdir,xlow,xhigh,ylow,yhigh,zlow,zhigh)
 
 % Internal matlab routine for Clawpack graphics.
 
@@ -15,7 +15,9 @@ udata = get(p,'UserData');
 % following to 1e-8 will leave gaps in the masking.  So assuming single
 % precision is probably a good idea here.
 
-s = 1e-5;
+ds = min([udata.dx, udata.dy, udata.dz]);
+
+s = ds/2;
 if (s > min([udata.dx, udata.dy, udata.dz]))
   error('mask_patch : s is too big for dx, dy, dz\n');
 end;
