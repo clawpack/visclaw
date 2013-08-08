@@ -17,7 +17,7 @@ udata = get(p,'UserData');
 
 ds = min([udata.dx, udata.dy, udata.dz]);
 
-s = 1e-5*ds;
+s = ds/2;
 if (s > min([udata.dx, udata.dy, udata.dz]))
   error('mask_patch : s is too big for dx, dy, dz\n');
 end;
