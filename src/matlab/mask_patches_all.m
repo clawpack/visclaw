@@ -17,6 +17,6 @@ for l = 1:length(vis_levels),
   reset_level(pvecl);
   if (l < length(vis_levels))
     pvecu = slice{vis_levels(l+1)};
-    % mask_patches2(pvecl,pvecu);
+    mask_patches2(pvecl,pvecu);
   end;
 end;
