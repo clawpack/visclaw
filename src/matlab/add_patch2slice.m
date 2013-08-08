@@ -1,5 +1,5 @@
 function add_patch2slice(sdir,sval,snum,xc,yc,zc, xe,ye,ze, q,level,...
-    contourlevels,mappedgrid,manifold,maskflag,grid_number);
+    contourlevels,mappedgrid,manifold,maskflag,grid_number,blockno);
 
 % Internal matlab routine for Clawpack graphics.
 
@@ -16,7 +16,7 @@ end;
 
 % Get the new patch
 new_patch = create_patch(xc,yc,zc,xe,ye,ze,q,sdir,sval,contourlevels,...
-    mappedgrid,manifold,grid_number);
+    mappedgrid,manifold,grid_number,blockno);
 
 % Finally add the patch to current slice, and update figure UserData.
 slices{snum}{level}(end+1) = new_patch;

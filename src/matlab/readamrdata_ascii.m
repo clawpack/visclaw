@@ -1,4 +1,4 @@
-function [amr,t] = readamrdata_ascii(dim,Frame,dir);
+function [amr,t] = readamrdata_ascii(dim,Frame,dir,readblocknumber);
 
 % Internal routine for Clawpack graphics.
 
@@ -9,6 +9,9 @@ fname(length(dir)+6) = 't';
 if ~exist(fname)
   amr = {};
   t = [];
+  disp(' ');
+  disp(['Frame ',num2str(Frame),' (',fname,') does not exist ***']);
+  disp(' ');
   return;
 end
 
@@ -38,6 +41,13 @@ for ng = 1:ngrids,
 
   amrdata.gridno = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);
   amrdata.level = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);
+  if (dim > 1)
+    if (readblocknumber)
+      amrdata.blockno = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);
+    else
+      amrdata.blockno = 1;
+    end
+  end
   amrdata.mx = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);
   if (dim > 1)
     amrdata.my = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);

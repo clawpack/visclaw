@@ -31,6 +31,7 @@ if (nargin < 2)
 else
   sdirs = {sdir};
 end;
+
 for idir = 1:length(sdirs),
   slices = get_slices(sdirs{idir});
   if (nargin < 3)
@@ -47,7 +48,16 @@ for idir = 1:length(sdirs),
     end;
     for l = 1:length(level),
       pvec = slice{level(l)};
-      set(pvec,'EdgeColor','k');
+      for k = 1:length(pvec),
+	p = pvec(k);
+	udata = get(p,'UserData');
+	if (~isfield(udata,'edgecolor'))
+	  c = 'k';
+	else
+	  c = udata.edgecolor;
+	end;
+	set(p,'EdgeColor',udata.edgecolor);
+      end;
     end;
   end;
 end;

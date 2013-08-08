@@ -15,7 +15,7 @@ function set_value(a,a_user,a_default)
 %
 % Example :
 %
-%           set_value(mappedgrid,'MappedGrid',0);
+%           set_value('mappedgrid','MappedGrid',0);
 %
 % This is equivilent to
 %

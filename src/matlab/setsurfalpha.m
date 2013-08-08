@@ -13,21 +13,25 @@ function setsurfalpha(a,snum)
 %
 %   SETSURFALPHA sets the 'FaceAlpha' property of the isosurface patch.
 %
-%    Transparency will only be set if the OpenGL renderer is the current
-%    figure renderer.  To see if you have this renderer available on your
-%    system, use the command
+%   Transparency will only be set if the OpenGL renderer is the current
+%   figure renderer.  To see if you have this renderer available on your
+%   system, use the command
 %
 %           set(gcf,'Renderer')
 %
-%    to get list of available renderers for your system. If you have the OpenGL
-%    renderer, you can set it using
+%   to get list of available renderers for your system. If you have the OpenGL
+%   renderer, you can set it using
 %
 %           set(gcf,'Renderer','OpenGL');
 %
-%    Or, simply use the command SETOPENGL.  This will set the renderer to
-%    OpenGL if you have it on your system, and report a warning otherwise.
+%   Or, simply use the command SETOPENGL.  This will set the renderer to
+%   OpenGL if you have it on your system, and report a warning otherwise.
 %
-%    If the OpenGL Renderer is not set, this command has no effect.
+%   If the OpenGL Renderer is not set, this command has no effect.
+%
+%   Note : Setting the alpha property to values less than 1 may slow
+%   the rendering of your plots.  Rotating plots using ROTATE3D, for
+%   example, may appear noticebly slower.
 %
 %   See also SETSURFCOLOR, SETOPENGL, OPENGL, PATCH, ISOSURFACE.
 
