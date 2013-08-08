@@ -318,15 +318,15 @@ for ng = 1:ngrids,
 
       % Loop over all slices that cube of data qmesh might intersect
       for n = 1:length(slicevals),
-	sval = slicevals(n);
-	[isect,qcm2] = interp_data_3d(xcenter,ycenter,zcenter,...
-	    xedge,yedge,zedge,qmesh,sdir,sval,interpmethod);
-	if (isect == 1)  % qmesh intersects a user specified slice.
-	  % This command adds a patch to the appropriate slice
-	  add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
-	      xedge,yedge,zedge,qcm2,level,...
-	      cvalues,mappedgrid, manifold,maskflag,ng,blockno);
-	end;
+          sval = slicevals(n);
+          [isect,qcm2] = interp_data_3d(xcenter,ycenter,zcenter,...
+              xedge,yedge,zedge,qmesh,sdir,sval,interpmethod);
+          if (isect == 1)  % qmesh intersects a user specified slice.
+              % This command adds a patch to the appropriate slice
+              add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
+                  xedge,yedge,zedge,qcm2,level,...
+                  cvalues,mappedgrid, manifold,maskflag,ng,blockno);
+          end;
       end;
     end;
     hidelevels(find(~PlotData));
@@ -357,10 +357,10 @@ for ng = 1:ngrids,
       end;
     else
       if (mappedgrid == 1)
-	[xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
-	r = sqrt((xpm - x0).^2 + (ypm - y0).^2 + (zpm - z0).^2);
+          [xpm,ypm,zpm] = mapc2p(xcm,ycm,zcm);
+          r = sqrt((xpm - x0).^2 + (ypm - y0).^2 + (zpm - z0).^2);
       else
-	r = sqrt((xcm - x0).^2 + (ycm - y0).^2 + (zcm - z0).^2);
+          r = sqrt((xcm - x0).^2 + (ycm - y0).^2 + (zcm - z0).^2);
       end;
       rvec = reshape(r,prod(size(r)),1);
       qvec = reshape(qmesh,prod(size(qmesh)),1);
