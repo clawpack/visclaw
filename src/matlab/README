@@ -1,4 +1,28 @@
-For a suite of examples using this graphics library, see
+Insructions on using the Matlab graphics for visualizing Clawpack/PyClaw
+output :
+
+   -- First, make sure that $CLAW/visclaw/src/matlab is in your Matlab
+      path.  You can do this either by setting the environment variable
+      MATLABPATH, or by using the Matlab ADDPATH command.
+
+   -- To get started with the plotting, you can type
+
+           >> plotclaw2
+      or
+           >> plotclaw3
+
+      at the Matlab prompt to plot output in fort.XXXX files produced by Clawpack
+      or PyClaw.  Other file formats (HDF) are supported to a limited extent.  See
+      READAMRDATA for ideas on how to support your own file format.
+
+   -- The ClawGraphics routines will run files setplot2.m or setplot3.m to initialize
+      graphics parameters.  To customize properties like axis limits, camera view angles,
+      colormaps, gridlines, patchborders, etc.  you can supply an 'afterframe.m' file
+      which gets run after each frame has been plotted.  Both the setplot<n>.m files and
+      afterframe file can be customized for particular examples, and should be located in
+      your working directory.
+
+For a suite of examples using this Clawpack graphics library, see
 
     http://math.boisestate.edu/~calhoun/visclaw/matlab_gallery/test_graphics/index.html
 
