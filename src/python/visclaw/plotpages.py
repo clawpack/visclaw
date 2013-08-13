@@ -2139,7 +2139,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                embed_frames=embed_frames, frame_dir=frame_dir, 
                add_html=add_html, frame_width=frame_width, default_mode=default_mode)
       
-        def set_framename(self):
+        def get_all_framenames(self):
             frame_fullname = self.file_names
             return frame_fullname
     
@@ -2159,7 +2159,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 im.set_data(image)
                 return im,
       
-            print "Created JSAnimation for figure", figno
             anim = animation.FuncAnimation(fig, animate, init_func=init,
                                           frames=len(filenames), blit=True)
       
@@ -2168,6 +2167,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             anim.save('movieframe_allframesfig%s.html' % figno, \
                  writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
                         add_html=pre_html, frame_width=500,file_names=filenames))
+            print "Created JSAnimation for figure", figno
   
     #-------
     # Movie:

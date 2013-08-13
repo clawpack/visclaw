@@ -172,7 +172,7 @@ JS_INCLUDE = """
 
 DISPLAY_TEMPLATE = """
 <div class="animation" align="center">
-    <img id="_anim_img{id}" style="width:{frame_width}px">
+    <img id="_anim_img{id}" style="width:{frame_width}px"> 
     <br>
     <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
     <br>
@@ -186,7 +186,7 @@ DISPLAY_TEMPLATE = """
     <button onclick="anim{id}.last_frame()"><img class="anim_icon" src="{icons.last}"></button>
     <button onclick="anim{id}.faster()">+</button>
   <form action="#n" name="_anim_loop_select{id}" class="anim_control">
-    <input id="_frameno_id" type="textbox" size="1" onchange="anim{id}.set_frame(parseInt(this.value));" onpaste="this.onchange();" oninput="this.onchange();"></input>
+    <input id="_frame_no{id}" type="textbox" size="1" onchange="anim{id}.set_frame(parseInt(this.value));" onpaste="this.onchange();" oninput="this.onchange();"></input>
     <input type="radio" name="state" value="once" {once_checked}> Once </input>
     <input type="radio" name="state" value="loop" {loop_checked}> Loop </input>
     <input type="radio" name="state" value="reflect" {reflect_checked}> Reflect </input>
@@ -200,7 +200,7 @@ DISPLAY_TEMPLATE = """
   (function() {{
     var img_id = "_anim_img{id}";
     var slider_id = "_anim_slider{id}";
-    var frame_id = "_frameno_id"
+    var frame_id = "_frame_no{id}"
     var loop_select_id = "_anim_loop_select{id}";
     var frames = new Array({Nframes});
     {fill_frames}
@@ -219,10 +219,10 @@ INCLUDED_FRAMES = """
 """
 
 
-def _included_frames(frame_fullnames):
+def _included_frames(all_frames_fullnames):
     """frame_list should be a list of filenames"""
-    return INCLUDED_FRAMES.format(Nframes=len(frame_fullnames),
-                                  frame_list=frame_fullnames)
+    return INCLUDED_FRAMES.format(Nframes=len(all_frames_fullnames),
+                                  frame_list=all_frames_fullnames)
 
 
 
@@ -252,7 +252,7 @@ class HTMLWriter(FileMovieWriter):
 
     def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None,
                  metadata=None, embed_frames=False, frame_dir=None, add_html='',
-                 frame_width=650,default_mode='loop'):
+                 frame_width=None,default_mode='loop'):
         self.embed_frames = embed_frames
         self.frame_dir = frame_dir
         self.add_html = add_html
@@ -284,12 +284,12 @@ class HTMLWriter(FileMovieWriter):
                                       frame_prefix, clear_temp=False)
                                       
     # Set frame fullname; it can be replaced in child class
-    def set_framename(self):
-      frame_fullname = self._temp_names
-      for i in range(len(self._temp_names)):
-        frame_name = 'frame' + str(i).zfill(4) + "." + self.frame_format
-        frame_fullname[i] = os.path.join(self.frame_dir, frame_name)
-      return frame_fullname
+    def get_all_framenames(self):
+        frame_fullname = self._temp_names
+        for i in range(len(self._temp_names)):
+          frame_name = 'frame' + str(i).zfill(4) + "." + self.frame_format
+          frame_fullname[i] = os.path.join(self.frame_dir, frame_name)
+        return frame_fullname
 
     def grab_frame(self, **savefig_kwargs):
         if self.embed_frames:
@@ -317,8 +317,8 @@ class HTMLWriter(FileMovieWriter):
                                            self.frame_format)
         else:
             # temp names is filled by FileMovieWriter
-            frame_fullname = self.set_framename()
-            fill_frames = _included_frames(frame_fullname)
+            all_frames_fullnames = self.get_all_framenames()
+            fill_frames = _included_frames(all_frames_fullnames)
 
         mode_dict = dict(once_checked='',
                          loop_checked='',
