@@ -309,7 +309,10 @@ def print_html_pointers(path_to_html_index):
     print "\nPoint your browser to:"
     print "    file://%s" % path_to_html_index
     clawdir = os.getenv('CLAW','')
-    if clawdir in path_to_html_index:
+
+    # Removed next message since clawpack server is rarely used...
+    #if clawdir in path_to_html_index:
+    if False:
         path_to_html_index = path_to_html_index.replace(clawdir,'')
         print "\nOr, if you have the Clawpack server running, point your browser to:"
         print "    http://localhost:50005%s"  % path_to_html_index
