@@ -14,7 +14,6 @@ import numpy as np
 from matplotlib import image as Image
 from matplotlib import pyplot as plt
 from matplotlib import animation
-from JSAnimation import HTMLWriter
 
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
@@ -1448,7 +1447,7 @@ def plotclaw2html(plotdata):
             if makefig:
                 if type(makefig)==str:
                     try:
-                        exec(makefig)
+                        exec(makefig) in globals(), locals()
                     except:
                         print "*** Problem executing makefig "
                         print "    for otherfigure ",name
@@ -1649,6 +1648,19 @@ def plotclaw2html(plotdata):
                 html.write("""<p><h3><a href="../eaglemenu.html">Main Menu for
                 this run-directory</a></h3>  """)
             html.write('</center></body></html>')
+            html.close()
+    
+    
+    # moviefigJ.html
+    #-------------------
+
+    if plotdata.html_movie == True:
+    
+        # original style still used if plotdata.html_movie == True:
+        for figno in fignos:
+            html = open('movie%s' % allframesfile[figno], 'w')
+            text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
+            html.write(text)
             html.close()
     
  
@@ -1940,6 +1952,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         plotdir = plotdata.plotdir     # where to put png and html files
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
+        
     except:
         print '*** Error in printframes: plotdata missing attribute'
         print '  *** plotdata = ',plotdata
@@ -2095,6 +2108,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Make html files for time frame figures:
     # ---------------------------------------
+    
+    if plotdata.html_movie == "JSAnimation":
+        # Only import if we need it:
+        try:
+            from JSAnimation import HTMLWriter
+        except:
+            print "*** Warning: Your version of matplotlib may not support JSAnimation"
+            print "    Switching to old style animation"
+            plotdata.html_movie = True
 
     os.chdir(plotdir)
 
@@ -2122,28 +2144,31 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
+
     
-    
-    # Movie:
-    # MODIFIED FOR "JSAnimations" MODIFIED MAY 2013 (requires JSAnimation MODIFIED package)
-    # Makes Javascript movies for Clawpack for all figures
-    
-    # Creates child class
-    class myHTMLWriter(HTMLWriter):
-        def __init__(self, fps=10, codec=None, bitrate=None, extra_args=None,\
-               metadata=None, embed_frames=False, frame_dir=None, add_html='', \
-               frame_width=650, default_mode='once', file_names=None):
-            self.file_names=file_names
-            super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
-               extra_args=extra_args, metadata=metadata, 
-               embed_frames=embed_frames, frame_dir=frame_dir, 
-               add_html=add_html, frame_width=frame_width, default_mode=default_mode)
-      
-        def get_all_framenames(self):
-            frame_fullname = self.file_names
-            return frame_fullname
-    
-    if plotdata.html_movie:
+    if plotdata.html_movie == "JSAnimation":
+        
+        # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
+
+        class myHTMLWriter(HTMLWriter):
+            """
+            Subclass to use JSAnimations for movies.
+            """
+
+            def __init__(self, fps=10, codec=None, bitrate=None, extra_args=None,\
+                   metadata=None, embed_frames=False, frame_dir=None, add_html='', \
+                   frame_width=650, default_mode='once', file_names=None):
+                self.file_names=file_names
+                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
+                   extra_args=extra_args, metadata=metadata, 
+                   embed_frames=embed_frames, frame_dir=frame_dir, 
+                   add_html=add_html, frame_width=frame_width, default_mode=default_mode)
+          
+            def get_all_framenames(self):
+                frame_fullname = self.file_names
+                return frame_fullname
+
+
         # Create Animations
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
@@ -2168,10 +2193,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                  writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
                         add_html=pre_html, frame_width=500,file_names=filenames))
             print "Created JSAnimation for figure", figno
-  
-    #-------
-    # Movie:
-    #-------
+              
+    #-----------
+    # gif movie:
+    #-----------
     
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
