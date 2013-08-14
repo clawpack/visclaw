@@ -11,7 +11,6 @@ import numpy as np
 
 import clawpack.clawutil.data as clawdata
 
-from clawpack.visclaw import plotpages
 from clawpack.visclaw.frametools import set_show
 
 plotter = 'matplotlib'
@@ -554,6 +553,7 @@ def printgauges(plotdata=None, verbose=True):
     import glob
     from clawpack.visclaw.data import ClawPlotData
 
+    from clawpack.visclaw import plotpages
 
 
     if not sys.modules.has_key('matplotlib'):
