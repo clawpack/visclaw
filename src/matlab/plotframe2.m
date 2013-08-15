@@ -64,8 +64,8 @@ if (PlotType <= 3)
     set_value('view_arg','UserView',2);
   end;
 
-  set_value('underover','ShowUnderOverShoots',0);
-  if (underover == 1 & ~exist('underover'))
+  set_value('underoverflag','ShowUnderOverShoots',0);
+  if (underoverflag == 1 & ~exist('underover'))
     error(['*** ShowUnderOverShoots = 1, but no ''underover'' ',...
 	  'function was found.']);
   end
@@ -76,7 +76,7 @@ if (PlotType <= 3)
 	  'function was found.']);
   end
 
-  if (underover == 1)
+  if (underoverflag == 1)
     colormapping = 'underover';
   elseif (usercolormapping == 1)
     colormapping = 'usercolormapping';
@@ -262,7 +262,7 @@ for ng = 1:ngrids,
 
   % minimum over all grids at this time, but not necessarily on slice
   % shown.
-  qmin = min([qmin,min(q(:)));
+  qmin = min([qmin,min(q(:))]);
   qmax = max([qmax,max(q(:))]);
 
   % keep count of how many cells at this refinement level:

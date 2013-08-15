@@ -67,8 +67,8 @@ if (PlotType <= 3)
     end;
   end;
 
-  set_value('underover','ShowUnderOverShoots',0);
-  if (underover == 1 & ~exist('underover'))
+  set_value('underoverflag','ShowUnderOverShoots',0);
+  if (underoverflag == 1 & ~exist('underover'))
     error(['*** ShowUnderOverShoots = 1, but no ''underover'' ',...
 	  'function was found.']);
   end
@@ -79,7 +79,7 @@ if (PlotType <= 3)
 	  'function was found.']);
   end
 
-  if (underover == 1)
+  if (underoverflag == 1)
     colormapping = 'underover';
   elseif (usercolormapping == 1)
     colormapping = 'usercolormapping';
