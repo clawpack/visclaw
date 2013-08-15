@@ -72,7 +72,6 @@ set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
 set_value('outputprefix','plot_prefix','pltstate');
 set_value('readblocknumber','ReadBlockNumber',0);
-set_value('forestclaw','ForestClaw',0);
 
 amrdata = [];
 Frame = -frameinc;  % Initialize frame counter
