@@ -1,12 +1,10 @@
 function setcolors(p,x,y,z,q)
-
-% SETCOLORS determines mapping between q data and color map
 %
-%      This subroutine, called by the Clawpack graphics routines, sets the
-%      way in which q data is mapped to the graphics colormap.  This routine
-%      is in the same location as the rest of the Clawpack graphics files;
-%      if you wish to modify this file, copy claw/matlab/setcolors.m to your
-%      working directory, and make any desired changes.
+% SETCOLORS specifies user-defined mapping between q data and color map
+%
+%      User-defined routine which maps q values to the colormap.  To
+%      indicate that this routine should be called, the user should set
+%      the flag 'UserColorMapping' to 1 in SETPLOT2 or SETPLOT3 files.
 %
 %      The syntax for this routine is
 %
@@ -18,118 +16,58 @@ function setcolors(p,x,y,z,q)
 %      (x,y,z) are given in the Cartesian locations, NOT the physical
 %      locations of cell centers.
 %
-%      By default, the q values are mapped linearly into current colormap,
-%      with min and max values clamped to limits set by caxis.
+%      Possible uses for this routine include :
 %
-%      This default behavior is accomplished with the following Matlab
-%      commands :
+%             -- Use different colormaps in different domain regions
+%             -- Mask out embedded boundary regions.
+%             -- Visualize parallel partitions
 %
-%            set(p,'CData',q);                % Data to use for coloring.
-%            set(p,'CDataMapping','scaled');  % Scale into current color map.
-%            set(p,'FaceColor','flat');       % Single color per cell
+%      To visualize under and over shoots, see UNDEROVER.
 %
-%      Other color mapping schemes can be provided, for example to mask out
-%      embedded boundary regions, or to flag certain values that lie out
-%      side of a given data range.
+%      Example : Use the 'spring' colormap for the left half of a region
+%      and the 'winter' color map for the right half.
 %
-%      For example, to highlight all values that lie outside of a given
-%      range [a,b] (to see where overshoots and undershoots occur, for example).
-%      Assume for example that the current colormap has length 'n', and that
-%      in location 1 you have assigned the color black ([0 0 0]) and in
-%      location n you have assigned the color white ([1 1 1]).  You want to
-%      color all values q < a the color black, and all values q > b the
-%      color white.  Everything in the range [a,b] should be mapped into the
-%      colormap 'default'.  The following code will do this:
+%              c1 = spring;
+%              c2 = winter;
 %
-%      Example :
+%              cm_new = [c1; c2];
 %
-%           colormap('default');
-%           cmap = [[0 0 0]; colormap; [1 1 1]];  % set black, white values
-%           colormap(cmap);
-%           n = length(cmap);
+%              n1 = length(c1);
+%              n2 = length(c2);
 %
-%           % Assign a color into map (2:n-1) based on value of q:
-%           a = 0;  % value data range.
-%           b = 1;
+%              % Map q(m1) to indices [1,n1] and q(m2) to indices [n1+1,n1+n2]
+%              idx = 0*q + nan;   % To make sure we don't leave any q values out.
 %
-%           % Map a -> index value 2
-%           % Map b -> index value n-1
-%           idx = ((n-1)-2)/(b-a)*(q - a) + 2;
+%              m1 = x > 0.5;      % Left and right halves of computational domains
+%              m2 = x <= 0.5;
 %
-%           % Map all values that fall outside of the range
-%           % [a,b] the color black or white
-%           qcolors(q < a) = 1;   % assign values < a the color black.
-%           qcolors(q > b) = n;   % assign values > b the color white.
-%           qcolors(q >= a & q <= b) = round(idx);
+%              qmin = -0.01;      % global min and max values for data
+%              qmax = 1.01;
 %
-%           % Set CData property for patch
-%           set(p,'CData',qcolors);
+%              q(q == qmax) = qmax*(1-1e-8);     % So floor works below.
+%              slope = (q - qmin)./(qmax-qmin);  % slopes must be in [0,1]
 %
-%           % Interpret values in CData as indices which can be used
-%           % directly into colormap.
-%           set(p,'CDataMapping','direct');
+%              idx(m1) = floor(1 + slope(m1)*(n1 - 1));
+%              idx(m2) = n1 + floor(1 + slope(m2)*(n2 - 1));
 %
-%      See also PATCH, COLORMAP.
+%              set(p,'cdata',idx);
+%              fv = get(p,'FaceVertexCData');
+%
+%              if (sum(isnan(fv)) > 0)
+%                error('setcolors : Not all values in q have been mapped')
+%              end;
+%
+%              set(p,'FaceVertexCData',cm_new(fv,:));
+%              set(p,'facecolor','flat');
+%
+%
+%      See also PATCH, COLORMAP, UNDEROVER, UNDEROVER_COLORBAR,
+%      MULTICOLORMAP, MULTICOLORMAP_COLORBAR.
+%
 
-set(p,'CData',q);                % Data to use for coloring.
-set(p,'CDataMapping','scaled');  % Scale into current color map.
-set(p,'FaceColor','flat');       % Single color per cell
 
-% Return here if you just want the usual colormap
-return;
+str = [...
+      'setcolors : Make a local copy of this routine and specify \n',...
+      'user-defined mapping']);
 
-% Continue if you want to highlight under and overshoots.
-
-% --------------------------------------------------------
-% User specified values for overshoot/undershoot values.
-% ---------------------------------------------------------
-% Specify colors for under/over shoots
-color_under = [1 0 1];   % cyan
-color_over = [0 1 1];    % magenta
-
-% Specify a tolerance for a under/over shoot value.
-% Values outside of [value_under-tol, value_over+tol] will be
-% colored using colors specified above.
-tol = 1e-4;
-
-% Specify exact values within which the exact solution should lie
-value_lower = 0;
-value_upper = 1;
-
-% Specify the current colormap to be used for all values
-% between [value_under, value_over];
-yrbcolormap;
-cm_user = colormap;
-
-% ----------------------------------------------------
-% The rest should be automatic
-% ----------------------------------------------------
-nmax = length(cm_user);
-cm_extended = [color_over; cm_user; color_under];
-
-% Fix q so that floor for indexing works.
-mfix = (value_lower-tol) < q & q <= value_lower;
-q(mfix) = value_lower;
-mfix = value_upper <= q & q <= (value_upper + tol);
-q(mfix) = value_upper-1e-8; % So floor works
-
-idx = q;
-m0 = value_lower <= q & q < value_upper;
-slope = (q(m0) - value_lower)/(value_upper-value_lower);
-
-% map value_lower => 1 and value_upper => nmax
-idx(m0) = 1 + floor(1 + slope*(nmax-1));
-
-m_over = q > (value_upper + tol);
-idx(m_over) = nmax + 2;   % last index of cm_extended
-m_under = q < -tol;
-idx(m_under) = 1;   % first index in cm_extended
-
-set(p,'CData',idx);      % Color by indexing directly into the color map
-fv = get(p,'FaceVertexCData');
-
-% Colors will be hardwired and not affected later calls to a colormap function.
-set(p,'FaceVertexCData',cm_extended(fv,:));
-
-% set(p,'CDataMapping','direct');
-set(p,'FaceColor','flat');
+error(str);

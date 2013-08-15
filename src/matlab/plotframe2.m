@@ -43,6 +43,7 @@ if exist('beforeframe')==2
   beforeframe;
 end
 
+set_value('forestclaw','ForestClaw',0);
 
 % Do some checking to make sure input is right..
 if (PlotType <= 3)
@@ -61,6 +62,26 @@ if (PlotType <= 3)
     set_value('view_arg','UserView',3);
   else
     set_value('view_arg','UserView',2);
+  end;
+
+  set_value('underover','ShowUnderOverShoots',0);
+  if (underover == 1 & ~exist('underover'))
+    error(['*** ShowUnderOverShoots = 1, but no ''underover'' ',...
+	  'function was found.']);
+  end
+
+  set_value('usercolormapping','UserColorMapping',0);
+  if (usercolormapping == 1 & ~exist('setcolors'))
+    error(['*** UserColorMapping = 1, but no ''setcolors'' ',...
+	  'function was found.']);
+  end
+
+  if (underover == 1)
+    colormapping = 'underover';
+  elseif (usercolormapping == 1)
+    colormapping = 'usercolormapping';
+  else
+    colormapping = 'default';
   end;
 
   set_value('cvalues','ContourValues',[]);
@@ -241,8 +262,8 @@ for ng = 1:ngrids,
 
   % minimum over all grids at this time, but not necessarily on slice
   % shown.
-  qmin = min([qmin,min(min(q))]);
-  qmax = max([qmax,max(max(q))]);
+  qmin = min([qmin,min(q(:)));
+  qmax = max([qmax,max(q(:))]);
 
   % keep count of how many cells at this refinement level:
   if length(ncells) < level
@@ -264,14 +285,16 @@ for ng = 1:ngrids,
     zcenter = [sval sval];
     sdir = 'z';
     snum = 1;   % only one slice in 2d plot
-    % only mask patches underneath if we are plotting a Manifold
+    % only mask patches underneath if we are plotting a Manifold, or
+    % using ForestClaw
     if (forestclaw)
       maskflag = 0;
     else
       maskflag = (manifold == 1);
     end
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
-	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,maskflag,ng,blockno);
+	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,...
+	maskflag,ng,blockno,colormapping);
   end;  % end of plotting for PlotType == 3
 
   if (PlotType == 4)
