@@ -74,3 +74,62 @@ function setcolors(p,x,y,z,q)
 set(p,'CData',q);                % Data to use for coloring.
 set(p,'CDataMapping','scaled');  % Scale into current color map.
 set(p,'FaceColor','flat');       % Single color per cell
+
+% Return here if you just want the usual colormap
+return;
+
+% Continue if you want to highlight under and overshoots.
+
+% --------------------------------------------------------
+% User specified values for overshoot/undershoot values.
+% ---------------------------------------------------------
+% Specify colors for under/over shoots
+color_under = [1 0 1];   % cyan
+color_over = [0 1 1];    % magenta
+
+% Specify a tolerance for a under/over shoot value.
+% Values outside of [value_under-tol, value_over+tol] will be
+% colored using colors specified above.
+tol = 1e-4;
+
+% Specify exact values within which the exact solution should lie
+value_lower = 0;
+value_upper = 1;
+
+% Specify the current colormap to be used for all values
+% between [value_under, value_over];
+yrbcolormap;
+cm_user = colormap;
+
+% ----------------------------------------------------
+% The rest should be automatic
+% ----------------------------------------------------
+nmax = length(cm_user);
+cm_extended = [color_over; cm_user; color_under];
+
+% Fix q so that floor for indexing works.
+mfix = (value_lower-tol) < q & q <= value_lower;
+q(mfix) = value_lower;
+mfix = value_upper <= q & q <= (value_upper + tol);
+q(mfix) = value_upper-1e-8; % So floor works
+
+idx = q;
+m0 = value_lower <= q & q < value_upper;
+slope = (q(m0) - value_lower)/(value_upper-value_lower);
+
+% map value_lower => 1 and value_upper => nmax
+idx(m0) = 1 + floor(1 + slope*(nmax-1));
+
+m_over = q > (value_upper + tol);
+idx(m_over) = nmax + 2;   % last index of cm_extended
+m_under = q < -tol;
+idx(m_under) = 1;   % first index in cm_extended
+
+set(p,'CData',idx);      % Color by indexing directly into the color map
+fv = get(p,'FaceVertexCData');
+
+% Colors will be hardwired and not affected later calls to a colormap function.
+set(p,'FaceVertexCData',cm_extended(fv,:));
+
+% set(p,'CDataMapping','direct');
+set(p,'FaceColor','flat');
