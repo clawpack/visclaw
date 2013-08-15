@@ -45,6 +45,7 @@
 %        LineStyle           - same as ScatterStyle.
 %        UserMap1d           - set to 1 if 'map1d' file exists.
 %        UserColorMapping    - Use user-defined 'setcolors' function
+%        ShowUnderOverShoots - Visualization for over/undershoots.
 %
 %      All parameters can be modified by typing 'k' at the PLOTCLAW2 prompt.
 %
