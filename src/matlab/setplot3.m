@@ -50,6 +50,7 @@
 %        IsosurfValues       - constants for isosurfaces
 %        IsosurfColors       - colors for isosurfaces.
 %        UserMap1d           - set to 1 if 'map1d' file exists.
+%        UserColorMapping    - Use user-defined 'setcolors' function
 %
 %      All parameters can be modified by typing 'k' at the PLOTCLAW3 prompt.
 %
@@ -106,7 +107,7 @@ ContourValues = [];
 % Isosurfaces.  Plot surfaces at q = IsosurfValue(i)
 % If empty, no isosurfaces will be drawn.
 
-IsosurfValues    =  [];  
+IsosurfValues    =  [];
 
 IsosurfColors    = 'b';  % Colors for each surface.
                          % Set to 'q' to get colors from the
@@ -116,7 +117,7 @@ IsosurfColors    = 'b';  % Colors for each surface.
 % ---------------------------------------------------------------------
 % plot q(r) vs. r = sqrt((x-x0)^2 + (y-y0)^2 + (z-z0)^2);
 % for scatter plot (PlotType==4):
-% The default is to plot q(i,j,k) vs. 
+% The default is to plot q(i,j,k) vs.
 %             r(i,j,k) = (x(i,j,k)-x0)^2 + (y(i,j,k)-y0)^2 + (z(i,j,k)-z0)^2
 x0 = 0.5;
 y0 = 0.5;

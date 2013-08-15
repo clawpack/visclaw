@@ -11,14 +11,14 @@
 %        OutputFlag        - set to 'ascii' (default) to read ascii output
 %                                from files fort.qXXXX where XXXX is Frame #
 %                            or to 'hdf' to read hdf output files.
-%                                from files fort.qXXXX.hdf 
+%                                from files fort.qXXXX.hdf
 %                            set to 'aux' to read aux array values from
 %                                fort.aXXXX instead of q from fort.qXXXX
-%                                These files are created only if 
+%                                These files are created only if
 %                                outaux = .true.  in out2.f
 %
 %        OutputDir         - set to '.' to read data from current working
-%                                directory (default) or set to path 
+%                                directory (default) or set to path
 %                                to output directory.
 %
 %        PlotType          - type of plot to produce:
@@ -44,6 +44,7 @@
 %        ScatterStyle        - symbols for scatter plot.
 %        LineStyle           - same as ScatterStyle.
 %        UserMap1d           - set to 1 if 'map1d' file exists.
+%        UserColorMapping    - Use user-defined 'setcolors' function
 %
 %      All parameters can be modified by typing 'k' at the PLOTCLAW2 prompt.
 %
@@ -71,16 +72,16 @@ PlotGridEdges =  [1 1 1 1 1 1];  % Plot edges of patches of each grid at
                                  % this level?
 
 % ---------------------------------------------------------------------
-% ContourValues is a vector of values used to draw contour lines.  
+% ContourValues is a vector of values used to draw contour lines.
 % The valid settings for this parameter are identical to those used by the
 % Matlab contour plotting routine.  See also CONTOUR.  In particular:
 %   If ContourValues is the empty matrix, no contour lines will be drawn.
 %   If ContourValues is a vector, these values will be used for contours.
 %   If ContourValues is an integer, this number of levels will be drawn,
-%        with values chosen based on the data.  (May not work well with 
+%        with values chosen based on the data.  (May not work well with
 %        AMR data since different levels may be chosen on different grids.
 
-ContourValues = [];       
+ContourValues = [];
 
 %---------------------------------
 
@@ -89,10 +90,9 @@ ContourValues = [];
 x0 = 0;
 y0 = 0;
 
-UserMap1d = 0;  % set to 1 and provide map1d.m file to specify a different 
+UserMap1d = 0;  % set to 1 and provide map1d.m file to specify a different
                 % mapping of (x,y,q) to (r,q) for scatter plots.
 
 ScatterStyle = setplotstyle('ro','bx','k.','rs','bv','k^');
 %               determines symbol and color for plotting scatter data on
 %               each refinement level.
-
