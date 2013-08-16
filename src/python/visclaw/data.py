@@ -73,7 +73,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_index_fname','_PlotIndex.html')   # name of html index file
         self.add_attribute('html_index_title','Plot Index')   # title at top of index page
         self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
-        self.add_attribute('html_movie',True)          # make html with java script for movie
+        self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames

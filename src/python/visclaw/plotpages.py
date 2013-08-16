@@ -49,7 +49,7 @@ class PlotPagesData(object):
         self.html_homelink = None       # link to here from top of index file
         self.html_itemsperline = 2      # number of items on each line
         self.html_preplots = None       # html to for top of page before plots
-        self.html_movie = True          # make html with java script for movie
+        self.html_movie = "JSAnimation" # make html with java script for movie
         self.html_eagle = False         # use EagleClaw titles on html pages?
 
         self.gif_movie = False          # make animated gif movie of frames
@@ -1323,9 +1323,9 @@ def plotclaw2html(plotdata):
     # moviefigJ.html
     #-------------------
 
-    if plotdata.html_movie == True:
+    if plotdata.html_movie in [True, "4.x"]:
     
-        # original style still used if plotdata.html_movie == True:
+        # original style still used if plotdata.html_movie == "4.x":
         for figno in fignos:
             html = open('movie%s' % allframesfile[figno], 'w')
             text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
@@ -1785,7 +1785,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         except:
             print "*** Warning: Your version of matplotlib may not support JSAnimation"
             print "    Switching to old style animation"
-            plotdata.html_movie = True
+            plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
 
