@@ -1,18 +1,27 @@
-function underover_colorbar(under_label,over_label)
+function colorbar_underover(under_label,over_label)
 %
-% UNDEROVER_COLORBAR constructs the colorbar to show under/overshoots
+% COLORBAR_UNDEROVER constructs the colorbar to show under/overshoots
 %
-% UNDEROVER_COLORBAR can be called from an afterframe.m file to
+% COLORBAR_UNDEROVER can be called from an afterframe.m file to
 % produced a colorbar associated with an under/overshoot colormap.
+% Default labels 'undershoot' and 'overshoot' are used to label the
+% under/overshoot regions of the colorbar.
 %
-% This relies on the structure created using the user-defined function
-% UNDEROVER.
+% COLORBAR_UNDEROVER(under_label,over_label) uses user supplied labels.
 %
-% This should be used in conjunction with SETCOLORS.
+% Example :  Provide labels which show the magnitude of the under/over
+%            shoots :
 %
-% See also SETCOLORS, UNDEROVER.
+%              under_label = sprintf('%2.0f - %6.2e',qlo,qlo-qmin);
+%              over_label = sprintf('%2.0f + %6.2e',qhi,qmax-qhi);
+%              colorbar_underover(under_label,over_label);
+%
+% COLORBAR_UNDEROVER makes a call to the user-defined function UNDEROVER.
+%
+% See also UNDEROVER.
 %
 
+% Number of bars in the color map used for the under/overshoot region.
 cm_buff = 3;
 
 uo = underover;   % User defined routine.
@@ -36,6 +45,7 @@ if (nargin == 0)
   over_label = 'overshoot';
 end;
 
+% Fix the tick marks
 set(o,'ytick',linspace(0,1,n+1));
 yticklabel = cell(n + 1,1);
 yticklabel{1} = under_label;
