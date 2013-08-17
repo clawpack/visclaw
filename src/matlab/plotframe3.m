@@ -428,6 +428,8 @@ end;
 
 view(view_arg);
 
+afterframe_default;
+
 if exist('afterframe')==2
   afterframe  % make an m-file with this name for any other commands you
   % want executed at the end of drawing each frame
