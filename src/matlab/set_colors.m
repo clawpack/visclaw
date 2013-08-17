@@ -27,10 +27,14 @@ case 'underover'
      % setplot3.m and define function 'underover.m'
      % -------------------------------------------------------------
 
+     cm_buff = 3;        % Number of buffer under/over color entries
+
      uo = underover();   % User-defined function
 
      nmax = length(uo.colormap);
-     cm_extended = [uo.color_under(:)'; uo.colormap; uo.color_over(:)'];
+     cm_extended = [kron(ones(cm_buff,1),uo.color_under(:)'); ...
+                    uo.colormap; ...
+		    kron(ones(cm_buff,1),uo.color_over(:)')];
 
      % Fix q so that floor for indexing works.  This also clamps
      % values in [qlo-tol,qlo] to qlo, and values in [qhi,qhi+tol]
@@ -44,6 +48,7 @@ case 'underover'
      % Create index values in range [qlo,qhi] into
      % user-specified colormap
      % ----------------------------------------------------
+
      idx = 0*q + nan;     % This will replace the 'cdata' property
                           % in the patch handle 'p'.
 
@@ -52,14 +57,14 @@ case 'underover'
 
      % map value_lower to 2 and value_upper to nmax+1
      slope = (q(m0) - uo.value_lower)/(uo.value_upper-uo.value_lower);
-     idx(m0) = 1 + floor(1 + slope*(nmax-1));
+     idx(m0) = cm_buff + floor(1 + slope*(nmax-1));
 
      % Set under shoots to 1 and over shoots to nmax+2
      m_under = q <= uo.value_lower-uo.tol;
      idx(m_under) = 1;   % first index in cm_extended
 
      m_over = q >= (uo.value_upper + uo.tol);
-     idx(m_over) = nmax + 2;   % last index of cm_extended
+     idx(m_over) = nmax + 2*cm_buff;   % last index of cm_extended
 
      % -----------------------
      % Modify patch handle
