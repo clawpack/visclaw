@@ -31,12 +31,18 @@ clawdim = 2;
 disp(' ')
 disp('plotclaw2  plots 2d results from clawpack or amrclaw')
 
+set_value('NoQuery','NoQuery',0);
+
 % set plotting parameters:
 whichfile = which('setplot2');
 if strcmp(whichfile,'')
   disp('*** No setplot2 file found')
 else
-  inp = input(['Execute setplot2 (default = no)? '],'s');
+  if (NoQuery == 0)
+    inp = input(['Execute setplot3 (default = no)? '],'s');
+  else
+    inp = 'y';
+  end;
   inpd = findstr('y',lower(inp));
   if (inpd == 1)
     setplot2;
