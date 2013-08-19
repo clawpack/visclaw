@@ -14,7 +14,6 @@ import numpy as np
 from matplotlib import image as Image
 from matplotlib import pyplot as plt
 from matplotlib import animation
-from JSAnimation import HTMLWriter
 
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
@@ -50,7 +49,7 @@ class PlotPagesData(object):
         self.html_homelink = None       # link to here from top of index file
         self.html_itemsperline = 2      # number of items on each line
         self.html_preplots = None       # html to for top of page before plots
-        self.html_movie = True          # make html with java script for movie
+        self.html_movie = "JSAnimation" # make html with java script for movie
         self.html_eagle = False         # use EagleClaw titles on html pages?
 
         self.gif_movie = False          # make animated gif movie of frames
@@ -310,345 +309,14 @@ def print_html_pointers(path_to_html_index):
     print "\nPoint your browser to:"
     print "    file://%s" % path_to_html_index
     clawdir = os.getenv('CLAW','')
-    if clawdir in path_to_html_index:
+
+    # Removed next message since clawpack server is rarely used...
+    #if clawdir in path_to_html_index:
+    if False:
         path_to_html_index = path_to_html_index.replace(clawdir,'')
         print "\nOr, if you have the Clawpack server running, point your browser to:"
         print "    http://localhost:50005%s"  % path_to_html_index
 
-
-#======================================================================
-def timeframes2html(plot_pages_data):
-#======================================================================
-    """
-    Replaced by plotclaw_driver below, which also handles gauges
-    ... RJL, 1/1/10
-
-    take a sequence of figure files in format frame000NfigJ.png for
-    N in framenos and J in fignos, and produce an html page for each
-    along with an index page and a page showing all frames together for
-    each figno and all figs together for each frameno.
-      plot_pages_data.timeframes_framenos  is list of frames to use,
-      plot_pages_data.timeframes_frametimes  is dictionary of time for each frame
-      plot_pages_data.timeframes_fignos  is list of figs to use,
-      plot_pages_data.timeframes_fignames  is dictionary of fig names for index.
-
-    """
-
-
-    print '\n-----------------------------------\n'
-    print '\nCreating html pages for timestepping figures...\n'
-
-    startdir = os.getcwd()
-    ppd =plot_pages_data
-        
-    try:
-        cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
-    except:
-        print "*** Error, aborting timeframes2html"
-        raise
-
-    creationtime = current_time()
-    ppd = massage_frames_data(ppd)
-
-    framenos = ppd.timeframes_framenos
-    frametimes = ppd.timeframes_frametimes
-    fignos = ppd.timeframes_fignos
-    fignames = ppd.timeframes_fignames
-    pngfile = ppd._pngfile
-    htmlfile = ppd._htmlfile
-    frametimef = ppd._frametimef
-    allfigsfile = ppd._allfigsfile
-    allframesfile = ppd._allframesfile
-            
-    numframes = len(framenos)
-    numfigs = len(fignos)
-    
-
-    eagle = getattr(ppd,'html_eagle',False)
-
-    
-    
-    # Create the index page:
-    #-----------------------
-    
-    html = open(ppd.html_index_fname,'w')
-    
-    if eagle:
-        html.write("""
-          <html><meta http-equiv="expires" content="0">
-          <title>EagleClaw Plot Index</title>
-          <head>
-          <link type="text/css" rel="stylesheet"
-                href="http://localhost:50005/eagleclaw/eagleclaw.css">
-          </head>
-          <eagle1>EagleClaw -- Plot Index</eagle1>
-          <eagle2>Easy Access Graphical Laboratory for Exploring Conservation
-          Laws</eagle2>
-          <p>
-          <center><eagle3>
-          <a href="../eaglemenu.html">Main Menu for this run-directory
-          </a></eagle3> </center><p>
-        """)
-
-
-    else:
-        html.write('<html><meta http-equiv="expires" content="0">')
-        html.write('\n<title>%s</title>\n<body>' % ppd.html_index_title)
-        html.write('\n<center><h1>%s</h1></center>\n' \
-                   % ppd.html_index_title)
-        homelink = getattr(ppd,'html_homelink',None)
-        if homelink:
-            html.write('<center><a href="%s">Back to %s</a></center>\n' \
-                       % (homelink, homelink))
-
-    html.write('<p>\n')
-    html.write('<center>Plots created: %s &nbsp;&nbsp; ' % creationtime )
-    html.write('</center><p>\n')
-
-    html.write('<p>\n<table border=0 cellpadding=5 cellspacing=5>\n')
-
-
-    if ppd.latex_makepdf:
-        html.write('<p><tr><td><b>pdf file:</b></td>')
-        html.write('\n   <td><a href="%s.pdf">%s.pdf</a></td>' \
-               % (ppd.latex_fname,ppd.latex_fname))
-        html.write('</tr>\n')
-
-    if ppd.html_movie:
-        html.write('<p><tr><td><b>js Movies:</b></td>')
-        for figno in fignos:
-            html.write('\n   <td><a href="movie%s">%s</a></td>' \
-                           % (allframesfile[figno],fignames[figno]))
-        html.write('</tr>\n')
-    if ppd.gif_movie:
-        html.write('<p><tr><td><b>gif Movies:</b></td>')
-        for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
-                           % (fignos[ifig],fignames[fignos[ifig]]))
-        html.write('</tr>\n')
-    html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
-    for ifig in range(len(fignos)):
-        html.write('\n   <td><a href="%s">%s</a></td>' \
-                       % (allframesfile[fignos[ifig]],fignames[fignos[ifig]]))
-    html.write('</tr>\n')
-    html.write('<p>\n<tr><td><b>Individual Frames:</b></td> </tr>\n')
-
-    for frameno in framenos:
-
-        html.write('\n <tr><td>Frame %s, t = %s:</td>' \
-                    % (frameno,frametimef[frameno]))
-        for figno in fignos:
-            figname = fignames[figno]
-            html.write('\n   <td><a href="%s">%s</a></td>' \
-                       % (htmlfile[frameno,figno],figname))
-        if numfigs > 1:
-            html.write('\n<td><a href="%s">All figures</a></td>' \
-                       % allfigsfile[frameno])
-        html.write('</tr>\n')
-    html.write('</table>\n')
-    html.write('</body></html>')
-
-    #----------------------------------------------------------------------
-    
-    # allframesfigJ.html
-    #-------------------
-    for figno in fignos:
-        html = open(allframesfile[figno], 'w')
-        html.write('<html><meta http-equiv="expires" content="0">')
-        html.write('<title>Plots</title>')
-        html.write('<body>\n<center><h1>All Frames -- %s</h1>\n' \
-                   % fignames[figno])
-        html.write('<p>\n')
-        html.write('\n<p><h3><a href=%s>Plot Index</a></h3>\n' \
-                   % (ppd.html_index_fname))
-        html.write('<p>\n')
-        html.write('<h3>Click on a figure to enlarge</h3>\n')
-        html.write('<p>\n')
-    
-        for frameno in framenos:
-            html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
-                % (htmlfile[frameno,figno], pngfile[frameno,figno]))
-    
-        html.write('\n</center></body></html>\n')
-        html.close()
-    
-    
-    # allfigsframeN.html
-    #-------------------
-    if numfigs > 1:
-        for iframe in range(numframes):
-            frameno = framenos[iframe]
-            html = open(allfigsfile[frameno], 'w')
-            html.write('<html><meta http-equiv="expires" content="0">')
-            html.write('<title>Plots</title>')
-            html.write('<body>\n<center><h3>All Figures -- Frame %s' \
-                 % framenos[iframe])
-            html.write('&nbsp; at time t = %s' % frametimef[frameno])
-            html.write('<p>\n')
-
-            # Write link commands to previous and next frame:
-
-            html.write('<p> <a href="%s">' % allfigsfile[framenos[0]])
-            html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
-            if iframe==0:
-                html.write('&#060; &nbsp; &nbsp; ')
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                if numframes > 1:
-                    html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
-                        % allfigsfile[framenos[1]])
-
-            elif iframe==numframes-1:
-                if numframes > 1:
-                    html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % allfigsfile[framenos[iframe-1]])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                html.write(' &nbsp; &nbsp; &#062; ')
-
-            else:
-                html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % allfigsfile[framenos[iframe-1]])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                html.write('\n&nbsp; &nbsp; <a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
-                        % allfigsfile[framenos[iframe+1]])
-
-            html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
-                      % allfigsfile[framenos[numframes-1]])
-            html.write('&#062; &#062;</a>  \n') 
-
-            html.write('</h3><p>\n')
-            html.write('<h3>Click on a figure to enlarge</h3>\n')
-            html.write('<p>\n')
-    
-            for figno in fignos:
-                html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
-                        % (htmlfile[frameno,figno], pngfile[frameno,figno]))
-
-            # list of all frames at bottom:
-
-            html.write('\n<p><b>Other frames:</b></a> &nbsp;&nbsp;')
-            for frameno2 in framenos:
-                if frameno2 == frameno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % frameno)
-                else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (allfigsfile[frameno2],frameno2))
-    
-            html.write('\n</center></body></html>\n')
-            html.close()
-    
-    
-    # frameNfigJ.html  -- individual files for each frame/fig combo
-    #----------------
-    
-    for iframe in range(numframes):
-        frameno = framenos[iframe]
-        for figno in fignos:
-            html = open(htmlfile[frameno,figno],'w')
-            html.write('<html><meta http-equiv="expires" content="0">\n')
-            html.write('<title>Plots</title>')
-            html.write('<body><center>\n')
-            html.write('\n<h3>Frame %i ' % frameno)
-            if numfigs > 1:
-                html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
-            html.write('&nbsp;&nbsp; at time t = %s</h3>' % frametimef[frameno])
-        
-            # Write link commands to previous and next frame:
-
-            html.write('<p> <a href="%s">' % htmlfile[framenos[0],figno])
-            html.write('&#060; &#060;</a> &nbsp; &nbsp;\n')
-            if iframe==0:
-                html.write('&#060; &nbsp; &nbsp; ')
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                if numframes > 1:
-                    html.write('&nbsp; &nbsp; <a href="%s"> &#062; </a> ' \
-                        % htmlfile[framenos[1],figno])
-
-            elif iframe==numframes-1:
-                if numframes > 1:
-                    html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % htmlfile[framenos[iframe-1],figno])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                html.write(' &nbsp; &nbsp; &#062; ')
-
-            else:
-                html.write('\n<a href="%s"> &#060; </a>  &nbsp; &nbsp; ' \
-                        % htmlfile[framenos[iframe-1],figno])
-                html.write('\n<a href="%s">Index</a> ' \
-                     % ppd.html_index_fname)
-                html.write('\n &nbsp; &nbsp;<a href="%s"> &#062; </a>  &nbsp; &nbsp; ' \
-                        % htmlfile[framenos[iframe+1],figno])
-
-            html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
-                      % htmlfile[framenos[numframes-1],figno])
-            html.write('&#062; &#062;</a>  \n') 
-        
-            # image:
-            html.write('\n\n <p><img src="%s"><p>  \n ' \
-                        % pngfile[frameno,figno])
-
-            html.write('\n\nImage source: &nbsp; %s'  \
-                   % os.path.join(os.getcwd(),pngfile[frameno,figno]))
-
-            # list of all figures at bottom of page:
-
-            if numfigs > 1:
-                html.write('\n<p><b>Other figures at this time:</b> &nbsp;&nbsp;')
-                for figno2 in fignos:
-                    if figno2 == figno:
-                        html.write('\n<font color=red>%s</font>&nbsp;&nbsp;' \
-                               % fignames[figno])
-                    else:
-                        html.write('\n<a href="%s">%s</a>  &nbsp; &nbsp; ' \
-                           % (htmlfile[frameno,figno2],fignames[figno2]))
-                html.write('\n<a href="%s"> All Figures </a>' \
-                     % allfigsfile[frameno])
-
-            # list of all frames at bottom of page:
-
-            html.write('\n<p><b>Other frames:</b></a> &nbsp;&nbsp;')
-            for frameno2 in framenos:
-                if frameno2 == frameno:
-                    html.write('\n<font color=red>%i</font>&nbsp;&nbsp;' \
-                               % frameno)
-                else:
-                    html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
-                           % (htmlfile[frameno2,figno],frameno2))
-            html.write('\n<a href="%s">  All Frames </a>' \
-                     % allframesfile[figno])
-        
-            html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
-                      % (ppd.html_index_fname))
-            if eagle:
-                html.write("""<p><h3><a href="../eaglemenu.html">Main Menu for
-                this run-directory</a></h3>  """)
-            html.write('</center></body></html>')
-            html.close()
-    
-    # moviefigJ.html
-    #-------------------
-    if ppd.html_movie:
-        for figno in fignos:
-            html = open('movie%s' % allframesfile[figno], 'w')
-            text = htmlmovie(plot_pages_data.html_index_fname,pngfile,framenos,figno)
-            html.write(text)
-            html.close()
-    
-    
-
-    os.chdir(startdir)
-
-    # print out pointers to html index page:
-    path_to_html_index = os.path.join(os.path.abspath(ppd.plotdir), \
-                               ppd.html_index_fname)
-    print_html_pointers(path_to_html_index)
-
-    # end of timeframes2html
     
 
 #=====================================
@@ -1448,7 +1116,7 @@ def plotclaw2html(plotdata):
             if makefig:
                 if type(makefig)==str:
                     try:
-                        exec(makefig)
+                        exec(makefig) in globals(), locals()
                     except:
                         print "*** Problem executing makefig "
                         print "    for otherfigure ",name
@@ -1649,6 +1317,19 @@ def plotclaw2html(plotdata):
                 html.write("""<p><h3><a href="../eaglemenu.html">Main Menu for
                 this run-directory</a></h3>  """)
             html.write('</center></body></html>')
+            html.close()
+    
+    
+    # moviefigJ.html
+    #-------------------
+
+    if plotdata.html_movie in [True, "4.x"]:
+    
+        # original style still used if plotdata.html_movie == "4.x":
+        for figno in fignos:
+            html = open('movie%s' % allframesfile[figno], 'w')
+            text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
+            html.write(text)
             html.close()
     
  
@@ -1940,6 +1621,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         plotdir = plotdata.plotdir     # where to put png and html files
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
+        
     except:
         print '*** Error in printframes: plotdata missing attribute'
         print '  *** plotdata = ',plotdata
@@ -2095,6 +1777,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Make html files for time frame figures:
     # ---------------------------------------
+    
+    if plotdata.html_movie == "JSAnimation":
+        # Only import if we need it:
+        try:
+            from JSAnimation import HTMLWriter
+        except:
+            print "*** Warning: Your version of matplotlib may not support JSAnimation"
+            print "    Switching to old style animation"
+            plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
 
@@ -2122,28 +1813,31 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
+
     
-    
-    # Movie:
-    # MODIFIED FOR "JSAnimations" MODIFIED MAY 2013 (requires JSAnimation MODIFIED package)
-    # Makes Javascript movies for Clawpack for all figures
-    
-    # Creates child class
-    class myHTMLWriter(HTMLWriter):
-        def __init__(self, fps=10, codec=None, bitrate=None, extra_args=None,\
-               metadata=None, embed_frames=False, frame_dir=None, add_html='', \
-               frame_width=650, default_mode='once', file_names=None):
-            self.file_names=file_names
-            super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
-               extra_args=extra_args, metadata=metadata, 
-               embed_frames=embed_frames, frame_dir=frame_dir, 
-               add_html=add_html, frame_width=frame_width, default_mode=default_mode)
-      
-        def get_all_framenames(self):
-            frame_fullname = self.file_names
-            return frame_fullname
-    
-    if plotdata.html_movie:
+    if plotdata.html_movie == "JSAnimation":
+        
+        # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
+
+        class myHTMLWriter(HTMLWriter):
+            """
+            Subclass to use JSAnimations for movies.
+            """
+
+            def __init__(self, fps=10, codec=None, bitrate=None, extra_args=None,\
+                   metadata=None, embed_frames=False, frame_dir=None, add_html='', \
+                   frame_width=650, default_mode='once', file_names=None):
+                self.file_names=file_names
+                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
+                   extra_args=extra_args, metadata=metadata, 
+                   embed_frames=embed_frames, frame_dir=frame_dir, 
+                   add_html=add_html, frame_width=frame_width, default_mode=default_mode)
+          
+            def get_all_framenames(self):
+                frame_fullname = self.file_names
+                return frame_fullname
+
+
         # Create Animations
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
@@ -2168,10 +1862,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                  writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
                         add_html=pre_html, frame_width=500,file_names=filenames))
             print "Created JSAnimation for figure", figno
-  
-    #-------
-    # Movie:
-    #-------
+              
+    #-----------
+    # gif movie:
+    #-----------
     
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
