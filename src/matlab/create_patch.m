@@ -1,5 +1,6 @@
 function p = create_patch(xc,yc,zc,xe,ye,ze,qcm2,sdir,sval,...
-    contourlevels,mappedgrid,manifold,grid_number,blockno)
+    contourlevels,mappedgrid,manifold,grid_number,blockno,...
+    colormapping)
 
 % Internal matlab routine for Clawpack graphics.
 
@@ -22,7 +23,7 @@ xcm2_like = 0*ycm2_like + sval;
 [xcm2, ycm2, zcm2] = get_xyz(xcm2_like, ycm2_like, zcm2_like, sdir);
 
 % This needs physical coordinates as well.
-setcolors(p,xcm2, ycm2, zcm2,qcm2);
+set_colors(p,xcm2, ycm2, zcm2,qcm2,colormapping);
 
 % -------------------------------------------------------------
 % Provide useful information about this patch.  Everything will be stored in

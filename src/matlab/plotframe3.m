@@ -67,6 +67,26 @@ if (PlotType <= 3)
     end;
   end;
 
+  set_value('underoverflag','ShowUnderOverShoots',0);
+  if (underoverflag == 1 & ~exist('underover'))
+    error(['*** ShowUnderOverShoots = 1, but no ''underover'' ',...
+	  'function was found.']);
+  end
+
+  set_value('usercolormapping','UserColorMapping',0);
+  if (usercolormapping == 1 & ~exist('setcolors'))
+    error(['*** UserColorMapping = 1, but no ''setcolors'' ',...
+	  'function was found.']);
+  end
+
+  if (underoverflag == 1)
+    colormapping = 'underover';
+  elseif (usercolormapping == 1)
+    colormapping = 'usercolormapping';
+  else
+    colormapping = 'default';
+  end;
+
   if (PlotType == 2)
     if (isempty(cvalues))
       disp(' ');
@@ -325,7 +345,8 @@ for ng = 1:ngrids,
               % This command adds a patch to the appropriate slice
               add_patch2slice(sdir,sval, n,xcenter,ycenter,zcenter,...
                   xedge,yedge,zedge,qcm2,level,...
-                  cvalues,mappedgrid, manifold,maskflag,ng,blockno);
+                  cvalues,mappedgrid, manifold,maskflag,ng,blockno,...
+		  colormapping);
           end;
       end;
     end;
@@ -406,6 +427,8 @@ if (PlotType <= 3)
 end;
 
 view(view_arg);
+
+afterframe_default;
 
 if exist('afterframe')==2
   afterframe  % make an m-file with this name for any other commands you

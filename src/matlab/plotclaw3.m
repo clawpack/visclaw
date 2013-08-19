@@ -13,6 +13,7 @@
 
 % generic plotting routine for clawpack and amrclaw output in matlab
 % R. J. LeVeque, 1999
+% Donna Calhoun, 2002
 %
 % Various parameters are set in setplot3.m
 % The default version in claw/matlab/setplot3.m can be copied to your
@@ -26,12 +27,18 @@ clawdim = 3;
 disp(' ')
 disp('plotclaw3  plots 3d results from clawpack or amrclaw')
 
+set_value('NoQuery','NoQuery',0);
+
 % set plotting parameters:
 whichfile = which('setplot3');
 if strcmp(whichfile,'')
     disp('*** No setplot3 file found')
   else
-    inp = input(['Execute setplot3 (default = no)? '],'s');
+    if (NoQuery == 0)
+      inp = input(['Execute setplot3 (default = no)? '],'s');
+    else
+      inp = 'y';
+    end;
     inpd = findstr('y',lower(inp));
     if (inpd == 1)
        setplot3;
