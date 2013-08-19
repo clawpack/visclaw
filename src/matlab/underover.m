@@ -39,10 +39,8 @@ function uo = underover()
 %            	         'tol',1e-4,...
 %            	         'colormap',cm);
 %
-% This function is called from SETCOLORS if the ShowOverUnderShoots flag is
-% set.
 %
-% See also SETCOLORS, UNDEROVER_COLORBAR.
+% See also SETCOLORS, COLORBAR_UNDEROVER.
 %
 
 error('underover : No user supplied ''underover'';  see UNDEROVER');

@@ -70,6 +70,8 @@
 %      yrbcolormap            - yellow/red/blue colormap
 %      redwhite               - red/white colormap
 %      rybcolormap            - red/yellow/blue colormap
+%      underover              - Modify colormap to visualize under/over shoots
+%      colorbar_underover     - Colorbar for visualzing under/over shoots in data
 %
 %      Misc
 %      ------

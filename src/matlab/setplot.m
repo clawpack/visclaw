@@ -12,7 +12,7 @@
 % ---------------------------------------------------------------------------
 %      Parameters that can be set with SETPLOT1
 %
-%        OutputFlag        - set to 'ascii' (default) to read ascii files,
+%        OutputFlag          - set to 'ascii' (default) to read ascii files,
 %                            'hdf' to read hdf files.
 %        PlotStyle           - used in plot command for line color and type.
 %        mq                  - which component of q to plot
@@ -57,9 +57,12 @@
 %        x0,y0               - center for scatter plots.
 %        UserMap1d           - set to 1 if file 'map1d' exists.
 %
+%        ShowUnderOverShoots - Visualize under/over shoots. (= 1 or 0).
+%
 %      All parameters can be modified by typing 'k' at the PLOTCLAW3 prompt.
 %
 %      See also PLOTCLAW2, SETPLOT2, MANIFOLD, MAPPEDGRID, SETSYMBOLS.
+%      UNDEROVER.
 % ----------------------------------------------------------------------------
 %      Parameters that can be set with SETPLOT3
 %
@@ -93,12 +96,15 @@
 %        LineStyle           - same as ScatterStyle.
 %        x0,y0,z0            - center for scatter plots.
 %        UserMap1d           - set to 1 if file 'map1d' exists.
-x%        IsosurfValues       - constants for isosurfaces
+%        IsosurfValues       - constants for isosurfaces
 %        IsosurfColors       - colors for isosurfaces.
+%
+%        ShowUnderOverShoots - Visualize under/over shoots. (= 1 or 0).
 %
 %      All parameters can be modified by typing 'k' at the PLOTCLAW3 prompt.
 %
-%      See also PLOTCLAW3, SETPLOT3, MANIFOLD, MAPPEDGRID, SETPLOTSTYLE.
+%      See also PLOTCLAW3, SETPLOT3, MANIFOLD, MAPPEDGRID, SETPLOTSTYLE,
+%      UNDEROVER.
 
 
 error(['setplot : This is routine cannot be called on its own. Please ',...

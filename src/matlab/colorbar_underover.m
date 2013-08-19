@@ -12,8 +12,8 @@ function colorbar_underover(under_label,over_label)
 % Example :  Provide labels which show the magnitude of the under/over
 %            shoots :
 %
-%              under_label = sprintf('%2.0f - %6.2e',qlo,qlo-qmin);
-%              over_label = sprintf('%2.0f + %6.2e',qhi,qmax-qhi);
+%              under_label = sprintf('%3.1f - %7.1e',qlo,qlo-qmin);
+%              over_label = sprintf('%3.1f + %7.1e',qhi,qmax-qhi);
 %              colorbar_underover(under_label,over_label);
 %
 % COLORBAR_UNDEROVER makes a call to the user-defined function UNDEROVER.
