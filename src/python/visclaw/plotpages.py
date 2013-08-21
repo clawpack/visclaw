@@ -1858,10 +1858,14 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
       
             #set embed_frames=True to embed base64-encoded frames directly in the HTML
             pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
+            myHTMLwriter=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
+                    add_html=pre_html, frame_width=500,file_names=filenames)
             anim.save('movieframe_allframesfig%s.html' % figno, \
-                 writer=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
-                        add_html=pre_html, frame_width=500,file_names=filenames))
+                 writer=myHTMLwriter)
             print "Created JSAnimation for figure", figno
+            # Clean up animation temporary files of the form frame0000.png
+            myHTMLwriter.clear_temp = True
+            myHTMLwriter.cleanup()
               
     #-----------
     # gif movie:
