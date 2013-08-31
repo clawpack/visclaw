@@ -783,7 +783,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('colorbar_label',None)
 
 
-            elif plot_type == '2d_contour':
+            elif plot_type == '2d_contour' or plot_type == '2d_contourf':
                 self.add_attribute('contour_nlevels',20)
                 self.add_attribute('contour_levels',None)
                 self.add_attribute('contour_min',None)
