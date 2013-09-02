@@ -49,8 +49,6 @@ def setplot(plotdata):
         raise Exception('Default setplot parameters are implemented only for 1D and 2D data')
 
     plotitem.plot_var = 0
-    plotitem.plotstyle = '-o'
-    plotitem.color = 'b'
     plotitem.show = True       # show on plot?
     
 
