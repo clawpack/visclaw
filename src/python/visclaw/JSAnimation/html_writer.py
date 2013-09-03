@@ -299,8 +299,8 @@ class HTMLWriter(FileMovieWriter):
                              dpi=self.dpi, **savefig_kwargs)
             f.reset()
             self._saved_frames.append(f.read().encode('base64'))
-        else:
-            return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
+        #else:
+            #return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
 
     def _run(self):
         # make a ducktyped subprocess standin
