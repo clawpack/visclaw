@@ -40,6 +40,8 @@ def setplot(plotdata):
     if ndim==1:
         plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
         plotitem.kwargs = {'linewidth':2,'markersize':5}
+        plotitem.plotstyle = '-o'
+        plotitem.color = 'b'
     elif ndim==2:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         from clawpack.visclaw import colormaps
@@ -49,8 +51,6 @@ def setplot(plotdata):
         raise Exception('Default setplot parameters are implemented only for 1D and 2D data')
 
     plotitem.plot_var = 0
-    plotitem.plotstyle = '-o'
-    plotitem.color = 'b'
     plotitem.show = True       # show on plot?
     
 
