@@ -13,7 +13,6 @@ import os, time, string, glob
 import numpy as np
 from matplotlib import image as Image
 from matplotlib import pyplot as plt
-from matplotlib import animation
 
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
@@ -1781,10 +1780,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.html_movie == "JSAnimation":
         # Only import if we need it:
         try:
+            from matplotlib import animation
             from JSAnimation import HTMLWriter
         except:
             print "*** Warning: Your version of matplotlib may not support JSAnimation"
-            print "    Switching to old style animation"
+            print "    Switching to 4.x style animation"
             plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
