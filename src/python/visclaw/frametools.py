@@ -257,7 +257,10 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = pylab.colorbar(pobj,shrink=plotitem.colorbar_shrink)
+                        cbar = pylab.colorbar(pobj, shrink=plotitem.colorbar_shrink, ticks=plotitem.colorbar_ticks)
+                        if plotitem.has_attribute('colorbar_tick_labels'):
+                            if plotitem.colorbar_tick_labels is not None:
+                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
                         if plotitem.colorbar_label is not None:
                             cbar.set_label(plotitem.colorbar_label)
                 except:

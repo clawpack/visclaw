@@ -794,6 +794,8 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('add_colorbar',False)
                 self.add_attribute('colorbar_shrink',1.0)
                 self.add_attribute('colorbar_label',None)
+                self.add_attribute('colorbar_ticks', None)
+                self.add_attribute('colorbar_tick_labels',None)
                 amr_attributes = """show colors cmap""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_contour_%s' % a, [])
