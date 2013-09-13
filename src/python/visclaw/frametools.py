@@ -257,7 +257,10 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = pylab.colorbar(pobj,shrink=plotitem.colorbar_shrink)
+                        cbar = pylab.colorbar(pobj, shrink=plotitem.colorbar_shrink, ticks=plotitem.colorbar_ticks)
+                        if plotitem.has_attribute('colorbar_tick_labels'):
+                            if plotitem.colorbar_tick_labels is not None:
+                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
                         if plotitem.colorbar_label is not None:
                             cbar.set_label(plotitem.colorbar_label)
                 except:
@@ -686,7 +689,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             pass
 
 
-    elif pp['plot_type'] == '2d_contour':
+    elif pp['plot_type'] == '2d_contour' or pp['plot_type'] == '2d_contourf':
         levels_set = True
         if pp['contour_levels'] is None:
             levels_set = False
@@ -713,7 +716,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
 
         # create the contour command:
-        contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
+        if pp['plot_type'] == '2d_contour':
+            contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
+        else:
+            contourcmd = "pobj = pylab.contourf(X_center, Y_center, var, "
         if levels_set:
             contourcmd += "pp['contour_levels']"
         else:
@@ -722,6 +728,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         if pp['contour_cmap']:
             if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
                 contourcmd += ", cmap = pp['contour_cmap']"
+            if pp['plot_type'] == '2d_contourf':
+                contourcmd += ", vmin=pp['contour_min'], vmax=pp['contour_max']"
         elif pp['contour_colors']:
             if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
                 contourcmd += ", colors = pp['contour_colors']"
