@@ -783,7 +783,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('colorbar_label',None)
 
 
-            elif plot_type == '2d_contour':
+            elif plot_type in ['2d_contour', '2d_contourf']:
                 self.add_attribute('contour_nlevels',20)
                 self.add_attribute('contour_levels',None)
                 self.add_attribute('contour_min',None)
@@ -794,9 +794,19 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('add_colorbar',False)
                 self.add_attribute('colorbar_shrink',1.0)
                 self.add_attribute('colorbar_label',None)
+                self.add_attribute('colorbar_ticks', None)
+                self.add_attribute('colorbar_tick_labels',None)
                 amr_attributes = """show colors cmap""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_contour_%s' % a, [])
+
+
+                if plot_type == '2d_contourf':
+                    self.add_attribute('fill_cmap',None)
+                    self.add_attribute('fill_cmin',None)
+                    self.add_attribute('fill_cmax',None)
+                    self.add_attribute('fill_colors',None)
+                    # Note either fill_cmap or fill_colors must be None
 
             elif plot_type == '2d_schlieren':
                 from clawpack.visclaw import colormaps
