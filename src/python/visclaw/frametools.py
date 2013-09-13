@@ -257,7 +257,12 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = pylab.colorbar(pobj,shrink=plotitem.colorbar_shrink)
+                        cbar = pylab.colorbar(pobj, \
+                                     shrink=plotitem.colorbar_shrink,\
+                                     ticks=plotitem.colorbar_ticks)
+                        if plotitem.has_attribute('colorbar_tick_labels'):
+                            if plotitem.colorbar_tick_labels is not None:
+                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
                         if plotitem.colorbar_label is not None:
                             cbar.set_label(plotitem.colorbar_label)
                 except:
@@ -584,7 +589,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'imshow_cmap','imshow_cmin','imshow_cmax',
              'contour_levels','contour_nlevels','contour_min','contour_max',
              'contour_colors','contour_cmap','contour_show',
-             'fill_cmap','fill_cmin','fill_cmax',
+             'fill_cmap','fill_cmin','fill_cmax','fill_colors',
              'schlieren_cmap','schlieren_cmin', 'schlieren_cmax',
              'quiver_coarsening','quiver_var_x','quiver_var_y','quiver_key_show',
              'quiver_key_scale','quiver_key_label_x','quiver_key_label_y',
@@ -687,7 +692,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             pass
 
 
-    elif pp['plot_type'] == '2d_contour':
+    elif pp['plot_type'] in ['2d_contour','2d_contourf']:
         levels_set = True
         if pp['contour_levels'] is None:
             levels_set = False
@@ -713,77 +718,60 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pylab.hold(True)
 
 
-        # create the contour command:
-        contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
-        if levels_set:
-            contourcmd += "pp['contour_levels']"
-        else:
-            contourcmd += "pp['contour_nlevels']"
+        if pp['plot_type'] == '2d_contour':
+            # create the contour command:
+            contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
+            if levels_set:
+                contourcmd += "pp['contour_levels']"
+            else:
+                contourcmd += "pp['contour_nlevels']"
+    
+            if pp['contour_cmap']:
+                if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
+                    contourcmd += ", cmap = pp['contour_cmap']"
+            elif pp['contour_colors']:
+                if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
+                    contourcmd += ", colors = pp['contour_colors']"
+    
+            contourcmd += ", **pp['kwargs'])"
+    
+            if (pp['contour_show'] and not var_all_masked):
+                # may suppress plotting at coarse levels
+                exec(contourcmd)
+    
 
-        if pp['contour_cmap']:
-            if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
-                contourcmd += ", cmap = pp['contour_cmap']"
-        elif pp['contour_colors']:
-            if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
-                contourcmd += ", colors = pp['contour_colors']"
+        if pp['plot_type'] == '2d_contourf':
 
-        contourcmd += ", **pp['kwargs'])"
+            # create the contourf command:
+            contourcmd = "pobj = pylab.contourf(X_center, Y_center, var, "
+            if levels_set:
+                contourcmd += "pp['contour_levels']"
+            else:
+                contourcmd += "pp['contour_nlevels']"
+    
+            if pp['fill_cmap']:
+                if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
+                    contourcmd += ", cmap = pp['fill_cmap']"
+            elif pp['fill_colors']:
+                if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
+                    contourcmd += ", colors = pp['fill_colors']"
+    
+            
+            if (pp['kwargs'] is None) or ('extend' not in pp['kwargs']):
+                contourcmd += ", extend = 'both'"
 
-        if (pp['contour_show'] and not var_all_masked):
-            # may suppress plotting at coarse levels
-            exec(contourcmd)
-
-
-    elif pp['plot_type'] == '2d_contourf':
-        levels_set = True
-        if pp['contour_levels'] is None:
-            levels_set = False
-            if pp['contour_nlevels'] is None:
-                print '*** Error in plotitem2:'
-                print '    contour_levels or contour_nlevels must be set'
-                raise
-                return
-            if (pp['contour_min'] is not None) and \
-                    (pp['contour_max'] is not None):
-
-                pp['contour_levels'] = pylab.linspace(pp['contour_min'], \
-                       pp['contour_max'], pp['contour_nlevels'])
-                levels_set = True 
-
-
-        if pp['celledges_show']:
-            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
-        elif pp['patch_bgcolor'] is not 'w': 
-            pobj = pc_mth(X_edge, Y_edge, pylab.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors='None')
-        pylab.hold(True)
-
-
-        # create the contourf command:
-        contourcmd = "pobj = pylab.contourf(X_center, Y_center, var, "
-        if levels_set:
-            contourcmd += "pp['contour_levels']"
-        else:
-            contourcmd += "pp['contour_nlevels']"
-
-        if pp['contour_cmap']:
-            if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
-                contourcmd += ", cmap = pp['contour_cmap']"
-        elif pp['contour_colors']:
-            if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
-                contourcmd += ", colors = pp['contour_colors']"
-
-        contourcmd += ", **pp['kwargs'])"
-
-        if (not var_all_masked):
-            # may suppress plotting at coarse levels
-            exec(contourcmd)
-
-            if (pp['fill_cmin'] not in ['auto',None]) and \
-                     (pp['fill_cmax'] not in ['auto',None]):
-                pylab.clim(pp['fill_cmin'], pp['fill_cmax']) 
-
+            contourcmd += ", **pp['kwargs'])"
+            
+    
+            if (not var_all_masked):
+                # may suppress plotting at coarse levels
+                exec(contourcmd)
+    
+                if pp['fill_cmap'] and \
+                         (pp['fill_cmin'] not in ['auto',None]) and \
+                         (pp['fill_cmax'] not in ['auto',None]):
+                    pylab.clim(pp['fill_cmin'], pp['fill_cmax']) 
+        
 
     elif pp['plot_type'] == '2d_patch':
         # plot only the patches, no data:
