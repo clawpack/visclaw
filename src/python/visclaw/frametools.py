@@ -170,7 +170,8 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 
 
             # loop over all outdirs:
-
+            if len(plotdata._outdirs) == 0:
+                plotdata._outdirs = [plotdata.outdir]
             for outdir in plotdata._outdirs:
                 framesoln = plotdata.getframe(frameno, outdir)
 
