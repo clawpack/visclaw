@@ -1,22 +1,24 @@
 function sliceloop(sdir)
-
-% SLICELOOP loops over user-specified 3d slices in given direction.
+%SLICELOOP loops over user-specified 3d slices in given direction.
 %
-%     SLICELOOP(SDIR) loops over slices in direction specified by SDIR.
-%     SDIR may be 'x', 'y', or 'z'.
+%   SLICELOOP(SDIR) loops over slices in direction specified by SDIR.
+%   SDIR may be 'x', 'y', or 'z'.
 %
-%     SLICELOOP, by itself, prompts the user for a direction (either x,y or z)
-%     and loops over slices in that direction.
+%   SLICELOOP, by itself, prompts the user for a direction (either x,y or z)
+%   and loops over slices in that direction.
 %
-%     At start of loop, all slices in specified direction are hidden.
-%     Then slices are viewed, one at a time, in specified direction.
-%     The visibility of slices in any of the other two directions
-%     will not be affected.
+%   At start of loop, all slices in specified direction are hidden. Then
+%   slices are viewed, one at a time, in specified direction. The
+%   visibility of slices in any of the other two directions will not be
+%   affected.
 %
-%     SLICELOOP only loops over those slices specified by variables
-%     xSliceCoords, ySliceCoords or zSliceCoords, in setplot3.m.
+%   SLICELOOP only loops over those slices specified by variables
+%   xSliceCoords, ySliceCoords or zSliceCoords, in setplot3.m.
 %
-%     See also SHOWSLICES, HIDESLICES, SETPLOT3.
+%   While looping over frames, the user can enter 'x', 'y' or 'z' to loop
+%   over slices while in the frame loop.
+% 
+%   See also SHOWSLICES, HIDESLICES, SETPLOT3, PLOTCLAW3.
 
 
 if (nargin == 0)
@@ -40,15 +42,15 @@ notdone = 1;
 next_slice = 0;
 last_slice = 0;
 while (notdone)
-  s = input('SLICELOOP : Hit <return> for next slice, or type k, j, or q : ','s');
+  s = input('SLICELOOP : Hit <return> for next slice, or f to return to Frame loop : ','s');
 
   if (isempty(s))
-    next_slice = mod(next_slice+1,length(slices)+1);
-  elseif (strcmp(s,'j'))
-    next_slice = input('Input slice number : ');
-  elseif (strcmp(s,'k'))
-    keyboard;
-  elseif (strcmp(s,'q'))
+    next_slice = mod(next_slice+1,length(slices)+1);  
+%   elseif (strcmp(s,'j'))
+%     next_slice = input('Input slice number : ');
+%   elseif (strcmp(s,'k'))
+%     keyboard;
+  elseif (strcmp(s,'f'))
     return;
   end;
   hideslices(sdir,last_slice);
