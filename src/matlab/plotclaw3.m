@@ -33,19 +33,22 @@ set_value('NoQuery','NoQuery',0);
 whichfile = which('setplot3');
 if strcmp(whichfile,'')
     disp('*** No setplot3 file found')
-  else
+else
     if (NoQuery == 0)
-      inp = input(['Execute setplot3 (default = no)? '],'s');
+        inp = input(['Execute setplot3 (default = yes)? '],'s');
+        if (isempty(inp))
+            inp = 'y';
+        end
     else
-      inp = 'y';
+        inp = 'y';
     end;
     inpd = findstr('y',lower(inp));
     if (inpd == 1)
-       setplot3;
-       disp(['Executing m-script ' whichfile])
-       disp(' ')
-       end
-  end
+        setplot3;
+        disp(['Executing m-script ' whichfile])
+        disp(' ')
+    end
+end
 disp(' ')
 
 % the file setprob.m can be used to set up any necessary physical parameters

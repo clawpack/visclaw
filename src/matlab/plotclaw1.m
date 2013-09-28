@@ -33,15 +33,23 @@ disp('plotclaw1  plots 1d results from clawpack')
 % set plotting parameters:
 whichfile = which('setplot1');
 if strcmp(whichfile,'')
-  disp('*** No setplot1 file found')
+    disp('*** No setplot1 file found')
 else
-  inp = input(['Execute setplot1 (default = no)? '],'s');
-  inpd = findstr('y',lower(inp));
-  if (inpd == 1)
-    setplot1
-    disp(' ')
-    disp(['Executing m-script ' whichfile])
-  end
+    if (NoQuery == 0)
+        inp = input(['Execute setplot1 (default = yes)? '],'s');
+        if (isempty(inp))
+            inp = 'y';
+        end
+    else
+        inp = 'y';
+    end;
+    
+    inpd = findstr('y',lower(inp));
+    if (inpd == 1)
+        setplot1
+        disp(' ')
+        disp(['Executing m-script ' whichfile])
+    end
 end
 disp(' ')
 
