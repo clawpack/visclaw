@@ -36,19 +36,22 @@ set_value('NoQuery','NoQuery',0);
 % set plotting parameters:
 whichfile = which('setplot2');
 if strcmp(whichfile,'')
-  disp('*** No setplot2 file found')
+    disp('*** No setplot2 file found')
 else
-  if (NoQuery == 0)
-    inp = input(['Execute setplot3 (default = no)? '],'s');
-  else
-    inp = 'y';
-  end;
-  inpd = findstr('y',lower(inp));
-  if (inpd == 1)
-    setplot2;
-    disp(['Executing m-script ' whichfile])
-    disp(' ')
-  end
+    if (NoQuery == 0)
+        inp = input(['Execute setplot2 (default = yes)? '],'s');
+        if (isempty(inp))
+            inp = 'y';
+        end
+    else
+        inp = 'y';
+    end;
+    inpd = findstr('y',lower(inp));
+    if (inpd == 1)
+        setplot2;
+        disp(['Executing m-script ' whichfile])
+        disp(' ')
+    end
 end
 disp(' ')
 
