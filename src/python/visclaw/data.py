@@ -758,6 +758,11 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('patch_bgcolor','w')
             self.add_attribute('patchedges_show',0)
             self.add_attribute('patchedges_color','k')
+            self.add_attribute('add_colorbar',False)
+            self.add_attribute('colorbar_shrink',1.0)
+            self.add_attribute('colorbar_label',None)
+            self.add_attribute('colorbar_ticks', None)
+            self.add_attribute('colorbar_tick_labels',None)
             self.add_attribute('kwargs',{})
             amr_attributes = """celledges_show celledges_color patch_bgcolor
                      patchedges_show patchedges_color kwargs""".split()
@@ -769,18 +774,12 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('pcolor_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('pcolor_cmin',None)
                 self.add_attribute('pcolor_cmax',None)
-                self.add_attribute('add_colorbar',True)
-                self.add_attribute('colorbar_shrink',1.0)
-                self.add_attribute('colorbar_label',None)
 
             elif plot_type == '2d_imshow':
                 from clawpack.visclaw import colormaps
                 self.add_attribute('imshow_cmap',colormaps.yellow_red_blue)
                 self.add_attribute('imshow_cmin',None)
                 self.add_attribute('imshow_cmax',None)
-                self.add_attribute('add_colorbar',True)
-                self.add_attribute('colorbar_shrink',1.0)
-                self.add_attribute('colorbar_label',None)
 
 
             elif plot_type in ['2d_contour', '2d_contourf']:
@@ -791,11 +790,6 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('contour_show',1)
                 self.add_attribute('contour_colors','k')
                 self.add_attribute('contour_cmap',None)
-                self.add_attribute('add_colorbar',False)
-                self.add_attribute('colorbar_shrink',1.0)
-                self.add_attribute('colorbar_label',None)
-                self.add_attribute('colorbar_ticks', None)
-                self.add_attribute('colorbar_tick_labels',None)
                 amr_attributes = """show colors cmap""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_contour_%s' % a, [])
@@ -813,9 +807,6 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('schlieren_cmap',colormaps.schlieren_grays)
                 self.add_attribute('schlieren_cmin',None)
                 self.add_attribute('schlieren_cmax',None)
-                self.add_attribute('add_colorbar',False)
-                self.add_attribute('colorbar_shrink',1.0)
-                self.add_attribute('colorbar_label',None)
 
             elif plot_type == '2d_patch':
                 self.add_attribute('max_density',None)
