@@ -53,4 +53,4 @@ yticklabel{cm_buff+1} = uo.value_lower;
 yticklabel{end-cm_buff} = uo.value_upper;
 yticklabel{end} = over_label;
 set(o,'yticklabel',yticklabel);
-set(o,'fontsize',16,'fontweight','bold')
+% set(o,'fontsize',16,'fontweight','bold')

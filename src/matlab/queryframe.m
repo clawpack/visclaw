@@ -26,16 +26,27 @@ end
 inp = 'k';
 while strcmp(inp,'k')
 
-  inp = input(...
-      ['Hit <return> for next plot, or type k, r, rr, j, i, q, or ?  '],'s');
-
+    if (clawdim < 3)
+        inp = input(...
+            ['Hit <return> for next plot, or type k, r, rr, j, i, q, or ?  '],'s');
+    else
+        inp = input(...
+            ['Hit <return> for next plot, or type k, r, rr, j, i, x, y, z, q, or ?  '],'s');
+    end
+  
   if strcmp(inp,'?')
     disp('  k  -- keyboard input.  Type any commands and then "return"')
     disp('  r  -- redraw current frame, without re-reading data')
     disp('  rr -- re-read current file,and redraw frame');
     disp('  j  -- jump to a particular frame')
     disp('  i  -- info about parameters and solution')
+    if (clawdim == 3)
+        disp('  x  -- loop over slices in x direction (3d only)')
+        disp('  y  -- loop over slices in y direction (3d only)')
+        disp('  z  -- loop over slices in z direction (3d only)')
+    end
     disp('  q  -- quit')
+    inp = 'k';
   elseif strcmp(inp,'k')
     keyboard
   elseif strcmp(inp,'r')
@@ -45,8 +56,51 @@ while strcmp(inp,'k')
       inp = 'k';
     end
   elseif strcmp(inp,'rr')
+    if Frame == -frameinc
+      disp('Cannot redraw yet')
+      inp = 'k';
+    end
     % redraw frame AND re-read data
     amrdata = [];
+  elseif strcmp(inp,'x')
+      if (clawdim < 3)
+          continue
+      end
+      if Frame == -frameinc
+          disp('Nothing to loop over yet!')
+          inp = 'k';
+      else
+          % Loop over x slices
+          sliceloop('x');
+          % Continue with same frame.
+          inp = 'k';
+      end
+  elseif strcmp(inp,'y')
+      if (clawdim < 3)
+          continue
+      end
+      if Frame == -frameinc
+          disp('Nothing to loop over yet!')
+          inp = 'k';
+      else
+          % Loop over x slices
+          sliceloop('y');
+          % Continue with same frame.
+          inp = 'k';
+      end
+  elseif strcmp(inp,'z')
+      if (clawdim < 3)
+          continue
+      end
+      if Frame == -frameinc
+          disp('Nothing to loop over yet!')
+          inp = 'k';
+      else
+          % Loop over x slices
+          sliceloop('z');
+          % Continue with same frame.
+          inp = 'k';
+      end
   elseif strcmp(inp,'j')
     Frame = input('Frame to jump to? ');
   elseif strcmp(inp,'i')
@@ -87,3 +141,6 @@ if strcmp(inp,'q')
   % quit now
   break
 end
+
+
+
