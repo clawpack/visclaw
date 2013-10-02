@@ -256,7 +256,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                     print "*** use ClawPlotAxes.afteraxes "
                     print "*** or  ClawPlotItem.afterpatch instead"
                 try:
-                    if plotitem.add_colorbar:
+                    if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
                         cbar = pylab.colorbar(pobj, \
                                      shrink=plotitem.colorbar_shrink,\
@@ -267,6 +267,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                         if plotitem.colorbar_label is not None:
                             cbar.set_label(plotitem.colorbar_label)
                 except:
+                    print "*** problem generating colorbar"
                     pass
 
 
