@@ -1,18 +1,18 @@
 function setcontourlineprops(varargin)
-
-%  SETCONTOURLINEPROPS sets colors, linewidth, etc for patch borders
+%SETCONTOURLINEPROPS sets colors, linewidth, etc for patch borders
 %
-%  SETCONTOURLINEPROPS(LEVEL,PROPS) sets properties for patch borders
-%  using any of the allowable line style properties.  Patches at level LEVEL
-%  will be affected.  LEVEL may be a vector of valid levels.
+%   SETCONTOURLINEPROPS(LEVEL,PROPS) sets properties for contour lines
+%   at level LEVEL, using any of the allowable line style properties.  
 %
-%  SETCONTOURLINEPROPS(PROPS) sets the properties at all levels.
+%   SETCONTOURLINEPROPS(PROPS) sets the properties at all levels.
 %
-%  Example :
-%       setcontourlineprops(3,'color','r','linewidth',2,'linestyle','dashed');
+%   PROPS are parameter pairs (PropertyName,PropertyValue)
 %
-%  See also SHOWPATCHBORDERS, HIDEPATCHBORDERS, SHOWGRIDLINES,
-%  HIDEGRIDLINES, SETPATCHBORDERPROPS
+%   Example :
+%   setcontourlineprops(3,'color','r','linewidth',2,'linestyle','dashed');
+%
+%   See also SHOWPATCHBORDERS, HIDEPATCHBORDERS, SHOWGRIDLINES,
+%   HIDEGRIDLINES, SETPATCHBORDERPROPS
 %
 
 if (isnumeric(varargin{1}))
