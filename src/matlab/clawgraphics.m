@@ -33,7 +33,7 @@
 %      drawcontourlines       - draws contour lines on slices.
 %      showcontourlines       - shows contour lines
 %      hidecontourlines       - hides contour lines
-%      setcontourlinecolor    - sets color of contour lines
+%      setcontourlineprops    - sets properties for contour lines
 %
 %      Gridlines
 %      ---------

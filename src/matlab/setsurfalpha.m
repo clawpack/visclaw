@@ -1,6 +1,5 @@
 function setsurfalpha(a,snum)
-
-% SETSURFALPHA sets the alpha (transparency) value for isosurfaces
+%SETSURFALPHA sets the alpha (transparency) value for isosurfaces
 %
 %   SETSURFALPHA(A,SNUM) sets the alpha value to A for isosurfaces
 %   specified in vector SNUM, where the entries of SNUM are integers

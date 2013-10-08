@@ -1,6 +1,5 @@
 function showpatchborders(level,sdir,snum)
-
-% SHOWPATCHBORDERS shows amr patch borders
+%SHOWPATCHBORDERS shows amr patch borders
 %
 %    SHOWPATCHBORDERS(level) shows patch borders for all patches at levels
 %    specified by vector LEVEL.

@@ -30,6 +30,9 @@ clawdim = 1;
 disp(' ')
 disp('plotclaw1  plots 1d results from clawpack')
 
+set_value('NoQuery','NoQuery',0);
+
+
 % set plotting parameters:
 whichfile = which('setplot1');
 if strcmp(whichfile,'')
@@ -42,8 +45,8 @@ else
         end
     else
         inp = 'y';
-    end;
-    
+    end
+
     inpd = findstr('y',lower(inp));
     if (inpd == 1)
         setplot1
