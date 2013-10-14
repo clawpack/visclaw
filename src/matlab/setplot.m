@@ -12,8 +12,9 @@
 % ---------------------------------------------------------------------------
 %      Parameters that can be set with SETPLOT1
 %
+%        OutputDir           - location of fort files (default: '_output')
 %        OutputFlag          - set to 'ascii' (default) to read ascii files,
-%                            'hdf' to read hdf files.
+%                              'hdf' to read hdf files.
 %        PlotStyle           - used in plot command for line color and type.
 %        mq                  - which component of q to plot
 %        UserVariable        - Set to 1 to specify a user defined variable.
@@ -28,6 +29,7 @@
 % ---------------------------------------------------------------------------
 %      Parameters that can be set with SETPLOT2
 %
+%        OutputDir         - location of fort files (default: '_output')
 %        OutputFlag        - set to 'ascii' (default) to read ascii files,
 %                            'hdf' to read hdf files.
 %        PlotType          - type of plot to produce:
@@ -51,7 +53,7 @@
 %        PlotGrid            - PLot grid lines on level k is PlotGrid(k) /= 0
 %        PlotGridEdges       - Plot 2d patch borders if PlotGridEdges(k) /= 0
 %        ContourValues       - Set to desired contour values, or [] for no ...
-% 	                       lines.
+% 	                           lines.
 %        ScatterStyle        - symbols to be used for scatter plots.
 %        LineStyle           - same as ScatterStyle
 %        x0,y0               - center for scatter plots.
@@ -66,6 +68,7 @@
 % ----------------------------------------------------------------------------
 %      Parameters that can be set with SETPLOT3
 %
+%        OutputDir         - location of fort files (default: '_output')
 %        OutputFlag        - set to 'ascii' (default) to read ascii files,
 %                            'hdf' to read hdf files.
 %        PlotType          - type of plot to produce:
