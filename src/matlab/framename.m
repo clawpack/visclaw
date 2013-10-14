@@ -1,6 +1,5 @@
 function fstr = framename(Frame,filename,ext,plotdir)
-%
-% FRAMENAME creates a filename based on Frame number and format
+%FRAMENAME creates a filename based on Frame number and format
 %
 % FSTR = FRAMENAME(FRAME,FILENAME,PRTFORMAT) returns a string with the
 % <filename>.<prtformat>.  It is assumed that FILENAME is a string with
@@ -13,14 +12,15 @@ function fstr = framename(Frame,filename,ext,plotdir)
 % window.
 %
 % Example :
-%                  Frame = 4;
-%                  fname = 'spiral0000';
-%                  ext = 'png';
-%                  plotdir = 'plots';
-%                  fstr = framename(Frame,fname,ext,dir);
-%                  print('-dpng',fstr,ext);
+% 
+% Frame = 4;
+% fname = 'spiral0000';
+% ext = 'png';
+% plotdir = 'plots';
+% fstr = framename(Frame,fname,ext,dir);
+% print('-dpng',fstr);
 %
-% See PRINT.
+% See also PRINT.
 %
 
 if (nargin < 4)

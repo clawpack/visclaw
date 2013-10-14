@@ -1,7 +1,18 @@
+%AFTERGRID
+% 
+% The commands in this file will be executed after each grid of data is
+% plotted.  For single grid calculations, this is equivalent to the
+% AFTERFRAME file.  When plotting AMR results, this will be called after
+% each grid is plotted, whereas AFTERFRAME is only called once the entire
+% plot is complete. 
+% 
+% Example:
+% % To pause after plotting each grid to manipulate the data 
+% keyboard;
+% 
+% Example:
+% % To label each grid with its gridnumber:
+% 
+% text(mean(xcenter),mean(ycenter),num2str(gridno))
 %
-% If you have a file called aftergrid.m on your matlab path, the commands
-% in this file will be executed after each grid of data is plotted when
-% plotting AMR results.  This is useful if you want to pause after plotting
-% each grid to manipulate the data (put "keyboard" command in aftergrid.m)
-% or if you want to label each grid with it's gridno, using for example
-%   text(mean(xcenter),mean(ycenter),num2str(gridno))
+% See also AFTERFRAME.
