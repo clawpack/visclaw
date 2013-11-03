@@ -535,7 +535,34 @@ class ClawPlotData(clawdata.ClawData):
         self.otherfigure_dict[name] = otherfigure
         return otherfigure
 
+    def set_outdirs(self):
+        """
+        Make a list of all outdir's for all plotitem's in the order they
+        are first used.
+        """
 
+        outdir_list = []
+        for figname in self._fignames:
+            plotfigure = self.plotfigure_dict[figname]
+            if not plotfigure._show:
+                continue  # skip to next figure
+            for axesname in plotfigure._axesnames:
+                plotaxes = plotfigure.plotaxes_dict[axesname]
+                if not plotaxes._show:
+                    continue  # skip to next axes
+                for itemname in plotaxes._itemnames:
+                    plotitem = plotaxes.plotitem_dict[itemname]
+                    if not plotitem._show:
+                        continue  # skip to next item
+                    if plotitem.outdir is not None:
+                        outdir = plotitem.outdir
+                    else:
+                        outdir = self.outdir
+                    if outdir not in outdir_list:
+                        outdir_list.append(outdir)
+                    
+        self._outdirs = outdir_list
+        return self
 
 # ============================================================================
 #  Subclass ClawPlotFigure containing data for plotting a figure
