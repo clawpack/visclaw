@@ -310,6 +310,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             if plotaxes.scaled:
                 pylab.axis('scaled')
+            elif plotaxes.image:
+                pylab.axis('image')
 
             # set axes limits:
             if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
