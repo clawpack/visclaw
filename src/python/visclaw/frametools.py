@@ -27,13 +27,15 @@ import clawpack.clawutil.data as clawdata
 #==============================================================================
 def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 #==============================================================================
-
     """
     Plot a single frame from the computation.
 
-    This routine checks input and then calls plotframeN for the
-    proper space dimension.
+    This routine checks input, loads the appropriate frame from each
+    outdir, and then calls plot_frame.
 
+    If simple == True, then plot_frame is not called.  In this case,
+    plotdata.setplot should actually be a (matplotlib) function that takes a
+    Solution object and plots it.
     """
 
     if verbose:  print '    Plotting frame %s ... '  % frameno
@@ -45,9 +47,6 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
         plotfun(sol)
         return
 
-    if plotdata.mode() == 'iplotclaw':
-        pylab.ion()
-        
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except AttributeError:
@@ -59,11 +58,36 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
         print '*** Warning in plotframe: plotdata has empty plotfigure_dict'
         print '*** Apparently no figures to plot'
 
-    framesoln = plotdata.getframe(frameno, plotdata.outdir, refresh=refresh)
+    plotdata.set_outdirs()  # set _outdirs attribute to be list of
+                                      # all outdirs for all items
 
-    t = framesoln.t
+    framesolns = []
+    # loop over all outdirs:
+    if len(plotdata._outdirs) == 0:
+        plotdata._outdirs = [plotdata.outdir]
+    for outdir in plotdata._outdirs:
+        framesolns.append(plotdata.getframe(frameno, outdir, refresh=refresh))
 
-    # initialize current_data containing data that will be passed
+    plot_frame(framesolns, plotdata, frameno,verbose=verbose)
+
+
+#==============================================================================
+def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
+#==============================================================================
+    """
+    Plot a single frame from the computation.
+
+    This routine checks input and then calls plotitemN for the
+    proper space dimension.  Framesolns is a list of solutions at the same time
+    but usually from different output directories.
+    """
+        
+    if not (type(framesolns) is list):
+        framesolns = [framesolns]
+
+    t = framesolns[0].t
+
+    # initialize current_data, which will be passed
     # to afterframe, afteraxes, afterpatch commands
     current_data = clawdata.ClawData()
     current_data.add_attribute('user',{})   # for user specified attributes
@@ -71,7 +95,6 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     current_data.add_attribute('plotdata',plotdata)
     current_data.add_attribute('frameno',frameno)
     current_data.add_attribute('t',t)
-
 
     # call beforeframe if present, which might define additional 
     # attributes in current_data or otherwise set up plotting for this
@@ -95,7 +118,8 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     # iterate over each single plot that makes up this frame:
     # -------------------------------------------------------
  
-    if plotdata._mode == 'iplotclaw':
+    if plotdata.mode() == 'iplotclaw':
+        pylab.ion()
         print '    Plotting Frame %s at t = %s' % (frameno,t)
         requested_fignos = plotdata.iplotclaw_fignos
     else:
@@ -104,9 +128,6 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 
     plotdata = set_show(plotdata)   # set _show attributes for which figures
                                     # and axes should be shown.
-
-    plotdata = set_outdirs(plotdata)  # set _outdirs attribute to be list of
-                                      # all outdirs for all items
 
     # loop over figures to appear for this frame: 
     # -------------------------------------------
@@ -117,13 +138,10 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
             continue  # skip to next figure 
 
         figno = plotfigure.figno
-        #print '+++ Figure: ',figname,figno
-        if requested_fignos != 'all':
-            if figno not in requested_fignos:
-                continue # skip to next figure
+        if (requested_fignos != 'all') and (figno not in requested_fignos):
+            continue # skip to next figure
 
         plotted_fignos.append(figno)
-
 
         if not plotfigure.kwargs.has_key('facecolor'):
             # use Clawpack's default bg color (tan)
@@ -140,7 +158,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
             print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
-            print '*** Apparently no axes to plot in figno ',figno
+            print '*** Apparently no axes to plot in figure ',figno
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
@@ -164,25 +182,16 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
             # two different items do pcolor plots with different color maps
             # for different parts of the domain (e.g. water and land).
 
-            # Added loop over outdirs to prevent problems if different
-            # items use data from different outdirs since loop over items
-            # is now inside loop on patches.
-
-
-            # loop over all outdirs:
-            if len(plotdata._outdirs) == 0:
-                plotdata._outdirs = [plotdata.outdir]
-            for outdir in plotdata._outdirs:
-                framesoln = plotdata.getframe(frameno, outdir)
+            for i, framesoln in enumerate(framesolns):
 
                 if framesoln.t != t:
                     print '*** Warning: t values do not agree for frame ',frameno
                     print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %g for outdir = %s' % (framesoln.t,outdir)
+                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
 
                 current_data.add_attribute('framesoln',framesoln)
 
-                #print "+++ Looping over patches in outdir = ",outdir
+                #print "+++ Looping over patches in outdir = ",outdirs[i]
 
                 # loop over patches:
                 # ----------------
@@ -216,13 +225,15 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
                         
                         plotitem = plotaxes.plotitem_dict[itemname]
 
-                        item_outdir = plotitem.outdir
-                        if not plotitem.outdir:
-                            item_outdir = plotdata.outdir
-                        if item_outdir != outdir:
-                            # skip to next item
-                            continue
-                            
+                        try:
+                            item_outdir = plotitem.outdir
+                            if not plotitem.outdir:
+                                item_outdir = plotdata.outdir
+                            if item_outdir != plotdata._outdirs[i]:
+                                # skip to next item
+                                continue
+                        except (NameError, AttributeError):  # no outdir if plotting from memory
+                            pass
 
                         num_dim = plotitem.num_dim
 
@@ -246,7 +257,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     
                     # end of loop over plotitems
                 # end of loop over patches
-            # end of loop over outdirs
+            # end of loop over framesolns
 
 
             for itemname in plotaxes._itemnames:
@@ -1603,33 +1614,4 @@ def set_show(plotdata):
                 
     return plotdata
 
-#------------------------------------------------------------------
-def set_outdirs(plotdata):
-#------------------------------------------------------------------
-    """
-    Make a list of all outdir's for all plotitem's in the order they
-    are first used.
-    """
 
-    outdir_list = []
-    for figname in plotdata._fignames:
-        plotfigure = plotdata.plotfigure_dict[figname]
-        if not plotfigure._show:
-            continue  # skip to next figure
-        for axesname in plotfigure._axesnames:
-            plotaxes = plotfigure.plotaxes_dict[axesname]
-            if not plotaxes._show:
-                continue  # skip to next axes
-            for itemname in plotaxes._itemnames:
-                plotitem = plotaxes.plotitem_dict[itemname]
-                if not plotitem._show:
-                    continue  # skip to next item
-                if plotitem.outdir is not None:
-                    outdir = plotitem.outdir
-                else:
-                    outdir = plotdata.outdir
-                if outdir not in outdir_list:
-                    outdir_list.append(outdir)
-                
-    plotdata._outdirs = outdir_list
-    return plotdata
