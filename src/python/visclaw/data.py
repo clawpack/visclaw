@@ -660,6 +660,8 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('xlimits',None)
         self.add_attribute('ylimits',None)
         self.add_attribute('scaled',False)   # true so x- and y-axis scaled same
+        self.add_attribute('image',False)    # true so x- and y-axis scaled same 
+                                             # and plot bounds tight
         self.add_attribute('plotitem_dict', {})
         self.add_attribute('type','each_frame')
         self._itemnames = []
