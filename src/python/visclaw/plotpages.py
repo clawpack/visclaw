@@ -25,7 +25,7 @@ if clawdir is not None:
 #===========================
 class PlotPagesData(object):
 #===========================
-    
+
     def __init__(self):
         self.plotdir = 'plots'
         self.overwrite = True
@@ -58,8 +58,8 @@ class PlotPagesData(object):
         self.timeframes_fignos = 'all'
         self.timeframes_fignames = {}
         self.timeframes_prefix = 'frame'
-        
-    
+
+
         self.pageitem_list = []
 
 
@@ -80,11 +80,16 @@ class PlotPagesData(object):
     def make_latex(self):
         plots2latex(self)
 
+    def make_kml(self):
+        plot2kml(self)
+
     def make_pages(self):
         if self.latex:
             self.make_latex()
         if self.html:
             self.make_html()
+        if self.kml:
+            self.make_kml()
 
     def make_timeframes_latex(self):
         timeframes2latex(self)
@@ -99,7 +104,7 @@ class PlotPagesData(object):
 #=======================
 class PageItem(object):
 #=======================
-    
+
     def __init__(self):
         self.fname = ''  # full path to png or other figure file
         self.html_index_entry = 'Untitled figure'  # Name for link from
@@ -108,7 +113,7 @@ class PageItem(object):
                                    # just before this item.
         self.latex_preitem = None  # any latex to be inserted in file
                                    # just before this item.
-    
+
 #=======================
 class HtmlIndex(object):
 #=======================
@@ -139,7 +144,7 @@ class HtmlIndex(object):
         path_to_html_index = os.path.join(os.getcwd(), \
                                    self.fname)
         print_html_pointers(path_to_html_index)
-                    
+
 
 #======================================================================
 def plots2html(plot_pages_data):
@@ -156,8 +161,8 @@ def plots2html(plot_pages_data):
 
     if numitems == 0:
         print '*** Warning: 0 plots to put in html file'
-        return 
-        
+        return
+
     ppd =plot_pages_data
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
@@ -167,19 +172,19 @@ def plots2html(plot_pages_data):
 
 
     creationtime = current_time()
-    
-    
+
+
     for pageitem in ppd.pageitem_list:
         splitname = os.path.splitext(pageitem.fname)
         pageitem.hname = splitname[0] + '.html'
         pageitem.ext = splitname[1]
 
-    
+
     # Create the index page:
     #-----------------------
-    
+
     html = open(ppd.html_index_fname,'w')
-    
+
     if ppd.html_eagle:
         html.write("""
           <html><meta http-equiv="expires" content="0">
@@ -236,7 +241,7 @@ def plots2html(plot_pages_data):
     html.write('</body></html>')
 
     #----------------------------------------------------------------------
-    
+
     # allfigures.html
     #-------------------
     html = open('allfigures.html', 'w')
@@ -255,13 +260,13 @@ def plots2html(plot_pages_data):
     for pageitem in ppd.pageitem_list:
         html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (pageitem.hname, pageitem.fname))
-    
+
     html.write('\n<p><h3><a href=%s>Return to Plot Index</a> </h3>' \
                 % ppd.html_index_fname)
     html.write('\n</center></body></html>\n')
     html.close()
-    
-    
+
+
     # individual html files for each figure
     #--------------------------------------
 
@@ -279,8 +284,8 @@ def plots2html(plot_pages_data):
             """ % (pageitem.html_index_entry,pageitem.html_index_entry))
 
         html.write("""
-              <p><img src="%s" ><p>  
-              <h3><a href=%s>Return to Plot Index</a> 
+              <p><img src="%s" ><p>
+              <h3><a href=%s>Return to Plot Index</a>
             """ % (pageitem.fname,ppd.html_index_fname))
         if j>0:
             html.write("&nbsp; ... &nbsp;  <a href=%s>Previous Figure</a> "\
@@ -289,14 +294,14 @@ def plots2html(plot_pages_data):
             html.write("&nbsp; ... &nbsp;  <a href=%s>Next Figure</a> "\
                    % ppd.pageitem_list[j+1].hname)
         html.write("\n</h3>")
-    
+
     html.write('\n</center></body></html>\n')
     html.close()
-    
+
     os.chdir(startdir)
     # end of plots2html
 
-    
+
 #======================================================================
 def print_html_pointers(path_to_html_index):
 #======================================================================
@@ -316,7 +321,7 @@ def print_html_pointers(path_to_html_index):
         print "\nOr, if you have the Clawpack server running, point your browser to:"
         print "    http://localhost:50005%s"  % path_to_html_index
 
-    
+
 
 #=====================================
 def htmlmovie(html_index_fname,pngfile,framenos,figno):
@@ -329,9 +334,9 @@ def htmlmovie(html_index_fname,pngfile,framenos,figno):
      figno: integer with the figure number for this movie.
 
     Returns:
-     text for an html file that incorporates javascript to loop through the 
-          plots one after another.  
-    
+     text for an html file that incorporates javascript to loop through the
+          plots one after another.
+
     New 6/7/10: The html page also has buttons for controlling the movie.
 
     The parameter iterval below is the time interval between loading
@@ -461,8 +466,8 @@ def plots2latex(plot_pages_data):
     if numitems == 0:
         print '*** Warning: 0 plots to put in latex file'
         print 'No latex file generated'
-        return 
-        
+        return
+
 
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
@@ -472,9 +477,9 @@ def plots2latex(plot_pages_data):
 
 
     creationtime = current_time()
-    
+
     latexfile = open(ppd.latex_fname + '.tex', 'w')
-    
+
     # latex header
     #-------------
 
@@ -516,11 +521,11 @@ def plots2latex(plot_pages_data):
     itempagecnt = 0
     for pageitem in ppd.pageitem_list:
         if itempagecnt >= itemsperpage:
-            latexfile.write('\\newpage \n')                       
+            latexfile.write('\\newpage \n')
             itempagecnt = 0
             itemlinecnt = 0
         elif itemlinecnt >= itemsperline:
-            latexfile.write('\\vskip 10pt \n')                       
+            latexfile.write('\\vskip 10pt \n')
             itemlinecnt = 0
         itemlinecnt += 1
         itempagecnt += 1
@@ -528,12 +533,12 @@ def plots2latex(plot_pages_data):
             latexfile.write(pageitem.latex_preitem)
         latexfile.write('\\includegraphics[width=%s\\textwidth]{%s}\n' \
                             % (fwidth,pageitem.fname))
-        #latexfile.write('\\vskip 10pt \n')                       
-    latexfile.write('\\end{document}\n')                         
+        #latexfile.write('\\vskip 10pt \n')
+    latexfile.write('\\end{document}\n')
     latexfile.close()
-    print "\nLatex file created:  " 
+    print "\nLatex file created:  "
     print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file" 
+    print "\nUse pdflatex to create pdf file"
 
     if ppd.latex_makepdf:
         try:
@@ -545,7 +550,72 @@ def plots2latex(plot_pages_data):
 
     os.chdir(startdir)
     # end of plots2latex
-    
+
+
+#======================================================================
+def plots2kml(plot_pages_data):
+#======================================================================
+    """
+    Take a list of figure files and produce kml file to display them.
+    So far only works with time frames, not with gauges or other plots.
+    """
+
+    print '\n-----------------------------------\n'
+    print '\nCreating kml file...\n'
+    startdir = os.getcwd()
+    ppd = plot_pages_data
+    plotdir = ppd.plotdir
+    numitems = len(ppd.pageitem_list)   # number of page items (separate plots)
+
+    if numitems == 0:
+        print '*** Warning: 0 plots to put in kml file'
+        print 'No kml file generated'
+        return
+
+
+    try:
+        cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
+    except:
+        print "*** Error, aborting plots2kml"
+        raise
+
+
+    creationtime = current_time()
+
+    # What is ppd?
+    # latexfile = open(ppd.kml_fname + '.kml', 'w')
+
+    # kml header
+    #-------------
+
+#     latexfile.write(r"""
+#         \documentclass[11pt]{article}
+#         \usepackage{graphicx}
+#         \setlength{\textwidth}{7.5in}
+#         \setlength{\oddsidemargin}{-0.5in}
+#         \setlength{\evensidemargin}{-0.5in}
+#         \setlength{\textheight}{9.2in}
+#         \setlength{\voffset}{-1in}
+#         \setlength{\headsep}{5pt}
+#         \begin{document}
+#         \begin{center}{\Large\bf %s}\vskip 5pt
+#         """ % ppd.latex_title)
+#
+#     latexfile.write(r"""
+#         \bf Plots created {\tt %s} in directory: \vskip 5pt
+#         \verb+%s+
+#         \end{center}
+#         \vskip 5pt
+#         """ % (creationtime, startdir))
+#
+    # kml layout
+    #-------------
+
+    # etc for KML!
+
+    os.chdir(startdir)
+    # end of plots2kml
+
 
 #======================================================================
 def cd_with_mkdir(newdir, overwrite=False, verbose=True):
@@ -629,8 +699,8 @@ def massage_frames_data(plot_pages_data):
         return
 
     startdir = os.getcwd()
-        
-        
+
+
     if framenos == 'all' or fignos == 'all':
         # need to determine which figures exist
         files = glob.glob('%s*.png' % prefix)
@@ -655,7 +725,7 @@ def massage_frames_data(plot_pages_data):
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
         allframesfile[figno] = '%s_allframesfig%s.html'  % (prefix,figno)
-       
+
     numframes = len(framenos)
     numfigs = len(fignos)
 
@@ -713,7 +783,7 @@ def timeframes2latex(plot_pages_data):
       plot_pages_data.timeframes_frametimes  is dictionary of time for each frame
       plot_pages_data.timeframes_fignos  is list of figs to use,
       plot_pages_data.timeframes_fignames  is dictionary of fig names for index.
-      plot_pages_data.timeframes_prefix  is the string indicating how the 
+      plot_pages_data.timeframes_prefix  is the string indicating how the
                              files are named  ('frame' by default).
     """
 
@@ -739,12 +809,12 @@ def timeframes2latex(plot_pages_data):
     fignos = ppd.timeframes_fignos
     fignames = ppd.timeframes_fignames
     pngfile = ppd._pngfile
-            
+
     numframes = len(framenos)
     numfigs = len(fignos)
-    
+
     latexfile = open(ppd.latex_fname + '.tex', 'w')
-    
+
     # latex header
     #-------------
 
@@ -772,23 +842,23 @@ def timeframes2latex(plot_pages_data):
     #-------------
 
     # determine how many plots should appear on each page and line:
-    framesperpage = ppd.latex_framesperpage 
+    framesperpage = ppd.latex_framesperpage
     if framesperpage == 'all':
         framesperpage = len(framenos)
-    framesperline = ppd.latex_framesperline 
+    framesperline = ppd.latex_framesperline
     if framesperline == 'all':
         framesperline = len(framenos)
-    figsperline = ppd.latex_figsperline      
+    figsperline = ppd.latex_figsperline
     if figsperline == 'all':
         figsperline = len(fignos)
     if (figsperline < len(fignos)) & (framesperline > 1):
         print '*** Incompatible layout: resetting framesperline to 1'
         framesperline = 1
-    totalperline = framesperline * figsperline      
+    totalperline = framesperline * figsperline
     if totalperline < 1:
         print '*** Warning: 0 figures per line requested in latex file'
         print 'No latex file generated due to format error'
-        return 
+        return
 
     # width each plot must be:
     fwidth = 0.95/totalperline
@@ -798,27 +868,27 @@ def timeframes2latex(plot_pages_data):
         #latexfile.write('\\centerline{\Large Frame %s at time = %s' \
         #       % (frameno frametime[frameno])
         if framecnt >= framesperpage:
-            latexfile.write('\\newpage \n')                       
+            latexfile.write('\\newpage \n')
             framecnt = 0
         elif framecnt >= framesperline:
-            latexfile.write('\\vskip 10pt \n')                       
+            latexfile.write('\\vskip 10pt \n')
             framecnt = 0
         framecnt += 1
         figcnt = 0
         for figno in fignos:
             if figcnt >= figsperline:
-                latexfile.write('\\vskip 10pt \n')                       
+                latexfile.write('\\vskip 10pt \n')
                 figcnt = 0
             figcnt += 1
             latexfile.write('\\includegraphics[width=%s\\textwidth]{%s}\n' \
                             % (fwidth,pngfile[frameno,figno]))
-        #latexfile.write('\\vskip 10pt \n')                       
-    latexfile.write('\\end{document}\n')                         
+        #latexfile.write('\\vskip 10pt \n')
+    latexfile.write('\\end{document}\n')
     latexfile.close()
 
-    print "\nLatex file created:  " 
+    print "\nLatex file created:  "
     print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file" 
+    print "\nUse pdflatex to create pdf file"
     if ppd.latex & ppd.latex_makepdf:
         try:
             os.system('pdflatex %s' % ppd.latex_fname)
@@ -830,7 +900,7 @@ def timeframes2latex(plot_pages_data):
     os.chdir(startdir)
     # end of timeframes2latex
 
-    
+
 
 #============================
 def test(makeplots = True):
@@ -847,7 +917,7 @@ def test(makeplots = True):
 
     ppd.html = True
 
-    ppd.latex = True 
+    ppd.latex = True
     ppd.latex_itemsperline = 2
     ppd.latex_itemsperpage = 4
     ppd.latex_makepdf = False
@@ -869,7 +939,7 @@ def test(makeplots = True):
         if mod(n,2) == 0:
             pid.latex_preitem = r"""
               \vskip 5pt \noindent{\large\bf Plot of $x^%s$}\vskip 2pt""" % n
-    
+
     ppd.make_pages()
 
 
@@ -882,22 +952,22 @@ def clawtest():
 
     for mx in [50, 100]:
         ppd = PlotPagesData()
-    
+
         outdir = 'output.mx%s' % mx
         ppd.plotdir = outdir
         ppd.overwrite = True
-    
+
         ppd.html = True
         ppd.html_index_title = 'Clawpack Plots with mx = %s' % mx
-    
-        ppd.latex = True 
+
+        ppd.latex = True
         ppd.latex_makepdf = False
-    
+
         ppd.timeframes_framenos = 'all'
         ppd.timeframes_frametimes = {}
         ppd.timeframes_fignos = 'all'
         ppd.timeframes_fignames = {}
-    
+
         ppd.make_timeframes_html()
         ppd.make_timeframes_latex()
 
@@ -931,8 +1001,8 @@ def plotclaw2html(plotdata):
     specified plotdata.
 
     Assumes the following types of figures may exist:
-       time frame figures of the form frame000NfigJ.png 
-       gauge figures of the form gauge000NfigJ.png 
+       time frame figures of the form frame000NfigJ.png
+       gauge figures of the form gauge000NfigJ.png
        other each_run type figures of the form figJ.png
        other figures can be specified in a dictionary plotdata.otherfigs
 
@@ -953,7 +1023,7 @@ def plotclaw2html(plotdata):
     print '\nCreating html pages for figures...\n'
 
     startdir = os.getcwd()
-        
+
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
@@ -977,19 +1047,19 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
-            
+
     numframes = len(framenos)
     numfigs = len(fignos)
-    
+
 
     eagle = getattr(plotdata,'html_eagle',False)
 
-    
+
     # Create the index page:
     #-----------------------
-    
+
     html = open(plotdata.html_index_fname,'w')
-    
+
     if eagle:
         html.write("""
           <html><meta http-equiv="expires" content="0">
@@ -1041,7 +1111,7 @@ def plotclaw2html(plotdata):
         html.write('\n   <td><a href="%s.pdf">%s.pdf</a></td>' \
                % (plotdata.latex_fname,plotdata.latex_fname))
         html.write('</tr>\n')
-        
+
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
@@ -1107,7 +1177,7 @@ def plotclaw2html(plotdata):
     #----------------
     if len(plotdata.otherfigure_dict)>0:
         html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
-        html.write('<p><ul>\n')  
+        html.write('<p><ul>\n')
         for name in plotdata.otherfigure_dict.iterkeys():
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
@@ -1127,9 +1197,9 @@ def plotclaw2html(plotdata):
                         print "    for otherfigure ",name
                         raise
 
-                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
-        html.write('<p></ul>\n')  
-    
+                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))
+        html.write('<p></ul>\n')
+
     html.write('</body></html>')
 
     # end of index
@@ -1137,7 +1207,7 @@ def plotclaw2html(plotdata):
 
     fignos = plotdata.timeframes_fignos
     fignames = plotdata.timeframes_fignames
-    
+
     # allframesfigJ.html
     #-------------------
     for figno in fignos:
@@ -1152,15 +1222,15 @@ def plotclaw2html(plotdata):
         html.write('<p>\n')
         html.write('<h3>Click on a figure to enlarge</h3>\n')
         html.write('<p>\n')
-    
+
         for frameno in framenos:
             html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (htmlfile[frameno,figno], pngfile[frameno,figno]))
-    
+
         html.write('\n</center></body></html>\n')
         html.close()
-    
-    
+
+
     # allfigsframeN.html
     #-------------------
     if numfigs > 1:
@@ -1204,12 +1274,12 @@ def plotclaw2html(plotdata):
 
             html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                       % allfigsfile[framenos[numframes-1]])
-            html.write('&#062; &#062;</a>  \n') 
+            html.write('&#062; &#062;</a>  \n')
 
             html.write('</h3><p>\n')
             html.write('<h3>Click on a figure to enlarge</h3>\n')
             html.write('<p>\n')
-    
+
             for figno in fignos:
                 html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                         % (htmlfile[frameno,figno], pngfile[frameno,figno]))
@@ -1224,14 +1294,14 @@ def plotclaw2html(plotdata):
                 else:
                     html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
                            % (allfigsfile[frameno2],frameno2))
-    
+
             html.write('\n</center></body></html>\n')
             html.close()
-    
-    
+
+
     # frameNfigJ.html  -- individual files for each frame/fig combo
     #----------------
-    
+
     for iframe in range(numframes):
         frameno = framenos[iframe]
         for figno in fignos:
@@ -1243,7 +1313,7 @@ def plotclaw2html(plotdata):
             if numfigs > 1:
                 html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
             html.write('&nbsp;&nbsp; at time t = %s</h3>' % frametimef[frameno])
-        
+
             # Write link commands to previous and next frame:
 
             html.write('<p> <a href="%s">' % htmlfile[framenos[0],figno])
@@ -1274,8 +1344,8 @@ def plotclaw2html(plotdata):
 
             html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                       % htmlfile[framenos[numframes-1],figno])
-            html.write('&#062; &#062;</a>  \n') 
-        
+            html.write('&#062; &#062;</a>  \n')
+
             # image:
             html.write('\n\n <p><img src="%s"><p>  \n ' \
                         % pngfile[frameno,figno])
@@ -1309,7 +1379,7 @@ def plotclaw2html(plotdata):
                            % (htmlfile[frameno2,figno],frameno2))
             html.write('\n<a href="%s">  All Frames </a>' \
                      % allframesfile[figno])
-        
+
             html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
                       % (plotdata.html_index_fname))
             if eagle:
@@ -1317,26 +1387,26 @@ def plotclaw2html(plotdata):
                 this run-directory</a></h3>  """)
             html.write('</center></body></html>')
             html.close()
-    
-    
+
+
     # moviefigJ.html
     #-------------------
 
     if plotdata.html_movie in [True, "4.x"]:
-    
+
         # original style still used if plotdata.html_movie == "4.x":
         for figno in fignos:
             html = open('movie%s' % allframesfile[figno], 'w')
             text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
             html.write(text)
             html.close()
-    
- 
+
+
 
     #----------------------------------------------------------------------
     fignos = plotdata.gauges_fignos
     fignames = plotdata.gauges_fignames
-    
+
     # allgaugesfigJ.html
     #-------------------
     if fignos is None:
@@ -1353,15 +1423,15 @@ def plotclaw2html(plotdata):
         html.write('<p>\n')
         html.write('<h3>Click on a figure to enlarge</h3>\n')
         html.write('<p>\n')
-    
+
         for gaugeno in gaugenos:
             html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
-    
+
         html.write('\n</center></body></html>\n')
         html.close()
-    
-    
+
+
     # allfigsgaugeN.html
     #-------------------
     if gaugenos is not None:
@@ -1405,12 +1475,12 @@ def plotclaw2html(plotdata):
 
                 html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                           % gauge_allfigsfile[gaugenos[numgauges-1]])
-                html.write('&#062; &#062;</a>  \n') 
+                html.write('&#062; &#062;</a>  \n')
 
                 html.write('</h3><p>\n')
                 html.write('<h3>Click on a figure to enlarge</h3>\n')
                 html.write('<p>\n')
-        
+
                 for figno in fignos:
                     html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                             % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
@@ -1425,14 +1495,14 @@ def plotclaw2html(plotdata):
                     else:
                         html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
                                % (gauge_allfigsfile[gaugeno2],gaugeno2))
-        
+
                 html.write('\n</center></body></html>\n')
                 html.close()
-    
-    
+
+
         # gaugeNfigJ.html  -- individual files for each gauge/fig combo
         #----------------
-        
+
         for igauge in range(numgauges):
             gaugeno = gaugenos[igauge]
             for figno in fignos:
@@ -1443,7 +1513,7 @@ def plotclaw2html(plotdata):
                 html.write('\n<h3>Gauge %i ' % gaugeno)
                 if numfigs > 1:
                     html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
-            
+
                 # Write link commands to previous and next gauge:
 
                 html.write('<p> <a href="%s">' % gauge_htmlfile[gaugenos[0],figno])
@@ -1474,8 +1544,8 @@ def plotclaw2html(plotdata):
 
                 html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                           % gauge_htmlfile[gaugenos[numgauges-1],figno])
-                html.write('&#062; &#062;</a>  \n') 
-            
+                html.write('&#062; &#062;</a>  \n')
+
                 # image:
                 html.write('\n\n <p><img src="%s"><p>  \n ' \
                             % gauge_pngfile[gaugeno,figno])
@@ -1509,7 +1579,7 @@ def plotclaw2html(plotdata):
                                % (gauge_htmlfile[gaugeno2,figno],gaugeno2))
                 html.write('\n<a href="allgaugesfig%s.html">  All Gauges </a>' \
                          % figno)
-            
+
                 html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
                           % (plotdata.html_index_fname))
                 if eagle:
@@ -1520,7 +1590,7 @@ def plotclaw2html(plotdata):
 
     os.chdir(startdir)
     # end of plotclaw2html
-    
+
 
 #=====================================
 def massage_gauges_data(plot_pages_data):
@@ -1537,11 +1607,11 @@ def massage_gauges_data(plot_pages_data):
         return
 
     startdir = os.getcwd()
-        
+
     for figno in fignos:
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
-            
+
     numgauges = len(gaugenos)
     numfigs = len(fignos)
 
@@ -1574,7 +1644,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
     The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.  
+    function setplot unless plotdata.setplot=False.
 
     If plotdata.setplot=True then it is assumed that the current directory
     contains a module setplot.py that defines this function.
@@ -1596,7 +1666,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if not sys.modules.has_key('matplotlib'):
         print '*** Error: matplotlib not found, no plots will be done'
         return plotdata
-        
+
     if not isinstance(plotdata,ClawPlotData):
         print '*** Error, plotdata must be an object of type ClawPlotData'
         return plotdata
@@ -1620,7 +1690,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         plotdir = plotdata.plotdir     # where to put png and html files
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
-        
+
     except:
         print '*** Error in printframes: plotdata missing attribute'
         print '  *** plotdata = ',plotdata
@@ -1640,7 +1710,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
             fignos_to_show.append(figno)
     fignos = fignos_to_show
-        
+
     # figure out what type each figure is:
     fignos_each_frame = []
     fignos_each_gauge = []
@@ -1653,7 +1723,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             fignos_each_gauge.append(figno)
         if plotdata.plotfigure_dict[figname].type == 'each_run':
             fignos_each_run.append(figno)
-        
+
 
     rootdir = os.getcwd()
 
@@ -1717,7 +1787,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-    
+
     #DK: In PetClaw, we don't output fort.q* files.  Instead count the
     #claw.pkl* files.
     if len(fortfile) == 0:
@@ -1726,11 +1796,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             fortfile[frameno] = file
             for figno in fignos_each_frame:
                 pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
- 
+
     if len(fortfile) == 0:
         print '*** No fort.q or claw.pkl files found in directory ', os.getcwd()
         return plotdata
-    
+
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
@@ -1776,7 +1846,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Make html files for time frame figures:
     # ---------------------------------------
-    
+
     if plotdata.html_movie == "JSAnimation":
         # Only import if we need it:
         try:
@@ -1793,7 +1863,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         #plotpages.timeframes2html(plotdata)
         plotpages.plotclaw2html(plotdata)
         pass
-    
+
     # Make png files for all frames and gauges:
     # -----------------------------------------
 
@@ -1814,9 +1884,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
-    
+
     if plotdata.html_movie == "JSAnimation":
-        
+
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
 
         class myHTMLWriter(HTMLWriter):
@@ -1828,11 +1898,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                    metadata=None, embed_frames=False, frame_dir=None, add_html='', \
                    frame_width=650, default_mode='once', file_names=None):
                 self.file_names=file_names
-                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
-                   extra_args=extra_args, metadata=metadata, 
-                   embed_frames=embed_frames, frame_dir=frame_dir, 
+                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate,
+                   extra_args=extra_args, metadata=metadata,
+                   embed_frames=embed_frames, frame_dir=frame_dir,
                    add_html=add_html, frame_width=frame_width, default_mode=default_mode)
-          
+
             def get_all_framenames(self):
                 frame_fullname = self.file_names
                 return frame_fullname
@@ -1847,15 +1917,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             def init():
                 im.set_data(Image.imread(filenames[0]))
                 return im,
-      
+
             def animate(i):
                 image=Image.imread(filenames[i])
                 im.set_data(image)
                 return im,
-      
+
             anim = animation.FuncAnimation(fig, animate, init_func=init,
                                           frames=len(filenames), blit=True)
-      
+
             #set embed_frames=True to embed base64-encoded frames directly in the HTML
             pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
             myHTMLwriter=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
@@ -1866,11 +1936,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             # Clean up animation temporary files of the form frame0000.png
             myHTMLwriter.clear_temp = True
             myHTMLwriter.cleanup()
-              
+
     #-----------
     # gif movie:
     #-----------
-    
+
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
         for figno in fignos_each_frame:
@@ -1880,7 +1950,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 print '    Created moviefig%s.gif' % figno
             except:
                 print '*** Error creating moviefig%s.gif' % figno
-    
+
     os.chdir(rootdir)
 
     # print out pointers to html index page:
@@ -1893,4 +1963,3 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     return plotdata
     # end of printframes
-
