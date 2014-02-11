@@ -761,7 +761,6 @@ class ClawPlotItem(clawdata.ClawData):
 
         self.add_attribute('params',{})  # dictionary to hold optional parameters
 
-
         if num_dim == 1:
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
@@ -777,6 +776,7 @@ class ClawPlotItem(clawdata.ClawData):
 
             if plot_type == '1d_from_2d_data':
                 self.add_attribute('map_2d_to_1d',None)
+                self.add_attribute('amr_plotstyle',[])
 
         elif num_dim == 2:
 
