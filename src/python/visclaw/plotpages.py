@@ -578,6 +578,14 @@ def plotclaw2kml(plot_pages_data):
 
     kmlfile = open(ppd.kml_fname + '.kml', 'w')
 
+    kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
+    kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
+
+    kmlfile.write('<Document>');
+    kmlfile.write('</Document>');
+
+    kmlfile.close();
+
     # Call specific commands to generate kml file.  Maybe in a seperate file?
 
     os.chdir(startdir)
