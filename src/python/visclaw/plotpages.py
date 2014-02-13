@@ -548,7 +548,7 @@ def plots2latex(plot_pages_data):
 
 
 #======================================================================
-def plotpages2kml(plot_pages_data):
+def plotclaw2kml(plot_pages_data):
 #======================================================================
     """
     Take a list of figure files and produce kml file to display them.
@@ -577,6 +577,14 @@ def plotpages2kml(plot_pages_data):
     creationtime = current_time()
 
     kmlfile = open(ppd.kml_fname + '.kml', 'w')
+
+    kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
+    kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
+
+    kmlfile.write('<Document>');
+    kmlfile.write('</Document>');
+
+    kmlfile.close();
 
     # Call specific commands to generate kml file.  Maybe in a seperate file?
 
