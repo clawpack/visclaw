@@ -80,16 +80,11 @@ class PlotPagesData(object):
     def make_latex(self):
         plots2latex(self)
 
-    def make_kml(self):
-        plot2kml(self)
-
     def make_pages(self):
         if self.latex:
             self.make_latex()
         if self.html:
             self.make_html()
-        if self.kml:
-            self.make_kml()
 
     def make_timeframes_latex(self):
         timeframes2latex(self)
@@ -553,11 +548,10 @@ def plots2latex(plot_pages_data):
 
 
 #======================================================================
-def plots2kml(plot_pages_data):
+def plotpages2kml(plot_pages_data):
 #======================================================================
     """
     Take a list of figure files and produce kml file to display them.
-    So far only works with time frames, not with gauges or other plots.
     """
 
     print '\n-----------------------------------\n'
@@ -582,36 +576,9 @@ def plots2kml(plot_pages_data):
 
     creationtime = current_time()
 
-    # What is ppd?
-    # latexfile = open(ppd.kml_fname + '.kml', 'w')
+    kmlfile = open(ppd.kml_fname + '.kml', 'w')
 
-    # kml header
-    #-------------
-
-#     latexfile.write(r"""
-#         \documentclass[11pt]{article}
-#         \usepackage{graphicx}
-#         \setlength{\textwidth}{7.5in}
-#         \setlength{\oddsidemargin}{-0.5in}
-#         \setlength{\evensidemargin}{-0.5in}
-#         \setlength{\textheight}{9.2in}
-#         \setlength{\voffset}{-1in}
-#         \setlength{\headsep}{5pt}
-#         \begin{document}
-#         \begin{center}{\Large\bf %s}\vskip 5pt
-#         """ % ppd.latex_title)
-#
-#     latexfile.write(r"""
-#         \bf Plots created {\tt %s} in directory: \vskip 5pt
-#         \verb+%s+
-#         \end{center}
-#         \vskip 5pt
-#         """ % (creationtime, startdir))
-#
-    # kml layout
-    #-------------
-
-    # etc for KML!
+    # Call specific commands to generate kml file.  Maybe in a seperate file?
 
     os.chdir(startdir)
     # end of plots2kml
@@ -1884,6 +1851,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
+    if plotdata.kml:
+        plotpages.plotclaw2kml(plotdata)
 
     if plotdata.html_movie == "JSAnimation":
 
