@@ -548,7 +548,7 @@ def plots2latex(plot_pages_data):
 
 
 #======================================================================
-def plotpages2kml(plot_pages_data):
+def plotclaw2kml(plot_pages_data):
 #======================================================================
     """
     Take a list of figure files and produce kml file to display them.
@@ -1851,6 +1851,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
+# 
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
