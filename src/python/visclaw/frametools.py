@@ -281,15 +281,17 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
+            # The code below is commented out so I don't get a title for KML plots.  I'll
+            # come up with a better way to do this later!
 
-#             if plotaxes.title_with_t:
-#                 if (t==0.) | ((t>=0.001) & (t<1000.)):
-#                     pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
-#                 else:
-#                     pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
-#             else:
-#                 pylab.title(plotaxes.title)
-#
+            # if plotaxes.title_with_t:
+            #     if (t==0.) | ((t>=0.001) & (t<1000.)):
+            #         pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
+            #     else:
+            #         pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+            #     else:
+            #         pylab.title(plotaxes.title)
+
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
