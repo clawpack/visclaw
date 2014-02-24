@@ -589,20 +589,24 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-    kmlfile = open(plotdata.kml_index_fname + '.kml', 'w')
-
-    kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
-    kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
-
-    kmlfile.write('<Document>');
-    kmlfile.write('</Document>');
-
-    kmlfile.close();
-
+#     kmlfile = open(plotdata.kml_index_fname + '.kml', 'w')
+#
+#     kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
+#     kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
+#
+#     kmlfile.write('<Document>');
+#     kmlfile.write('</Document>');
+#
+#     kmlfile.close();
+#
     # Call specific commands to generate kml file.  Maybe in a seperate file?
+    from pykml.factory import KML_ElementMaker as KML
+
+    pml = KML.kml(KML.Document())
+
 
     os.chdir(startdir)
-    # end of plots2kml
+    # end of plotclaw2kml
 
 
 #======================================================================
