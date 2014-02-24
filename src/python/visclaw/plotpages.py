@@ -1019,7 +1019,7 @@ def plotclaw2html(plotdata):
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting timeframes2html"
+        print "*** Error, aborting plotclaw2html"
         raise
 
     creationtime = current_time()

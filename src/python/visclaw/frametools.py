@@ -1153,7 +1153,7 @@ def printframes(plotdata=None, verbose=True):
     os.chdir(plotdir)
 
     if plotdata.html:
-        plotpages.timeframes2html(plotdata)
+        plotpages.timeframes2htmlXX(plotdata)
 
     if not plotdata.printfigs:
         print "Using previously printed figure files"
