@@ -958,8 +958,8 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
 
     # This was added so that in KML, axes, tick labels, etc do not get printed.
-    # This code should go somewhere else eventually, since it is only used
-    # for Google Earth.
+    # This code will go somewhere else eventually, since it is only used
+    # for Google Earth.   But I haven't figured out yet where to put it.
     fig = pylab.gcf()
     fig.patch.set_alpha(0)
     a = fig.gca()
