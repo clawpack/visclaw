@@ -548,7 +548,7 @@ def plots2latex(plot_pages_data):
 
 
 #======================================================================
-def plotclaw2kml(plot_pages_data):
+def plotclaw2kml(plotdata):
 #======================================================================
     """
     Take a list of figure files and produce kml file to display them.
@@ -556,40 +556,57 @@ def plotclaw2kml(plot_pages_data):
 
     print '\n-----------------------------------\n'
     print '\nCreating kml file...\n'
+
     startdir = os.getcwd()
-    ppd = plot_pages_data
-    plotdir = ppd.plotdir
-    numitems = len(ppd.pageitem_list)   # number of page items (separate plots)
-
-    if numitems == 0:
-        print '*** Warning: 0 plots to put in kml file'
-        print 'No kml file generated'
-        return
-
 
     try:
-        cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
+        cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
         print "*** Error, aborting plots2kml"
         raise
 
+    creationtime = current_time()
+    plotdata = massage_frames_data(plotdata)
+    if plotdata.gauges_fignos is not None:
+        plotdata = massage_gauges_data(plotdata)
+        gauge_pngfile = plotdata._gauge_pngfile
+        gauge_htmlfile = plotdata._gauge_htmlfile
+        gauge_allfigsfile = plotdata._gauge_allfigsfile
+
+    framenos = plotdata.timeframes_framenos
+    frametimes = plotdata.timeframes_frametimes
+    fignos = plotdata.timeframes_fignos
+    fignames = plotdata.timeframes_fignames
+    pngfile = plotdata._pngfile
+    htmlfile = plotdata._htmlfile
+    frametimef = plotdata._frametimef
+    allfigsfile = plotdata._allfigsfile
+    allframesfile = plotdata._allframesfile
+
+    numframes = len(framenos)
+    numfigs = len(fignos)
+
 
     creationtime = current_time()
 
-    kmlfile = open(ppd.kml_fname + '.kml', 'w')
-
-    kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
-    kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
-
-    kmlfile.write('<Document>');
-    kmlfile.write('</Document>');
-
-    kmlfile.close();
-
+#     kmlfile = open(plotdata.kml_index_fname + '.kml', 'w')
+#
+#     kmlfile.write('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2">');
+#     kmlfile.write('<kml xmlns="http://www.opengis.net/kml/2.2">');
+#
+#     kmlfile.write('<Document>');
+#     kmlfile.write('</Document>');
+#
+#     kmlfile.close();
+#
     # Call specific commands to generate kml file.  Maybe in a seperate file?
+    from pykml.factory import KML_ElementMaker as KML
+
+    pml = KML.kml(KML.Document())
+
 
     os.chdir(startdir)
-    # end of plots2kml
+    # end of plotclaw2kml
 
 
 #======================================================================
@@ -1002,7 +1019,7 @@ def plotclaw2html(plotdata):
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting timeframes2html"
+        print "*** Error, aborting plotclaw2html"
         raise
 
     creationtime = current_time()
