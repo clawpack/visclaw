@@ -39,11 +39,15 @@ class ClawPlotData(clawdata.ClawData):
             # inherit some values from controller
             self.add_attribute('rundir',copy.copy(controller.rundir))
             self.add_attribute('outdir',copy.copy(controller.outdir))
+            if len(controller.frames)>0:
+                for i,frame in enumerate(controller.frames):
+                    self.framesoln_dict[str(i)] = frame
+            self.add_attribute('format',copy.copy(controller.output_format))
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
+            self.add_attribute('format','ascii')
 
-        self.add_attribute('format','ascii')
 
         self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
         self.add_attribute('overwrite',True)           # ok to overwrite old plotdir?

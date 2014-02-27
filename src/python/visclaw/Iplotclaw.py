@@ -61,7 +61,8 @@ class Iplotclaw(Iplot):
     lastcmd = 'n'             # initialize so <return> advances frame'
 
     def __init__(self, setplot='setplot.py', outdir=None, \
-                 completekey='tab', stdin=None, stdout=None, simple=False):
+                 completekey='tab', stdin=None, stdout=None, simple=False,
+                 controller=None):
         """Instantiate a line-oriented interpreter framework.
 
 
@@ -89,7 +90,7 @@ class Iplotclaw(Iplot):
         self.completekey = completekey
  
         self.setplot = setplot
-        plotdata = data.ClawPlotData()
+        plotdata = data.ClawPlotData(controller)
         plotdata.setplot = self.setplot
         plotdata._mode = 'iplotclaw'
 
