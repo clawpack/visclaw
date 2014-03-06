@@ -20,13 +20,13 @@ from pykml.factory import write_python_script_for_kml_document
 #fileobject = urllib2.urlopen(url)
 
 #'file.kml' is a sample file found on pykml website
-fileobject = open('testfile.kml')
+fileobject = open('sample.kml','r')
 
 doc = parser.parse(fileobject).getroot()
 
 script = write_python_script_for_kml_document(doc)
 
-fileout=open('file.py','w')
+fileout=open('sample.py','w')
 
 fileout.write(script)
 
