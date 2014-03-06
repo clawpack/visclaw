@@ -600,9 +600,40 @@ def plotclaw2kml(plotdata):
 #     kmlfile.close();
 #
     # Call specific commands to generate kml file.  Maybe in a seperate file?
-    from pykml.factory import KML_ElementMaker as KML
+#    from pykml.factory import KML_ElementMaker as KML
 
     pml = KML.kml(KML.Document())
+
+from lxml import etree
+from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import ATOM_ElementMaker as ATOM
+from pykml.factory import GX_ElementMaker as GX
+
+filekml = open('googleearth.kml','w')
+
+filekml.write()
+
+doc = KML.GroundOverlay(
+  KML.TimeSpan(
+    KML.begin('2013-10-02T00:00:00Z'),
+    KML.end('2013-10-02T00:01:00Z'),
+  ),
+  KML.drawOrder('1'),
+  KML.altitude('0.0'),
+  KML.altitudeMode('clampToGround'),
+  KML.Icon(
+    KML.href('frame0000fig0.png'),
+  ),
+  KML.LatLonBox(
+    KML.north('0.0'),
+    KML.south('-60.0'),
+    KML.east('-60'),
+    KML.west('-120'),
+    KML.rotation('0.0'),
+  ),
+  id="ID",
+)
+#print etree.tostring(etree.ElementTree(doc),pretty_print=True)
 
 
     os.chdir(startdir)
