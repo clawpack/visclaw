@@ -78,6 +78,7 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('kml',True)                # make html files for figures
         self.add_attribute('kml_index_fname','_GoogleEarth.kml')   # name of html index file
+        self.add_attribute('dpi',750)
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
