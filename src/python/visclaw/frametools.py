@@ -275,8 +275,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
                         cbar = pylab.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
+                                shrink=plotitem.colorbar_shrink,\
+                                ticks=plotitem.colorbar_ticks)
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
                                 cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
@@ -286,11 +286,13 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
-            # Title was printed here... This code has been moved to
-            # below, so that we can use this code also for plotting
-            # KML figures.
-
-            # ......
+            if plotaxes.title_with_t:
+                if (t==0.) | ((t>=0.001) & (t<1000.)):
+                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
+                else:
+                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+            else:
+                pylab.title(plotaxes.title)
 
 
             # call an afteraxes function if present:
@@ -330,7 +332,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
 
             # end of loop over plotaxes
-
         # end of loop over plotfigures
 
 
@@ -349,7 +350,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 print '*** Error in afterframe ***'
                 raise
 
-
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
     for figno in plotted_fignos:
@@ -364,27 +364,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
         for figno in plotted_fignos:
-            # Print the KML file first, before we add a title.
-            if plotdata.kml:
-                pass
-                #printfig(frameno=frameno, figno=figno, \
-                #         format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                #         verbose=verbose,kml_fig=True,dpi_value=plotdata.dpi)
-
-            # Add the title after KML file is printed so that it doesn't
-            # mess with padding around edges.
-
-            # 'plotaxes' is really the last axis in the loop above.  I am not sure
-            # why there would be more than one axis in a frame, but here, I am assuming
-            # there is only one, and that is the one we will use here.
-            if plotaxes.title_with_t:
-                if (t==0.) | ((t>=0.001) & (t<1000.)):
-                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                else:
-                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
-            else:
-                pylab.title(plotaxes.title)
-
             printfig(frameno=frameno, figno=figno, \
                      format=plotdata.print_format, plotdir=plotdata.plotdir,\
                      verbose=verbose,kml_fig=False)
@@ -431,12 +410,7 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
     plotdata = set_show(plotdata)   # set _show attributes for which figures
                                     # and axes should be shown.
 
-    # Assume that there is only a single figure for
-    # this frame.
-    # -------------------------------------------
-
     plotfigure_dict = plotdata.plotfigure_dict
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
 
@@ -482,13 +456,10 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
 
                 current_data.add_attribute('framesoln',framesoln)
 
-                #print "+++ Looping over patches in outdir = ",outdirs[i]
-
                 # loop over patches:
                 # ----------------
 
                 for stateno,state in enumerate(framesoln.states):
-                    #print '+++ stateno = ',stateno
                     state = framesoln.states[stateno]
                     patch = state.patch
 
@@ -562,6 +533,7 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
                     pass  # let axis be set automatically
 
         # loop over axes...
+
         pylab.figure(figno)
         pylab.draw()
 
