@@ -70,6 +70,10 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 
     plot_frame(framesolns, plotdata, frameno,verbose=verbose)
 
+    # This is done in addition to the usual plot_frame?
+    if plotdata.kml:
+        plot_frame_kml(frameno, plotdata, verbose=False)
+
 
 #==============================================================================
 def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
@@ -281,16 +285,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
-            # The code below is commented out so I don't get a title for KML plots.  I'll
-            # come up with a better way to do this later!
 
-            # if plotaxes.title_with_t:
-            #     if (t==0.) | ((t>=0.001) & (t<1000.)):
-            #         pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
-            #     else:
-            #         pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
-            #     else:
-            #         pylab.title(plotaxes.title)
+            if plotaxes.title_with_t:
+                if (t==0.) | ((t>=0.001) & (t<1000.)):
+                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
+                else:
+                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+                else:
+                    pylab.title(plotaxes.title)
 
 
             # call an afteraxes function if present:
@@ -371,6 +373,306 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     return current_data
 
     # end of plotframe
+
+
+#==============================================================================
+def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
+#==============================================================================
+    """
+    Plot a single frame for plotting in GoogleEarth
+
+    This routine is considerably simpler than the usual 'plotframe', since we do not
+    have any colorbars, tick marks, titles, axes, etc.
+    """
+
+    if not (type(framesolns) is list):
+        framesolns = [framesolns]
+
+    t = framesolns[0].t
+
+    # initialize current_data, which will be passed
+    # to afterframe, afteraxes, afterpatch commands
+    current_data = clawdata.ClawData()
+    current_data.add_attribute('user',{})   # for user specified attributes
+                                            # to avoid potential conflicts
+    current_data.add_attribute('plotdata',plotdata)
+    current_data.add_attribute('frameno',frameno)
+    current_data.add_attribute('t',t)
+
+    # call beforeframe if present, which might define additional
+    # attributes in current_data or otherwise set up plotting for this
+    # frame.
+
+    beforeframe =  getattr(plotdata, 'beforeframe', None)
+    if beforeframe:
+        if isinstance(beforeframe, str):
+            # a string to be executed
+            exec(beforeframe)
+        else:
+            # assume it's a function
+            try:
+                output = beforeframe(current_data)
+                if output: current_data = output
+            except:
+                print '*** Error in beforeframe ***'
+                raise
+
+
+    # iterate over each single plot that makes up this frame:
+    # -------------------------------------------------------
+
+    if plotdata.mode() == 'iplotclaw':
+        pylab.ion()
+        print '    Plotting Frame %s at t = %s' % (frameno,t)
+        requested_fignos = plotdata.iplotclaw_fignos
+    else:
+        requested_fignos = plotdata.print_fignos
+    plotted_fignos = []
+
+    plotdata = set_show(plotdata)   # set _show attributes for which figures
+                                    # and axes should be shown.
+
+    # loop over figures to appear for this frame:
+    # -------------------------------------------
+
+    for figname in plotdata._fignames:
+        plotfigure = plotdata.plotfigure_dict[figname]
+        if (not plotfigure._show) or (plotfigure.type != 'each_frame'):
+            continue  # skip to next figure
+
+        figno = plotfigure.figno
+        if (requested_fignos != 'all') and (figno not in requested_fignos):
+            continue # skip to next figure
+
+        plotted_fignos.append(figno)
+
+        if not plotfigure.kwargs.has_key('facecolor'):
+            # use Clawpack's default bg color (tan)
+            plotfigure.kwargs['facecolor'] = '#ffeebb'
+
+        # create figure and set handle:
+        plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
+
+        pylab.ioff()
+        if plotfigure.clf_each_frame:
+            pylab.clf()
+
+        plotaxes_dict = plotfigure.plotaxes_dict
+
+        if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
+            print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
+            print '*** Apparently no axes to plot in figure ',figno
+
+        # loop over axes to appear on this figure:
+        # ----------------------------------------
+
+        for axesname in plotfigure._axesnames:
+            plotaxes = plotaxes_dict[axesname]
+            if not plotaxes._show:
+                continue   # skip this axes if no items show
+
+            # create the axes:
+            axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
+            axescmd = 'plotaxes._handle = pylab.%s' % axescmd
+            exec(axescmd)
+            pylab.hold(True)
+
+
+            # NOTE: This was rearranged December 2009 to
+            # loop over patches first and then over plotitems so that
+            # finer patches will plot over coarser patches of other items.
+            # Needed in particular if masked arrays are used, e.g. if
+            # two different items do pcolor plots with different color maps
+            # for different parts of the domain (e.g. water and land).
+
+            for i, framesoln in enumerate(framesolns):
+
+                if framesoln.t != t:
+                    print '*** Warning: t values do not agree for frame ',frameno
+                    print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
+                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
+
+                current_data.add_attribute('framesoln',framesoln)
+
+                #print "+++ Looping over patches in outdir = ",outdirs[i]
+
+                # loop over patches:
+                # ----------------
+
+                for stateno,state in enumerate(framesoln.states):
+                    #print '+++ stateno = ',stateno
+                    state = framesoln.states[stateno]
+                    patch = state.patch
+
+                    current_data.add_attribute('patch',patch)
+                    current_data.add_attribute('q',state.q)
+                    current_data.add_attribute('var',None)
+                    current_data.add_attribute('aux',state.aux)
+                    current_data.add_attribute('xlower',patch.dimensions[0].lower)
+                    current_data.add_attribute('xupper',patch.dimensions[0].upper)
+
+                    current_data.add_attribute("x",patch.grid.p_centers[0])
+                    current_data.add_attribute("dx",patch.delta[0])
+
+                    if patch.num_dim == 2:
+                        current_data.add_attribute('y',patch.grid.p_centers[1])
+                        current_data.add_attribute('dy',patch.delta[1])
+
+                    current_data.add_attribute('plotaxes',None)
+                    current_data.add_attribute('plotfigure',None)
+
+                    # loop over items:
+                    # ----------------
+
+                    for itemname in plotaxes._itemnames:
+
+                        plotitem = plotaxes.plotitem_dict[itemname]
+
+                        try:
+                            item_outdir = plotitem.outdir
+                            if not plotitem.outdir:
+                                item_outdir = plotdata.outdir
+                            if item_outdir != plotdata._outdirs[i]:
+                                # skip to next item
+                                continue
+                        except (NameError, AttributeError):  # no outdir if plotting from memory
+                            pass
+
+                        num_dim = plotitem.num_dim
+
+                        # option to suppress printing some levels:
+                        try:
+                            pp['amr_data_show'] = plotitem.amr_data_show
+                            i = min(len(pp['amr_data_show']), state.level) - 1
+                            show_this_level = pp['amr_data_show'][i]
+                        except:
+                            show_this_level = True
+
+                        if plotitem._show and show_this_level:
+                            if num_dim == 1:
+                                plotitem_fun = plotitem1
+                            elif num_dim == 2:
+                                plotitem_fun = plotitem2
+                            current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
+
+                            if verbose:
+                                print '      Plotted  plotitem ', itemname
+
+                    # end of loop over plotitems
+                # end of loop over patches
+            # end of loop over framesolns
+
+
+            for itemname in plotaxes._itemnames:
+                plotitem = plotaxes.plotitem_dict[itemname]
+                if plotitem.afteritem:
+                    print "*** ClawPlotItem.afteritem is deprecated"
+                    print "*** use ClawPlotAxes.afteraxes "
+                    print "*** or  ClawPlotItem.afterpatch instead"
+                try:
+                    if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
+                        pobj = plotitem._current_pobj # most recent plot object
+                        cbar = pylab.colorbar(pobj, \
+                                     shrink=plotitem.colorbar_shrink,\
+                                     ticks=plotitem.colorbar_ticks)
+                        if plotitem.has_attribute('colorbar_tick_labels'):
+                            if plotitem.colorbar_tick_labels is not None:
+                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
+                        if plotitem.colorbar_label is not None:
+                            cbar.set_label(plotitem.colorbar_label)
+                except:
+                    print "*** problem generating colorbar"
+                    pass
+
+
+            if plotaxes.title_with_t:
+                if (t==0.) | ((t>=0.001) & (t<1000.)):
+                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
+                else:
+                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+                else:
+                    pylab.title(plotaxes.title)
+
+
+            # call an afteraxes function if present:
+            afteraxes =  getattr(plotaxes, 'afteraxes', None)
+            if afteraxes:
+                if isinstance(afteraxes, str):
+                    # a string to be executed
+                    exec(afteraxes)
+                else:
+                    # assume it's a function
+                    try:
+                        current_data.plotaxes = plotaxes
+                        current_data.plotfigure = plotaxes._plotfigure
+                        output = afteraxes(current_data)
+                        if output: current_data = output
+                    except:
+                        print '*** Error in afteraxes ***'
+                        raise
+
+            if plotaxes.scaled:
+                pylab.axis('scaled')
+            elif plotaxes.image:
+                pylab.axis('image')
+
+            # set axes limits:
+            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
+                try:
+                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                except:
+                    pass  # let axis be set automatically
+            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
+                try:
+                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                except:
+                    pass  # let axis be set automatically
+
+
+
+            # end of loop over plotaxes
+
+        # end of loop over plotfigures
+
+
+    # call an afterframe function if present:
+    afterframe =  getattr(plotdata, 'afterframe', None)
+    if afterframe:
+        if isinstance(afterframe, str):
+            # a string to be executed
+            exec(afterframe)
+        else:
+            # assume it's a function
+            try:
+                output = afterframe(current_data)
+                if output: current_data = output
+            except:
+                print '*** Error in afterframe ***'
+                raise
+
+
+    if plotdata.mode() == 'iplotclaw':
+        pylab.ion()
+    for figno in plotted_fignos:
+        pylab.figure(figno)
+        pylab.draw()
+
+    if verbose:
+        print '    Done with plotframe for frame %i at time %g' % (frameno,t)
+
+
+    # print the figure(s) to file(s) if requested:
+    if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
+        # iterate over all figures that are to be printed:
+        for figno in plotted_fignos:
+            printfig(frameno=frameno, figno=figno, \
+                    format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                    verbose=verbose)
+
+    return current_data
+
+    # end of plotframe
+
 
 def params_dict(plotitem, base_params, level_params, level):
     """
@@ -972,241 +1274,6 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     pylab.axis('off')
     pylab.savefig(fname, transparent=True, bbox_inches='tight', \
                   pad_inches=0,dpi=750)
-
-
-
-
-
-#======================================================================
-def printframes(plotdata=None, verbose=True):
-#======================================================================
-
-    """
-    Deprecated: use plotpages.plotclaw_driver instead to get gauges as well.
-      - RJL, 1/1/10
-
-    Produce a set of png files for all the figures specified by plotdata.
-    Also produce a set of html files for viewing the figures and navigating
-    between them.  These will all be in directorey plotdata.plotdir.
-
-    The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.
-
-    If plotdata.setplot=True then it is assumed that the current directory
-    contains a module setplot.py that defines this function.
-
-    If plotdata.setplot is a string then it is assumed this is the name of
-    a module to import that contains the function setplot.
-
-    If plotdata.setplot is a function then this function will be used.
-    """
-
-    import glob
-    from clawpack.visclaw.data import ClawPlotData
-    from clawpack.visclaw import plotpages
-
-
-
-    if not sys.modules.has_key('matplotlib'):
-        print '*** Error: matplotlib not found, no plots will be done'
-        return plotdata
-
-    if not isinstance(plotdata,ClawPlotData):
-        print '*** Error, plotdata must be an object of type ClawPlotData'
-        return plotdata
-
-    plotdata._mode = 'printframes'
-
-    plotdata = call_setplot(plotdata.setplot, plotdata)
-
-    try:
-        plotdata.rundir = os.path.abspath(plotdata.rundir)
-        plotdata.outdir = os.path.abspath(plotdata.outdir)
-        plotdata.plotdir = os.path.abspath(plotdata.plotdir)
-
-        framenos = plotdata.print_framenos # frames to plot
-        fignos = plotdata.print_fignos     # figures to plot at each frame
-        fignames = {}                      # names to use in html files
-
-        rundir = plotdata.rundir       # directory containing *.data files
-        outdir = plotdata.outdir       # directory containing fort.* files
-        plotdir = plotdata.plotdir     # where to put png and html files
-        overwrite = plotdata.overwrite # ok to overwrite?
-        msgfile = plotdata.msgfile     # where to write error messages
-    except AttributeError:
-        print '*** Error in printframes: plotdata missing attribute'
-        print '  *** plotdata = ',plotdata
-        return plotdata
-
-    if fignos == 'all':
-        fignos = plotdata._fignos
-        #for (figname,plotfigure) in plotdata.plotfigure_dict.iteritems():
-        #    fignos.append(plotfigure.figno)
-
-
-    # filter out the fignos that will be empty, i.e.  plotfigure._show=False.
-    plotdata = set_show(plotdata)
-    fignos_to_show = []
-    for figname in plotdata._fignames:
-        figno = plotdata.plotfigure_dict[figname].figno
-        if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
-            fignos_to_show.append(figno)
-    fignos = fignos_to_show
-
-
-    rootdir = os.getcwd()
-
-    # annoying fix needed when EPD is used for plotting under cygwin:
-    cw_path = r'C:\cygwin'
-    if rootdir[0:9] == cw_path and outdir[0:9] != cw_path:
-        outdir = cw_path + outdir
-        plotdata.outdir = outdir
-    if rootdir[0:9] == cw_path and rundir[0:9] != cw_path:
-        rundir = cw_path + rundir
-        plotdata.rundir = rundir
-    if rootdir[0:9] == cw_path and plotdir[0:9] != cw_path:
-        plotdir = cw_path + plotdir
-        plotdata.plotdir = plotdir
-
-    try:
-        os.chdir(rundir)
-    except OSError:
-        print '*** Error: cannot move to run directory ',rundir
-        print 'rootdir = ',rootdir
-        return plotdata
-
-
-    if msgfile != '':
-        sys.stdout = open(msgfile, 'w')
-        sys.stderr = sys.stdout
-
-
-    try:
-        plotpages.cd_plotdir(plotdata)
-    except:
-        print "*** Error, aborting plotframes"
-        return plotdata
-
-
-    framefiles = glob.glob(os.path.join(plotdir,'frame*.png')) + \
-                    glob.glob(os.path.join(plotdir,'frame*.html'))
-    if overwrite:
-        # remove any old versions:
-        for file in framefiles:
-            os.remove(file)
-    else:
-        if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
-            return plotdata
-
-
-    # Create each of the figures
-    #---------------------------
-
-    try:
-        os.chdir(outdir)
-    except OSError:
-        print '*** Error printframes: cannot move to outdir = ',outdir
-        return plotdata
-
-
-    fortfile = {}
-    frametimes = {}
-
-    import glob
-    for file in glob.glob('fort.q*'):
-        frameno = int(file[6:])
-        fortfile[frameno] = file
-
-    if len(fortfile) == 0:
-        print '*** No fort.q files found in directory ', os.getcwd()
-        return plotdata
-
-    # Discard frames that are not from latest run, based on
-    # file modification time:
-    framenos = only_most_recent(framenos, plotdata.outdir)
-
-    numframes = len(framenos)
-
-    print "Will plot %i frames numbered:" % numframes, framenos
-    print 'Will make %i figure(s) for each frame, numbered: ' % len(fignos),\
-          fignos
-
-    fignames = {}
-    for figname in plotdata._fignames:
-        figno = plotdata.plotfigure_dict[figname].figno
-        fignames[figno] = figname
-
-
-
-    # Make png files by calling plotframe:
-    # ------------------------------------
-
-    for frameno in framenos:
-        #plotframe(frameno, plotdata, verbose)
-        frametimes[frameno] = plotdata.getframe(frameno, plotdata.outdir).t
-        #print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
-
-    plotdata.timeframes_framenos = framenos
-    plotdata.timeframes_frametimes = frametimes
-    plotdata.timeframes_fignos = fignos
-    plotdata.timeframes_fignames = fignames
-
-    os.chdir(plotdir)
-
-    if plotdata.html:
-        plotpages.timeframes2htmlXX(plotdata)
-
-    if not plotdata.printfigs:
-        print "Using previously printed figure files"
-    else:
-        print "Now making png files for all figures..."
-        for frameno in framenos:
-            plotframe(frameno, plotdata, verbose)
-            #frametimes[frameno] = plotdata.framesoln_dict[frameno].t
-            print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
-
-    if plotdata.latex:
-        plotpages.timeframes2latex(plotdata)
-
-
-    # Movie:
-    #-------
-
-    if plotdata.gif_movie:
-        print 'Making gif movies.  This may take some time....'
-        for figno in fignos:
-            try:
-                os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
-                   % (figno,figno))
-                print '    Created moviefig%s.gif' % figno
-            except:
-                print '*** Error creating moviefig%s.gif' % figno
-
-    os.chdir(rootdir)
-
-    # print out pointers to html index page:
-    path_to_html_index = os.path.join(os.path.abspath(plotdata.plotdir), \
-                               plotdata.html_index_fname)
-    plotpages.print_html_pointers(path_to_html_index)
-
-    # reset stdout for future print statements
-    sys.stdout = sys.__stdout__
-
-    return plotdata
-    # end of printframes
-
-#======================================================================
-def plotclaw2html(plotdata=None, verbose=True):
-#======================================================================
-    """
-    Old plotting routine no longer exists.
-    """
-    print '*** Error: plotclaw2html name is deprecated, use printframes.'
-    print '*** Plotting command syntax has also changed, you may need to'
-    print '*** update your setplot function.'
-
 
 
 #------------------------------------------------------------------
