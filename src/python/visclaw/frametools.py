@@ -68,12 +68,8 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     for outdir in plotdata._outdirs:
         framesolns.append(plotdata.getframe(frameno, outdir, refresh=refresh))
 
+
     plot_frame(framesolns, plotdata, frameno,verbose=verbose)
-
-    # This is done in addition to the usual plot_frame?
-    if plotdata.kml:
-        plot_frame_kml(frameno, plotdata, verbose=False)
-
 
 #==============================================================================
 def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
@@ -285,14 +281,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
+            # Title was printed here... This code has been moved to
+            # below, so that we can use this code also for plotting
+            # KML figures.
 
-            if plotaxes.title_with_t:
-                if (t==0.) | ((t>=0.001) & (t<1000.)):
-                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                else:
-                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
-                else:
-                    pylab.title(plotaxes.title)
+            # ......
 
 
             # call an afteraxes function if present:
@@ -366,308 +359,29 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
         for figno in plotted_fignos:
-            printfig(frameno=frameno, figno=figno, \
-                    format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                    verbose=verbose)
+            # Print the KML file first, before we add a title.
+            if plotdata.kml:
+                printfig(frameno=frameno, figno=figno, \
+                         format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                         verbose=verbose,kml_fig=True,dpi_value=plotdata.dpi)
 
-    return current_data
+            # Add the title after KML file is printed so that it doesn't
+            # mess with padding around edges.
 
-    # end of plotframe
-
-
-#==============================================================================
-def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
-#==============================================================================
-    """
-    Plot a single frame for plotting in GoogleEarth
-
-    This routine is considerably simpler than the usual 'plotframe', since we do not
-    have any colorbars, tick marks, titles, axes, etc.
-    """
-
-    if not (type(framesolns) is list):
-        framesolns = [framesolns]
-
-    t = framesolns[0].t
-
-    # initialize current_data, which will be passed
-    # to afterframe, afteraxes, afterpatch commands
-    current_data = clawdata.ClawData()
-    current_data.add_attribute('user',{})   # for user specified attributes
-                                            # to avoid potential conflicts
-    current_data.add_attribute('plotdata',plotdata)
-    current_data.add_attribute('frameno',frameno)
-    current_data.add_attribute('t',t)
-
-    # call beforeframe if present, which might define additional
-    # attributes in current_data or otherwise set up plotting for this
-    # frame.
-
-    beforeframe =  getattr(plotdata, 'beforeframe', None)
-    if beforeframe:
-        if isinstance(beforeframe, str):
-            # a string to be executed
-            exec(beforeframe)
-        else:
-            # assume it's a function
-            try:
-                output = beforeframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in beforeframe ***'
-                raise
-
-
-    # iterate over each single plot that makes up this frame:
-    # -------------------------------------------------------
-
-    if plotdata.mode() == 'iplotclaw':
-        pylab.ion()
-        print '    Plotting Frame %s at t = %s' % (frameno,t)
-        requested_fignos = plotdata.iplotclaw_fignos
-    else:
-        requested_fignos = plotdata.print_fignos
-    plotted_fignos = []
-
-    plotdata = set_show(plotdata)   # set _show attributes for which figures
-                                    # and axes should be shown.
-
-    # loop over figures to appear for this frame:
-    # -------------------------------------------
-
-    for figname in plotdata._fignames:
-        plotfigure = plotdata.plotfigure_dict[figname]
-        if (not plotfigure._show) or (plotfigure.type != 'each_frame'):
-            continue  # skip to next figure
-
-        figno = plotfigure.figno
-        if (requested_fignos != 'all') and (figno not in requested_fignos):
-            continue # skip to next figure
-
-        plotted_fignos.append(figno)
-
-        if not plotfigure.kwargs.has_key('facecolor'):
-            # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'
-
-        # create figure and set handle:
-        plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
-
-        pylab.ioff()
-        if plotfigure.clf_each_frame:
-            pylab.clf()
-
-        plotaxes_dict = plotfigure.plotaxes_dict
-
-        if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
-            print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
-            print '*** Apparently no axes to plot in figure ',figno
-
-        # loop over axes to appear on this figure:
-        # ----------------------------------------
-
-        for axesname in plotfigure._axesnames:
-            plotaxes = plotaxes_dict[axesname]
-            if not plotaxes._show:
-                continue   # skip this axes if no items show
-
-            # create the axes:
-            axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
-            axescmd = 'plotaxes._handle = pylab.%s' % axescmd
-            exec(axescmd)
-            pylab.hold(True)
-
-
-            # NOTE: This was rearranged December 2009 to
-            # loop over patches first and then over plotitems so that
-            # finer patches will plot over coarser patches of other items.
-            # Needed in particular if masked arrays are used, e.g. if
-            # two different items do pcolor plots with different color maps
-            # for different parts of the domain (e.g. water and land).
-
-            for i, framesoln in enumerate(framesolns):
-
-                if framesoln.t != t:
-                    print '*** Warning: t values do not agree for frame ',frameno
-                    print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
-
-                current_data.add_attribute('framesoln',framesoln)
-
-                #print "+++ Looping over patches in outdir = ",outdirs[i]
-
-                # loop over patches:
-                # ----------------
-
-                for stateno,state in enumerate(framesoln.states):
-                    #print '+++ stateno = ',stateno
-                    state = framesoln.states[stateno]
-                    patch = state.patch
-
-                    current_data.add_attribute('patch',patch)
-                    current_data.add_attribute('q',state.q)
-                    current_data.add_attribute('var',None)
-                    current_data.add_attribute('aux',state.aux)
-                    current_data.add_attribute('xlower',patch.dimensions[0].lower)
-                    current_data.add_attribute('xupper',patch.dimensions[0].upper)
-
-                    current_data.add_attribute("x",patch.grid.p_centers[0])
-                    current_data.add_attribute("dx",patch.delta[0])
-
-                    if patch.num_dim == 2:
-                        current_data.add_attribute('y',patch.grid.p_centers[1])
-                        current_data.add_attribute('dy',patch.delta[1])
-
-                    current_data.add_attribute('plotaxes',None)
-                    current_data.add_attribute('plotfigure',None)
-
-                    # loop over items:
-                    # ----------------
-
-                    for itemname in plotaxes._itemnames:
-
-                        plotitem = plotaxes.plotitem_dict[itemname]
-
-                        try:
-                            item_outdir = plotitem.outdir
-                            if not plotitem.outdir:
-                                item_outdir = plotdata.outdir
-                            if item_outdir != plotdata._outdirs[i]:
-                                # skip to next item
-                                continue
-                        except (NameError, AttributeError):  # no outdir if plotting from memory
-                            pass
-
-                        num_dim = plotitem.num_dim
-
-                        # option to suppress printing some levels:
-                        try:
-                            pp['amr_data_show'] = plotitem.amr_data_show
-                            i = min(len(pp['amr_data_show']), state.level) - 1
-                            show_this_level = pp['amr_data_show'][i]
-                        except:
-                            show_this_level = True
-
-                        if plotitem._show and show_this_level:
-                            if num_dim == 1:
-                                plotitem_fun = plotitem1
-                            elif num_dim == 2:
-                                plotitem_fun = plotitem2
-                            current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
-
-                            if verbose:
-                                print '      Plotted  plotitem ', itemname
-
-                    # end of loop over plotitems
-                # end of loop over patches
-            # end of loop over framesolns
-
-
-            for itemname in plotaxes._itemnames:
-                plotitem = plotaxes.plotitem_dict[itemname]
-                if plotitem.afteritem:
-                    print "*** ClawPlotItem.afteritem is deprecated"
-                    print "*** use ClawPlotAxes.afteraxes "
-                    print "*** or  ClawPlotItem.afterpatch instead"
-                try:
-                    if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
-                        pobj = plotitem._current_pobj # most recent plot object
-                        cbar = pylab.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
-                        if plotitem.has_attribute('colorbar_tick_labels'):
-                            if plotitem.colorbar_tick_labels is not None:
-                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
-                        if plotitem.colorbar_label is not None:
-                            cbar.set_label(plotitem.colorbar_label)
-                except:
-                    print "*** problem generating colorbar"
-                    pass
-
-
+            # 'plotaxes' is really the last axis in the loop above.  I am not sure
+            # why there would be more than one axis in a frame, but here, I am assuming
+            # there is only one, and that is the one we will use here.
             if plotaxes.title_with_t:
                 if (t==0.) | ((t>=0.001) & (t<1000.)):
                     pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
                 else:
                     pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
-                else:
-                    pylab.title(plotaxes.title)
+            else:
+                pylab.title(plotaxes.title)
 
-
-            # call an afteraxes function if present:
-            afteraxes =  getattr(plotaxes, 'afteraxes', None)
-            if afteraxes:
-                if isinstance(afteraxes, str):
-                    # a string to be executed
-                    exec(afteraxes)
-                else:
-                    # assume it's a function
-                    try:
-                        current_data.plotaxes = plotaxes
-                        current_data.plotfigure = plotaxes._plotfigure
-                        output = afteraxes(current_data)
-                        if output: current_data = output
-                    except:
-                        print '*** Error in afteraxes ***'
-                        raise
-
-            if plotaxes.scaled:
-                pylab.axis('scaled')
-            elif plotaxes.image:
-                pylab.axis('image')
-
-            # set axes limits:
-            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-                try:
-                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-                except:
-                    pass  # let axis be set automatically
-            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-                try:
-                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-                except:
-                    pass  # let axis be set automatically
-
-
-
-            # end of loop over plotaxes
-
-        # end of loop over plotfigures
-
-
-    # call an afterframe function if present:
-    afterframe =  getattr(plotdata, 'afterframe', None)
-    if afterframe:
-        if isinstance(afterframe, str):
-            # a string to be executed
-            exec(afterframe)
-        else:
-            # assume it's a function
-            try:
-                output = afterframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in afterframe ***'
-                raise
-
-
-    if plotdata.mode() == 'iplotclaw':
-        pylab.ion()
-    for figno in plotted_fignos:
-        pylab.figure(figno)
-        pylab.draw()
-
-    if verbose:
-        print '    Done with plotframe for frame %i at time %g' % (frameno,t)
-
-
-    # print the figure(s) to file(s) if requested:
-    if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
-        # iterate over all figures that are to be printed:
-        for figno in plotted_fignos:
             printfig(frameno=frameno, figno=figno, \
-                    format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                    verbose=verbose)
+                     format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                     verbose=verbose,kml_fig=False)
 
     return current_data
 
@@ -1231,7 +945,7 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True):
+             verbose=True, kml_fig=False, dpi_value=''):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1246,7 +960,10 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     """
 
     if fname == '':
-        fname = 'frame' + str(frameno).rjust(4,'0')
+        if kml_fig:
+            fname = 'frameKML' + str(frameno).rjust(4,'0')
+        else:
+            fname = 'frame' + str(frameno).rjust(4,'0')
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
@@ -1259,22 +976,23 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         fname = os.path.join(plotdir,fname)
     if verbose:  print '    Saving plot to file ', fname
 
-    # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
+    if kml_fig:
+        # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
+        # This was added so that in KML, axes, tick labels, etc do not get printed.
+        fig = pylab.gcf()
+        fig.patch.set_alpha(0)
+        a = fig.gca()
+        a.set_frame_on(False)
 
-    # This was added so that in KML, axes, tick labels, etc do not get printed.
-    # This code will go somewhere else eventually, since it is only used
-    # for Google Earth.   But I haven't figured out yet where to put it.
+        # These have to be turned off explicitly so the plot doesn't have any padding.
+        a.set_xticks([])
+        a.set_yticks([])
 
-    fig = pylab.gcf()
-    fig.patch.set_alpha(0)
-    a = fig.gca()
-    a.set_frame_on(False)
-    a.set_xticks([]);
-    a.set_yticks([])
-    pylab.axis('off')
-    pylab.savefig(fname, transparent=True, bbox_inches='tight', \
-                  pad_inches=0,dpi=750)
-
+        pylab.axis('off')
+        pylab.savefig(fname, transparent=True, bbox_inches='tight', \
+                      pad_inches=0,dpi=dpi_value)
+    else:
+        pylab.savefig(fname)
 
 #------------------------------------------------------------------
 def var_limits(plotdata,vars,padding=0.1):
