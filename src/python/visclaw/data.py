@@ -76,7 +76,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
-        self.add_attribute('kml',True)                # make html files for figures
+        self.add_attribute('kml',True)                # make kml plots and a kml file for figures
         self.add_attribute('kml_index_fname','_GoogleEarth.kml')   # name of html index file
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
@@ -599,6 +599,8 @@ class ClawPlotFigure(clawdata.ClawData):
         self._show = True
         self.add_attribute('plotaxes_dict', {})
         self.add_attribute('type',fig_type)   # = 'each_frame' or 'each_run' or 'each_gauge'
+        self.add_attribute('use_for_kml',False)
+        self.add_attribute('dpi',750)
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
