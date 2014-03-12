@@ -3,11 +3,13 @@ from pykml.factory import KML_ElementMaker as KML
 from pykml.factory import ATOM_ElementMaker as ATOM
 from pykml.factory import GX_ElementMaker as GX
 
-
-
 fileout = open('googleearth.kml','w')
 fileout.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 framenos = 10
+midnight = datetime.datetime.combine( datetime.date.today(), datetime.time() )
+seconds = datetime.timedelta( seconds=234 )
+time = midnight + seconds
+time.strftime( '%H:%M:%S' )
 
 doc = KML.kml(
 KML.Document(
@@ -17,12 +19,22 @@ for i in range(1,framenos+1):
     doc.Document.Folder.append(
         KML.GroundOverlay(
             KML.TimeSpan(
-                KML.begin('2013-10-02T00:00:00Z'),
-                KML.end('2013-10-02T00:01:00Z'),
+                KML.begin('2013-10-02T00:00:00Z', time),
+                KML.end('2013-10-02T00:01:00Z', time),
             ),
             KML.drawOrder(i)
         )
     )
+
+fileout.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+#print etree.tostring(etree.ElementTree(doc),pretty_print=True)
+fileout.close()
+
+
+
+
+
+
 
 #ML.GroundOverlay(
 # KML.TimeSpan(
@@ -43,9 +55,3 @@ for i in range(1,framenos+1):
 #   KML.rotation('0.0'),
 # ),
 # id="ID",
-#
-#
-#
-fileout.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
-#print etree.tostring(etree.ElementTree(doc),pretty_print=True)
-fileout.close()
