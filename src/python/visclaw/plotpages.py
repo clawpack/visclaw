@@ -5,7 +5,13 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
-
+#------------------STEPH-------------------
+# Moved KML utilities up here
+#------------------------------------------
+from lxml import etree
+from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import ATOM_ElementMaker as ATOM
+from pykml.factory import GX_ElementMaker as GX
 
 import os, time, string, glob
 
@@ -62,7 +68,6 @@ class PlotPagesData(object):
 
         self.pageitem_list = []
 
-
     def new_pageitem(self):
         """
         Create a new PageItem to be printed on this page
@@ -94,7 +99,6 @@ class PlotPagesData(object):
         path_to_html_index = os.path.join(os.path.abspath(self.plotdir), \
                                    self.html_index_fname)
         print_html_pointers(path_to_html_index)
-
 
 #=======================
 class PageItem(object):
@@ -553,7 +557,6 @@ def plotclaw2kml(plotdata):
     """
     Take a list of figure files and produce kml file to display them.
     """
-
     print '\n-----------------------------------\n'
     print '\nCreating kml file...\n'
 
@@ -567,6 +570,7 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
+    
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
         gauge_pngfile = plotdata._gauge_pngfile
@@ -586,17 +590,64 @@ def plotclaw2kml(plotdata):
     numframes = len(framenos)
     numfigs = len(fignos)
 
-
     creationtime = current_time()
 
-    # Call specific commands to generate kml file.  Maybe in a seperate file?
-    from pykml.factory import KML_ElementMaker as KML
+    #    Call specific commands to generate kml file.  Maybe in a seperate file?
 
-    pml = KML.kml(KML.Document())
+    #     pml = KML.kml(KML.Document())
 
+    filekml = open(plotdata.kml_index_fname,'w')
+   
+    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+
+#------------------STEPH-------------------
+# So far, no successful changes. I cannot
+# seem to write to googleearth.kml
+#------------------------------------------
+    doc = KML.kml(
+    KML.Document(
+    KML.Folder()))
+
+    figno = 0
+
+    for i in range(0,numframes-1):
+        frameno = framenos[i]
+        gbegin = time.gmtime(frametimes[i])
+        timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin) 
+        gend = time.gmtime(frametimes[i+1])
+        timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend) 
+        fname = 'frameKML' + str(frameno).rjust(4, '0')
+        fname = fname + 'fig%s' % figno
+        fname = fname + '.png'
+
+        doc.Document.Folder.append(
+            KML.GroundOverlay(
+                KML.TimeSpan(
+                    KML.begin(timestrbegin),
+                    KML.end(timestrend)),
+                KML.drawOrder(i),
+                KML.altitude(0.0),
+                KML.altitudeMode("clampToGround"),
+                KML.Icon(
+                    KML.href(fname)),
+                KML.LatLonBox(
+                    KML.north(0.0),
+                    KML.south(-60.0),
+                    KML.east(-60.0),
+                    KML.west(-120.0),
+                    KML.rotation(0.0)) 
+                )
+        )
+        
+
+    filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+
+    filekml.close()
 
     os.chdir(startdir)
-    # end of plotclaw2kml
+
+#   end of plotclaw2kml
 
 
 #======================================================================
@@ -1866,6 +1917,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
+# 
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
