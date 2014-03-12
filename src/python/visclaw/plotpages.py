@@ -68,13 +68,6 @@ class PlotPagesData(object):
 
         self.pageitem_list = []
 
-#------------------STEPH-------------------
-# Added this to see if it recognizes the..
-# class?
-#------------------------------------------
-    def make_kml(self):
-        plotclaw2kml(self)
-
     def new_pageitem(self):
         """
         Create a new PageItem to be printed on this page
@@ -97,11 +90,6 @@ class PlotPagesData(object):
             self.make_latex()
         if self.html:
             self.make_html()
-#------------------STEPH-------------------
-# Not sure if this is necessary
-#------------------------------------------
-        if self.kml:
-            self.make_kml()
 
     def make_timeframes_latex(self):
         timeframes2latex(self)
@@ -604,37 +592,14 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-#    Call specific commands to generate kml file.  Maybe in a seperate file?
+    #    Call specific commands to generate kml file.  Maybe in a seperate file?
 
-    pml = KML.kml(KML.Document())
+    #     pml = KML.kml(KML.Document())
 
-    filekml = open('googleearth.kml','w')
-
-    filekml.write()
+    filekml = open(plotdata.kml_index_fname,'w')
    
-#    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-#    doc = KML.GroundOverlay(
-#      KML.TimeSpan(
-#        KML.begin('2013-10-02T00:00:00Z'),
-#        KML.end('2013-10-02T00:01:00Z'),
-#      ),
-#      KML.drawOrder('1'),
-#      KML.altitude('0.0'),
-#      KML.altitudeMode('clampToGround'),
-#      KML.Icon(
-#        KML.href('frame0000fig0.png'),
-#      ),
-#      KML.LatLonBox(
-#        KML.north('0.0'),
-#        KML.south('-60.0'),
-#        KML.east('-60'),
-#        KML.west('-120'),
-#        KML.rotation('0.0'),
-#      ),
-#      id="ID",
-#    )
-#    print etree.tostring(etree.ElementTree(doc),pretty_print=True)
 
 #------------------STEPH-------------------
 # So far, no successful changes. I cannot
@@ -644,16 +609,37 @@ def plotclaw2kml(plotdata):
     KML.Document(
     KML.Folder()))
 
-    for i in range(1,framenos+1):
+    figno = 0
+
+    for i in range(0,numframes-1):
+        frameno = framenos[i]
+        gbegin = time.gmtime(frametimes[i])
+        timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin) 
+        gend = time.gmtime(frametimes[i+1])
+        timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend) 
+        fname = 'frameKML' + str(frameno).rjust(4, '0')
+        fname = fname + 'fig%s' % figno
+        fname = fname + '.png'
+
         doc.Document.Folder.append(
             KML.GroundOverlay(
                 KML.TimeSpan(
-                    KML.begin('2013-10-02T00:00:00Z'),
-                    KML.end('2013-10-02T00:01:00Z'),
-                ),
-                KML.drawOrder(i)
-            )
+                    KML.begin(timestrbegin),
+                    KML.end(timestrend)),
+                KML.drawOrder(i),
+                KML.altitude(0.0),
+                KML.altitudeMode("clampToGround"),
+                KML.Icon(
+                    KML.href(fname)),
+                KML.LatLonBox(
+                    KML.north(0.0),
+                    KML.south(-60.0),
+                    KML.east(-60.0),
+                    KML.west(-120.0),
+                    KML.rotation(0.0)) 
+                )
         )
+        
 
     filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
 
