@@ -532,7 +532,7 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
                 except:
                     pass  # let axis be set automatically
 
-        # loop over axes...
+        # End of loop over axes
 
         pylab.figure(figno)
         pylab.draw()
@@ -545,6 +545,7 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
                  verbose=verbose,kml_fig=True,dpi_value=plotfigure.dpi)
 
     # End loop over figures
+
     return current_data
 
     # end of plot_frame_kml
