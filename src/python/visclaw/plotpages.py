@@ -5,6 +5,13 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
+#------------------STEPH-------------------
+# Moved KML utilities up here
+#------------------------------------------
+from lxml import etree
+from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import ATOM_ElementMaker as ATOM
+from pykml.factory import GX_ElementMaker as GX
 
 
 import os, time, string, glob
@@ -61,6 +68,9 @@ class PlotPagesData(object):
 
 
         self.pageitem_list = []
+
+#ADDED THIS TO SEE IF IT RECOGNIZES THE... CLASS?
+        plotclaw2kml(self)
 
 
     def new_pageitem(self):
@@ -567,6 +577,7 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
+    
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
         gauge_pngfile = plotdata._gauge_pngfile
@@ -586,48 +597,68 @@ def plotclaw2kml(plotdata):
     numframes = len(framenos)
     numfigs = len(fignos)
 
-
     creationtime = current_time()
 
-    # Call specific commands to generate kml file.  Maybe in a seperate file?
+#    Call specific commands to generate kml file.  Maybe in a seperate file?
+
 #    from pykml.factory import KML_ElementMaker as KML
 
-    pml = KML.kml(KML.Document())
+#   pml = KML.kml(KML.Document())
 
-from lxml import etree
-from pykml.factory import KML_ElementMaker as KML
-from pykml.factory import ATOM_ElementMaker as ATOM
-from pykml.factory import GX_ElementMaker as GX
+    filekml = open('googleearth.kml','w')
 
-filekml = open('googleearth.kml','w')
+    #filekml.write()
+   
+    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-filekml.write()
+#    doc = KML.GroundOverlay(
+#      KML.TimeSpan(
+#        KML.begin('2013-10-02T00:00:00Z'),
+#        KML.end('2013-10-02T00:01:00Z'),
+#      ),
+#      KML.drawOrder('1'),
+#      KML.altitude('0.0'),
+#      KML.altitudeMode('clampToGround'),
+#      KML.Icon(
+#        KML.href('frame0000fig0.png'),
+#      ),
+#      KML.LatLonBox(
+#        KML.north('0.0'),
+#        KML.south('-60.0'),
+#        KML.east('-60'),
+#        KML.west('-120'),
+#        KML.rotation('0.0'),
+#      ),
+#      id="ID",
+#    )
+#    print etree.tostring(etree.ElementTree(doc),pretty_print=True)
 
-doc = KML.GroundOverlay(
-  KML.TimeSpan(
-    KML.begin('2013-10-02T00:00:00Z'),
-    KML.end('2013-10-02T00:01:00Z'),
-  ),
-  KML.drawOrder('1'),
-  KML.altitude('0.0'),
-  KML.altitudeMode('clampToGround'),
-  KML.Icon(
-    KML.href('frame0000fig0.png'),
-  ),
-  KML.LatLonBox(
-    KML.north('0.0'),
-    KML.south('-60.0'),
-    KML.east('-60'),
-    KML.west('-120'),
-    KML.rotation('0.0'),
-  ),
-  id="ID",
-)
-#print etree.tostring(etree.ElementTree(doc),pretty_print=True)
+#------------------STEPH-------------------
+# So far, no successful changes. I cannot
+# seem to write to googleearth.kml
+#------------------------------------------
+    doc = KML.kml(
+    KML.Document(
+    KML.Folder()))
 
+    for i in range(1,framenos+1):
+        doc.Document.Folder.append(
+            KML.GroundOverlay(
+                KML.TimeSpan(
+                    KML.begin('2013-10-02T00:00:00Z'),
+                    KML.end('2013-10-02T00:01:00Z'),
+                ),
+                KML.drawOrder(i)
+            )
+        )
+
+    filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+
+    filekml.close()
 
     os.chdir(startdir)
-    # end of plotclaw2kml
+
+#   end of plotclaw2kml
 
 
 #======================================================================
