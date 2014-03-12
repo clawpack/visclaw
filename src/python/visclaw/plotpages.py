@@ -13,7 +13,6 @@ from pykml.factory import KML_ElementMaker as KML
 from pykml.factory import ATOM_ElementMaker as ATOM
 from pykml.factory import GX_ElementMaker as GX
 
-
 import os, time, string, glob
 
 # Required for new animation style modified MAY 2013
@@ -69,9 +68,12 @@ class PlotPagesData(object):
 
         self.pageitem_list = []
 
-#ADDED THIS TO SEE IF IT RECOGNIZES THE... CLASS?
+#------------------STEPH-------------------
+# Added this to see if it recognizes the..
+# class?
+#------------------------------------------
+    def make_kml(self):
         plotclaw2kml(self)
-
 
     def new_pageitem(self):
         """
@@ -95,6 +97,11 @@ class PlotPagesData(object):
             self.make_latex()
         if self.html:
             self.make_html()
+#------------------STEPH-------------------
+# Not sure if this is necessary
+#------------------------------------------
+        if self.kml:
+            self.make_kml()
 
     def make_timeframes_latex(self):
         timeframes2latex(self)
@@ -104,7 +111,6 @@ class PlotPagesData(object):
         path_to_html_index = os.path.join(os.path.abspath(self.plotdir), \
                                    self.html_index_fname)
         print_html_pointers(path_to_html_index)
-
 
 #=======================
 class PageItem(object):
@@ -563,7 +569,6 @@ def plotclaw2kml(plotdata):
     """
     Take a list of figure files and produce kml file to display them.
     """
-
     print '\n-----------------------------------\n'
     print '\nCreating kml file...\n'
 
@@ -601,15 +606,13 @@ def plotclaw2kml(plotdata):
 
 #    Call specific commands to generate kml file.  Maybe in a seperate file?
 
-#    from pykml.factory import KML_ElementMaker as KML
-
-#   pml = KML.kml(KML.Document())
+    pml = KML.kml(KML.Document())
 
     filekml = open('googleearth.kml','w')
 
-    #filekml.write()
+    filekml.write()
    
-    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+#    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
 #    doc = KML.GroundOverlay(
 #      KML.TimeSpan(
