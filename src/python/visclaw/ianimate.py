@@ -16,12 +16,12 @@ def ianimate(frame_list,plotdata=None,**kargs):
     from clawpack.visclaw.JSAnimation import IPython_display
     from clawpack.pyclaw import Controller
 
-    if isinstance(framelist,Controller):
-        framelist = framelist.frames
+    if isinstance(frame_list,Controller):
+        frame_list = frame_list.frames
 
     ivar = 0
 
-    frame = framelist[0]
+    frame = frame_list[0]
     ndim = len(frame.q.shape)-1
     if ndim == 1:
         fig = plt.figure(figsize=(8,4))
@@ -37,7 +37,7 @@ def ianimate(frame_list,plotdata=None,**kargs):
 
 
     def fplot(frame_number):
-        frame = framelist[frame_number]
+        frame = frame_list[frame_number]
         if ndim == 1:
             im.set_data(xc, frame.q[ivar,:])
         elif ndim == 2:
@@ -46,4 +46,4 @@ def ianimate(frame_list,plotdata=None,**kargs):
             raise Exception('3D animation not yet implemented')
         return im,
 
-    return animation.FuncAnimation(fig, fplot, frames=len(framelist))
+    return animation.FuncAnimation(fig, fplot, frames=len(frame_list))
