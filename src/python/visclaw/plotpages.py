@@ -639,24 +639,24 @@ def plotclaw2kml(plotdata):
                 )
         )
         
-    doc.Document.Folder.append(
-        KML.GroundOverlay(
-            KML.TimeSpan(
-                KML.begin(2013-10-02T09:00:00Z),
-                KML.end(2013-10-02T09:00:00Z)),
-            KML.drawOrder(i),
-            KML.altitude(0.0),
-            KML.altitudeMode("clampToGround"),
-            KML.Icon(
-                KML.href(fname)),
-            KML.LatLonBox(
+        doc.Document.Folder.append(
+            KML.GroundOverlay(
+                KML.TimeSpan(
+                    KML.begin('2013-10-02T09:00:00Z'),
+                    KML.end('2013-10-02T09:00:00Z')),
+                KML.drawOrder(i),
+                KML.altitude(0.0),
+                KML.altitudeMode("clampToGround"),
+                KML.Icon(
+                    KML.href(fname)),
+                KML.LatLonBox(
                 KML.north(0.0),
                 KML.south(-60.0),
                 KML.east(-60.0),
                 KML.west(-120.0),
                 KML.rotation(0.0)) 
+            )
         )
-    )
         
 
     filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
