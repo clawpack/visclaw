@@ -57,7 +57,8 @@ class _NameOnlyTemporaryFile(object):
             os.remove(self.name)
 
 
-def anim_to_html(anim, fps=None, embed_frames=True, default_mode='loop'):
+def anim_to_html(anim, fps=None, embed_frames=True, default_mode='loop',
+                 show_buttons=True):
     """Generate HTML representation of the animation"""
     if fps is None and hasattr(anim, '_interval'):
         # Convert interval in ms to frames per second
@@ -73,7 +74,8 @@ def anim_to_html(anim, fps=None, embed_frames=True, default_mode='loop'):
         with _NameOnlyTemporaryFile(suffix='.html') as f:
             anim.save(f.name,  writer=HTMLWriter(fps=fps,
                                                  embed_frames=embed_frames,
-                                                 default_mode=default_mode))
+                                                 default_mode=default_mode,
+                                                 show_buttons=show_buttons))
             html = open(f.name).read()
 
         anim._html_representation = html
