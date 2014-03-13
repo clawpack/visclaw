@@ -95,24 +95,20 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     current_data.add_attribute('plotdata',plotdata)
     current_data.add_attribute('frameno',frameno)
     current_data.add_attribute('t',t)
+    current_data.add_attribute('var',None)
+    current_data.add_attribute('plotaxes',None)
+    current_data.add_attribute('plotfigure',None)
 
     # call beforeframe if present, which might define additional 
     # attributes in current_data or otherwise set up plotting for this
     # frame.
 
     beforeframe =  getattr(plotdata, 'beforeframe', None)
-    if beforeframe:
-        if isinstance(beforeframe, str):
-            # a string to be executed
-            exec(beforeframe)
-        else:
-            # assume it's a function
-            try:
-                output = beforeframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in beforeframe ***'
-                raise
+    try:
+        current_data = run_str_or_func(beforeframe,current_data)
+    except:
+        print '*** Error in beforeframe ***'
+        raise
 
 
     # iterate over each single plot that makes up this frame:
@@ -174,6 +170,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             exec(axescmd)
             pylab.hold(True)
 
+            current_data.plotaxes = plotaxes
+            current_data.plotfigure = plotaxes._plotfigure
+
 
             # NOTE: This was rearranged December 2009 to 
             # loop over patches first and then over plotitems so that 
@@ -204,7 +203,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute("level",1)
                     current_data.add_attribute('q',state.q)
-                    current_data.add_attribute('var',None)
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
                     current_data.add_attribute('xupper',patch.dimensions[0].upper)
@@ -216,14 +214,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])
 
-                    current_data.add_attribute('plotaxes',None)
-                    current_data.add_attribute('plotfigure',None)
-
                     # loop over items:
                     # ----------------
     
                     for itemname in plotaxes._itemnames:
-                        
+
                         plotitem = plotaxes.plotitem_dict[itemname]
 
                         try:
@@ -294,20 +289,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
-            if afteraxes:
-                if isinstance(afteraxes, str):
-                    # a string to be executed
-                    exec(afteraxes)
-                else:
-                    # assume it's a function
-                    try:
-                        current_data.plotaxes = plotaxes
-                        current_data.plotfigure = plotaxes._plotfigure
-                        output = afteraxes(current_data)
-                        if output: current_data = output
-                    except:
-                        print '*** Error in afteraxes ***'
-                        raise
+            try:
+                current_data = run_str_or_func(afteraxes,current_data)
+            except:
+                print '*** Error in afteraxes ***'
+                raise
 
             if plotaxes.scaled:
                 pylab.axis('scaled')
@@ -326,8 +312,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 except:
                     pass  # let axis be set automatically
 
-
-
             # end of loop over plotaxes
             
         # end of loop over plotfigures
@@ -335,18 +319,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
     # call an afterframe function if present:
     afterframe =  getattr(plotdata, 'afterframe', None)
-    if afterframe:
-        if isinstance(afterframe, str):
-            # a string to be executed
-            exec(afterframe)
-        else:
-            # assume it's a function
-            try:
-                output = afterframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in afterframe ***'
-                raise
+    try:
+        current_data = run_str_or_func(afterframe,current_data)
+    except:
+        print '*** Error in afteraxes ***'
+        raise
 
 
     if plotdata.mode() == 'iplotclaw':
@@ -368,8 +345,21 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     verbose=verbose)
 
     return current_data
-
     # end of plotframe
+
+
+def run_str_or_func(str_or_func,current_data):
+    if str_or_func is None:
+        return current_data
+    if isinstance(str_or_func, str):
+        exec(str_or_func)
+    else:
+        output = str_or_func(current_data)
+    if output:
+        return output
+    else:
+        return current_data
+
 
 def params_dict(plotitem, base_params, level_params, level):
     """ 
