@@ -104,11 +104,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     # frame.
 
     beforeframe =  getattr(plotdata, 'beforeframe', None)
-    try:
-        current_data = run_str_or_func(beforeframe,current_data)
-    except:
-        print '*** Error in beforeframe ***'
-        raise
+    current_data = run_str_or_func(beforeframe,current_data)
 
 
     # iterate over each single plot that makes up this frame:
@@ -289,11 +285,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
-            try:
-                current_data = run_str_or_func(afteraxes,current_data)
-            except:
-                print '*** Error in afteraxes ***'
-                raise
+            current_data = run_str_or_func(afteraxes,current_data)
 
             if plotaxes.scaled:
                 pylab.axis('scaled')
@@ -319,11 +311,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
     # call an afterframe function if present:
     afterframe =  getattr(plotdata, 'afterframe', None)
-    try:
-        current_data = run_str_or_func(afterframe,current_data)
-    except:
-        print '*** Error in afteraxes ***'
-        raise
+    current_data = run_str_or_func(afterframe,current_data)
 
 
     if plotdata.mode() == 'iplotclaw':
@@ -355,10 +343,9 @@ def run_str_or_func(str_or_func,current_data):
         exec(str_or_func)
     else:
         output = str_or_func(current_data)
-    if output:
-        return output
-    else:
-        return current_data
+        if output:
+            return output
+    return current_data
 
 
 def params_dict(plotitem, base_params, level_params, level):
