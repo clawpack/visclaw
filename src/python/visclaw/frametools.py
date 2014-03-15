@@ -129,7 +129,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
+
     plotted_fignos = []
+    kml_fignos = []
 
     plotdata = set_show(plotdata)   # set _show attributes for which figures
                                     # and axes should be shown.
@@ -147,6 +149,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             continue # skip to next figure
 
         plotted_fignos.append(figno)
+        if plotfigure.use_for_kml:
+            kml_fignos.append(figno)
 
         if not plotfigure.kwargs.has_key('facecolor'):
             # use Clawpack's default bg color (tan)
@@ -272,7 +276,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** use ClawPlotAxes.afteraxes "
                     print "*** or  ClawPlotItem.afterpatch instead"
                 try:
-                    if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
+                    if plotfigure.use_for_kml:
+                        pass
+                    elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
                         cbar = pylab.colorbar(pobj, \
                                 shrink=plotitem.colorbar_shrink,\
@@ -286,13 +292,16 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
-            if plotaxes.title_with_t:
-                if (t==0.) | ((t>=0.001) & (t<1000.)):
-                    pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                else:
-                    pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+            if plotfigure.use_for_kml:
+                pass
             else:
-                pylab.title(plotaxes.title)
+                if plotaxes.title_with_t:
+                    if (t==0.) | ((t>=0.001) & (t<1000.)):
+                        pylab.title("%s at time t = %14.8f" % (plotaxes.title,t))
+                    else:
+                        pylab.title("%s at time t = %14.8e" % (plotaxes.title,t))
+                else:
+                    pylab.title(plotaxes.title)
 
 
             # call an afteraxes function if present:
@@ -363,204 +372,24 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
-        for figno in plotted_fignos:
-            printfig(frameno=frameno, figno=figno, \
-                     format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                     verbose=verbose,kml_fig=False)
+        for figname in plotdata._fignames:
+            plotfigure = plotdata.plotfigure_dict[figname]
+            figno = plotfigure.figno
+            if figno in plotted_fignos:
+                if figno in kml_fignos:
+                    printfig(frameno=frameno, figno=figno, \
+                             format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                             verbose=verbose,kml_fig=True,dpi_value=plotfigure.dpi)
+                else:
+                    printfig(frameno=frameno, figno=figno, \
+                             format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                             verbose=verbose,kml_fig=False)
 
     return current_data
 
     # end of plotframe
 
 
-#==============================================================================
-def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
-#==============================================================================
-    """
-    Plot a single frame for use with GoogleEarth. This only considers a limited
-    set of plotitems.
-
-    This routine checks input and then calls plotitemN for the
-    proper space dimension.  Framesolns is a list of solutions at the same time
-    but usually from different output directories.
-    """
-
-    if not (type(framesolns) is list):
-        framesolns = [framesolns]
-
-    t = framesolns[0].t
-
-    # initialize current_data, which will be passed
-    # to afterframe, afteraxes, afterpatch commands
-    current_data = clawdata.ClawData()
-    current_data.add_attribute('user',{})   # for user specified attributes
-                                            # to avoid potential conflicts
-    current_data.add_attribute('plotdata',plotdata)
-    current_data.add_attribute('frameno',frameno)
-    current_data.add_attribute('t',t)
-
-    # Skip the call to 'beforeframe' ....
-    # -----------------------------------
-
-    # Skip interactive part.
-    # ----------------------------
-
-    requested_fignos = plotdata.print_fignos
-
-    plotdata = set_show(plotdata)   # set _show attributes for which figures
-                                    # and axes should be shown.
-
-    plotfigure_dict = plotdata.plotfigure_dict
-    for figname in plotdata._fignames:
-        plotfigure = plotdata.plotfigure_dict[figname]
-
-        if not plotfigure.use_for_kml:
-            continue
-
-        figno = plotfigure.figno
-
-        if not plotfigure.kwargs.has_key('facecolor'):
-            # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'
-
-        # create figure and set handle:
-        plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
-
-        pylab.ioff()
-        if plotfigure.clf_each_frame:
-            pylab.clf()
-
-        plotaxes_dict = plotfigure.plotaxes_dict
-
-        if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
-            print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
-            print '*** Apparently no axes to plot in figure ',figno
-
-        for axesname in plotfigure._axesnames:
-            plotaxes = plotaxes_dict[axesname]
-            if not plotaxes._show:
-                continue   # skip this axes if no items show
-
-            # create the axes:
-            axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
-            axescmd = 'plotaxes._handle = pylab.%s' % axescmd
-            exec(axescmd)
-            pylab.hold(True)
-
-            for i, framesoln in enumerate(framesolns):
-
-                if framesoln.t != t:
-                    print '*** Warning: t values do not agree for frame ',frameno
-                    print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
-
-                current_data.add_attribute('framesoln',framesoln)
-
-                # loop over patches:
-                # ----------------
-
-                for stateno,state in enumerate(framesoln.states):
-                    state = framesoln.states[stateno]
-                    patch = state.patch
-
-                    current_data.add_attribute('patch',patch)
-                    current_data.add_attribute('q',state.q)
-                    current_data.add_attribute('var',None)
-                    current_data.add_attribute('aux',state.aux)
-                    current_data.add_attribute('xlower',patch.dimensions[0].lower)
-                    current_data.add_attribute('xupper',patch.dimensions[0].upper)
-
-                    current_data.add_attribute("x",patch.grid.p_centers[0])
-                    current_data.add_attribute("dx",patch.delta[0])
-
-                    current_data.add_attribute('y',patch.grid.p_centers[1])
-                    current_data.add_attribute('dy',patch.delta[1])
-
-                    current_data.add_attribute('plotaxes',None)
-                    current_data.add_attribute('plotfigure',None)
-
-                    # loop over items:
-                    # ----------------
-
-                    for itemname in plotaxes._itemnames:
-
-                        plotitem = plotaxes.plotitem_dict[itemname]
-
-                        try:
-                            item_outdir = plotitem.outdir
-                            if not plotitem.outdir:
-                                item_outdir = plotdata.outdir
-                            if item_outdir != plotdata._outdirs[i]:
-                                # skip to next item
-                                continue
-                        except (NameError, AttributeError):  # no outdir if plotting from memory
-                            pass
-
-                        num_dim = plotitem.num_dim
-
-                        # option to suppress printing some levels:
-                        try:
-                            pp['amr_data_show'] = plotitem.amr_data_show
-                            i = min(len(pp['amr_data_show']), state.level) - 1
-                            show_this_level = pp['amr_data_show'][i]
-                        except:
-                            show_this_level = True
-
-                        if plotitem._show and show_this_level:
-                            current_data = plotitem2(framesoln,plotitem,current_data,stateno)
-
-                            if verbose:
-                                print '      Plotted  plotitem ', itemname
-
-                    # end of loop over plotitems
-                # end of loop over patches
-            # end of loop over framesolns
-            if plotaxes.scaled:
-                pylab.axis('scaled')
-            elif plotaxes.image:
-                pylab.axis('image')
-
-            # set axes limits:
-            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-                try:
-                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-                except:
-                    pass
-            else:
-                print " "
-                print "*** KML error : Use 'xlimits' to set axes limits. "
-                print " "
-                raise
-                return
-            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-                try:
-                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-                except:
-                    pass
-            else:
-                print " "
-                print "*** KML error : Use 'ylimits' to set axes limits. "
-                print " "
-                raise
-                return
-
-        # End of loop over axes
-
-        pylab.figure(figno)
-        pylab.draw()
-
-        if verbose:
-            print '    Done with plotframe for frame %i at time %g' % (frameno,t)
-
-        printfig(frameno=frameno, figno=figno, \
-                 format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                 verbose=verbose,kml_fig=True,dpi_value=plotfigure.dpi)
-
-    # End loop over figures
-
-    return current_data
-
-    # end of plot_frame_kml
 
 
 def params_dict(plotitem, base_params, level_params, level):
@@ -1135,10 +964,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     """
 
     if fname == '':
-        if kml_fig:
-            fname = 'frameKML' + str(frameno).rjust(4,'0')
-        else:
-            fname = 'frame' + str(frameno).rjust(4,'0')
+        fname = 'frame' + str(frameno).rjust(4,'0')
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
