@@ -525,12 +525,24 @@ def plot_frame_kml(framesolns,plotdata,frameno=0,verbose=False):
                 try:
                     pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                 except:
-                    pass  # let axis be set automatically
+                    pass
+            else:
+                print " "
+                print "*** KML error : Use 'xlimits' to set axes limits. "
+                print " "
+                raise
+                return
             if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
                 try:
                     pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
                 except:
-                    pass  # let axis be set automatically
+                    pass
+            else:
+                print " "
+                print "*** KML error : Use 'ylimits' to set axes limits. "
+                print " "
+                raise
+                return
 
         # End of loop over axes
 
