@@ -73,8 +73,6 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     # doesn't get used at all.
     plot_frame(framesolns, plotdata, frameno,verbose=verbose)
 
-    if plotdata.kml:
-        plot_frame_kml(framesolns, plotdata, frameno, verbose=False)
 
 #==============================================================================
 def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
