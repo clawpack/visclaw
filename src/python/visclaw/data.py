@@ -317,10 +317,27 @@ class ClawPlotData(clawdata.ClawData):
                     raw_data = np.loadtxt(file_path)
 
                     gauge_read_string = ""
-                    raw_numbers = np.array(raw_data[:,0], dtype=int)    # Convert type for equality comparison
-                    for n in gauge_data.gauge_numbers:
+
+                    if len(raw_data) == 0:
+                        print '*** Warning: fort.gauge is empty'
+                        gauge_numbers = []
+                    else:
+                        # Convert type for equality comparison:
+                        raw_numbers = np.array(raw_data[:,0], dtype=int)    
+                        
+                        gauge_numbers = list(set(raw_numbers))
+                        gauge_numbers.sort()
+                        print "In fort.gauge file, found gauge numbers %s" \
+                          % gauge_numbers
+
+
+                    for n in gauge_numbers:
+                        try:
+                            loc = locations[n]
+                        except:
+                            loc = None
                         gauge = gaugetools.GaugeSolution(gaugeno, 
-                                                         location=locations[n])
+                                                         location=loc)
                         gauge_indices = np.nonzero(n == raw_numbers)[0]
 
                         gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
@@ -336,6 +353,7 @@ class ClawPlotData(clawdata.ClawData):
             except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
                 print '*** outdir = ', outdir
+                import pdb; pdb.set_trace()
                 raise e
 
         # Attempt to fetch gauge requested
