@@ -640,10 +640,10 @@ def plotclaw2kml(plotdata):
                     KML.Icon(
                         KML.href(fname)),
                     KML.LatLonBox(
-                        KML.north(0.0),
-                        KML.south(-60.0),
-                        KML.east(-60.0),
-                        KML.west(-120.0),
+                        KML.north(plotfigure.kml_ylimits[1]),
+                        KML.south(plotfigure.kml_ylimits[0]),
+                        KML.east(plotfigure.kml_xlimits[0]),
+                        KML.west(plotfigure.kml_xlimits[1]),
                         KML.rotation(0.0))))
         # end range loop
 
@@ -1929,8 +1929,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
-    import pdb
-    pdb.set_trace()
     if plotdata.html_movie == "JSAnimation":
 
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp

@@ -325,7 +325,26 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 pylab.axis('image')
 
             # set axes limits:
-            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
+            if plotfigure.use_for_kml:
+                if (plotfigure.kml_xlimits is not None) & (type(plotfigure.kml_xlimits) is not str):
+                    try:
+                        pylab.xlim(plotfigure.kml_xlimits[0], plotfigure.kml_xlimits[1])
+                    except:
+                        print " "
+                        print "*** KML error : Set figure.kml_xlimits"
+                        print " "
+                        return
+
+                if (plotfigure.kml_ylimits is not None) & (type(plotfigure.kml_ylimits) is not str):
+                    try:
+                        pylab.ylim(plotfigure.kml_ylimits[0], plotfigure.kml_ylimits[1])
+                    except:
+                        print " "
+                        print "*** KML error : Set plotfigure.kml_ylimits"
+                        print " "
+                        return
+
+            elif (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                 try:
                     pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                 except:
@@ -377,7 +396,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 if figno in kml_fignos:
                     printfig(frameno=frameno, figno=figno, \
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                             verbose=verbose,kml_fig=True,dpi_value=plotfigure.dpi)
+                             verbose=verbose,kml_fig=True,kml_dpi=plotfigure.kml_dpi)
                 else:
                     printfig(frameno=frameno, figno=figno, \
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
@@ -947,7 +966,7 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True, kml_fig=False, dpi_value=''):
+             verbose=True, kml_fig=False, kml_dpi=''):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -989,7 +1008,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
 
         pylab.axis('off')
         pylab.savefig(fname, transparent=True, bbox_inches='tight', \
-                      pad_inches=0,dpi=dpi_value)
+                      pad_inches=0,dpi=kml_dpi)
     else:
         pylab.savefig(fname)
 
