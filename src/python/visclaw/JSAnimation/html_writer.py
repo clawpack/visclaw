@@ -170,12 +170,7 @@ JS_INCLUDE = """
 """
 
 
-DISPLAY_TEMPLATE = """
-<div class="animation" align="center">
-    <img id="_anim_img{id}" style="width:{frame_width}px"> 
-    <br>
-    <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
-    <br>
+BUTTONS = """
     <button onclick="anim{id}.slower()">&#8211;</button>
     <button onclick="anim{id}.first_frame()"><img class="anim_icon" src="{icons.first}"></button>
     <button onclick="anim{id}.previous_frame()"><img class="anim_icon" src="{icons.prev}"></button>
@@ -186,11 +181,26 @@ DISPLAY_TEMPLATE = """
     <button onclick="anim{id}.last_frame()"><img class="anim_icon" src="{icons.last}"></button>
     <button onclick="anim{id}.faster()">+</button>
   <form action="#n" name="_anim_loop_select{id}" class="anim_control">
-    <input id="_frame_no{id}" type="textbox" size="1" onchange="anim{id}.set_frame(parseInt(this.value));" onpaste="this.onchange();" oninput="this.onchange();"></input>
+"""
+
+
+RADIO = """
     <input type="radio" name="state" value="once" {once_checked}> Once </input>
     <input type="radio" name="state" value="loop" {loop_checked}> Loop </input>
     <input type="radio" name="state" value="reflect" {reflect_checked}> Reflect </input>
   </form>
+"""
+
+
+DISPLAY_TEMPLATE = """
+<div class="animation" align="center">
+    <img id="_anim_img{id}" style="width:{frame_width}px">
+    <br>
+    <input id="_anim_slider{id}" type="range" style="width:350px" name="points" min="0" max="1" step="1" value="0" onchange="anim{id}.set_frame(parseInt(this.value));"></input>
+    <br>
+    {buttons}
+    <input id="_frame_no{id}" type="textbox" size="1" onchange="anim{id}.set_frame(parseInt(this.value));" onpaste="this.onchange();" oninput="this.onchange();"></input>
+    {radio}
 </div>
 
 
@@ -252,12 +262,13 @@ class HTMLWriter(FileMovieWriter):
 
     def __init__(self, fps=30, codec=None, bitrate=None, extra_args=None,
                  metadata=None, embed_frames=False, frame_dir=None, add_html='',
-                 frame_width=None,default_mode='loop'):
+                 frame_width=None,default_mode='loop',show_buttons=True):
         self.embed_frames = embed_frames
         self.frame_dir = frame_dir
         self.add_html = add_html
         self.frame_width = frame_width
         self.default_mode = default_mode.lower()
+        self.show_buttons = show_buttons
 
         if self.default_mode not in ['loop', 'once', 'reflect']:
             self.default_mode = 'loop'
@@ -331,10 +342,19 @@ class HTMLWriter(FileMovieWriter):
             if (self.add_html != ''):
                 of.write(PREV_INCLUDE.format(add_html=self.add_html))
             of.write(JS_INCLUDE)
-            of.write(DISPLAY_TEMPLATE.format(id=self.new_id(),
+            newid = self.new_id()
+            if self.show_buttons:
+                buttons = BUTTONS.format(id=newid,
+                                       icons=_Icons())
+                radio = RADIO.format(**mode_dict)
+            else:
+                buttons = ''
+                radio = ''
+
+            of.write(DISPLAY_TEMPLATE.format(id=newid,
                                              Nframes=len(self._temp_names),
                                              fill_frames=fill_frames,
                                              interval=interval,
-                                             icons=_Icons(),
                                              frame_width=self.frame_width,
-                                             **mode_dict))
+                                             buttons=buttons,
+                                             radio=radio))
