@@ -59,6 +59,44 @@ def make_colormap(colors):
     mymap = LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
 
+
+def add_colormaps(colormaps, break_location=0.5):
+    r"""Concatenate colormaps in *colormaps* list.
+
+    Appends the colormaps in the list *colormaps* causing a break to occur at
+    *break_location*.  Only currently works with two colormaps.  This
+    functionality is planned to be included in matplotlib at a future date.
+
+    Originally contributed by Damon McDougall
+
+    returns `matplotlib.colors.LinearSegmentedColormap`
+
+    """
+    
+    lhs_dict = colormaps[0]._segmentdata
+    rhs_dict = colormaps[1]._segmentdata
+    new_dict = dict(red=[], green=[], blue=[])
+
+    # Scale rhs by half
+    for key in rhs_dict:
+        val_list = rhs_dict[key]
+        # print(key, val_list)
+        for val in val_list:
+            new_dict[key].append((val[0] * break_location, val[1], val[2]))
+
+    # Append lhs
+    for key in lhs_dict:
+        val_list = lhs_dict[key]
+        # print(key, val_list)
+        for val in val_list:
+            new_dict[key].append((break_location + val[0] * (1.0 - break_location), val[1], val[2]))
+
+    N = 256
+    gamma = 1.0
+
+    return colors.LinearSegmentedColormap('something', new_dict, N, gamma)
+
+
 def showcolors(cmap):
     from pylab import colorbar, clf, axes, linspace, pcolor, \
          meshgrid, show, axis, title
