@@ -77,7 +77,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
         self.add_attribute('kml',True)                # make kml plots and a kml file for figures
-        self.add_attribute('kml_index_fname','_GoogleEarth.kml')   # name of html index file
+        self.add_attribute('kml_index_fname','_GoogleEarth')   # name of html index file
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
@@ -600,7 +600,9 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('plotaxes_dict', {})
         self.add_attribute('type',fig_type)   # = 'each_frame' or 'each_run' or 'each_gauge'
         self.add_attribute('use_for_kml',False)
-        self.add_attribute('dpi',750)
+        self.add_attribute('kml_dpi',200)
+        self.add_attribute('kml_xlimits',None)
+        self.add_attribute('kml_ylimits',None)
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
@@ -766,7 +768,6 @@ class ClawPlotItem(clawdata.ClawData):
 
         self.add_attribute('params',{})  # dictionary to hold optional parameters
 
-
         if num_dim == 1:
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
@@ -782,6 +783,7 @@ class ClawPlotItem(clawdata.ClawData):
 
             if plot_type == '1d_from_2d_data':
                 self.add_attribute('map_2d_to_1d',None)
+                self.add_attribute('amr_plotstyle',[])
 
         elif num_dim == 2:
 

@@ -557,10 +557,11 @@ def plotclaw2kml(plotdata):
     """
     Take a list of figure files and produce kml file to display them.
     """
-    print '\n-----------------------------------\n'
-    print '\nCreating kml file...\n'
-
     startdir = os.getcwd()
+
+    print '\n-----------------------------------\n'
+    print '\nCreating kml files ...'
+
 
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
@@ -570,7 +571,7 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
-    
+
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
         gauge_pngfile = plotdata._gauge_pngfile
@@ -592,14 +593,6 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-    #    Call specific commands to generate kml file.  Maybe in a seperate file?
-
-    #     pml = KML.kml(KML.Document())
-
-    filekml = open(plotdata.kml_index_fname,'w')
-   
-    filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
 
 #------------------STEPH-------------------
 # Working so far!
@@ -608,6 +601,7 @@ def plotclaw2kml(plotdata):
     KML.Document(
     KML.Folder()))
 
+<<<<<<< HEAD
     figno = 0
 
     for i in range(0,numframes-1):
@@ -662,6 +656,58 @@ def plotclaw2kml(plotdata):
     filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
 
     filekml.close()
+=======
+    for figname in plotdata._fignames:
+        plotfigure = plotdata.plotfigure_dict[figname]
+        figno = plotfigure.figno
+
+        if not figno in fignos:
+            continue
+
+        if not plotfigure.use_for_kml:
+            continue
+
+        fname = plotdata.kml_index_fname + str(figno) + '.kml'
+        print '\nCreating kml file %s for figure %d\n' % (fname,figno)
+
+        filekml = open(fname,'w')
+
+        filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+        for i in range(0,numframes-1):
+            frameno = framenos[i]
+            gbegin = time.gmtime(frametimes[i])
+            timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin)
+            gend = time.gmtime(frametimes[i+1])
+            timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
+            fname = 'frame' + str(frameno).rjust(4, '0')
+            fname = fname + 'fig%s' % figno
+            fname = fname + '.png'
+
+            doc.Document.Folder.append(
+                KML.GroundOverlay(
+                    KML.TimeSpan(
+                        KML.begin(timestrbegin),
+                        KML.end(timestrend)),
+                    KML.drawOrder(i),
+                    KML.altitude(0.0),
+                    KML.altitudeMode("clampToGround"),
+                    KML.Icon(
+                        KML.href(fname)),
+                    KML.LatLonBox(
+                        KML.north(plotfigure.kml_ylimits[1]),
+                        KML.south(plotfigure.kml_ylimits[0]),
+                        KML.east(plotfigure.kml_xlimits[0]),
+                        KML.west(plotfigure.kml_xlimits[1]),
+                        KML.rotation(0.0))))
+        # end range loop
+
+        filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+        filekml.close()
+
+    # end figure loop
+
+>>>>>>> donna/googleearth
 
     os.chdir(startdir)
 
@@ -1935,7 +1981,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
-# 
+#
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
