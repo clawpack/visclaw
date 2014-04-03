@@ -203,10 +203,30 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
+                # Mask out covered coarse grid regions.
+                import numpy as np
+                from numpy import ma, where
+                for stateno,state in enumerate(framesoln.states):
+                    # Enumerate over all grids, masking coarser covered regions.
+                    state = framesoln.states[stateno]
+
+
+
+
+
                 for stateno,state in enumerate(framesoln.states):
                     #print '+++ stateno = ',stateno
-                    state = framesoln.states[stateno]
                     patch = state.patch
+
+
+                    # From pyclaw/src/pyclaw/state.py : A 'state' is an array of
+                    # values (stored as [mq,i,j], mq = field.
+                    # self.q   = self.new_array(num_eqn)
+                    # self.aux = self.new_array(num_aux)
+
+
+                    patch = state.patch
+
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute('q',state.q)
@@ -217,6 +237,44 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
+
+                    mask = np.ones(state.grid.num_cells)
+                    mask = np.ma.array(mask)  #  is this needed?
+
+                    # mask = np.ma.array(state.q)
+                    this_level = state.level
+                    grid = state.grid  # ?
+                    xlower = patch.dimension[0].lower
+                    xupper = patch.dimension[0].upper
+                    # ylower = ...
+                    # yupper = ...
+                    dx = patch.delta[0]
+                    # dy = ...
+
+                    # iterate over all grids to see which one needs to get masked by this grid.
+                    for stateno1,state1 in enumerate(framesoln.states):
+                        # iterate over all patches, and find any finer level grids that are
+                        # sitting on top of this patch/grid/state.
+                        if state1.level != level+1:
+                            continue
+
+                        patch1 = state1.patch
+                        xlower = patch1.dimension[0].lower
+                        xupper = patch1.dimension[0].upper
+                        # ylower = ...
+                        # yupper = ...
+                        dx = patch1.delta[0]
+                        # dy = ...
+
+                        # Figure out if patch1 overlaps current patch. If so, we need to set
+                        # corresponding values in mask to 0.
+
+                        # ......
+
+
+                    mask = ma.masked_where(mask==0,mask)
+                    current_data.add_attribute("mask",mask)
+
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
