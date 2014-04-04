@@ -595,8 +595,7 @@ def plotclaw2kml(plotdata):
 
 
 #------------------STEPH-------------------
-# So far, no successful changes. I cannot
-# seem to write to googleearth.kml
+# Working so far!
 #------------------------------------------
     doc = KML.kml(
     KML.Document(

@@ -6,6 +6,7 @@ from pykml.factory import GX_ElementMaker as GX
 fileout = open('googleearth.kml','w')
 fileout.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 framenos = 10
+
 midnight = datetime.datetime.combine( datetime.date.today(), datetime.time() )
 seconds = datetime.timedelta( seconds=234 )
 time = midnight + seconds
