@@ -204,8 +204,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # ----------------
 
                 # Mask out covered coarse grid regions.
-                import numpy as np
-                from numpy import ma, where
                 for stateno,state in enumerate(framesoln.states):
                     #print '+++ stateno = ',stateno
                     patch = state.patch
@@ -222,6 +220,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute('var',None)
+                    current_data.add_attribute('q',state.q)
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
                     current_data.add_attribute('xupper',patch.dimensions[0].upper)
@@ -229,12 +228,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
 
-                    mask = np.ones(state.grid.num_cells)
-                    mask = np.ma.array(mask)  #  is this needed?
-
-                    # mask = np.ma.array(state.q)
-                    import pdb
-                    # pdb.set_trace()
+                    import numpy as np
+                    from numpy import ma, where
+                    mask = np.ma.array(state.q[0,:,:])  # Get a mask the same size as q
                     this_level = patch.level
                     grid = state.grid  # ?
                     xlower = patch.dimensions[0].lower
@@ -264,15 +260,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                         # ......
 
+                    # Create dummy mask
                     import pdb
                     # pdb.set_trace()
-                    q = np.ma.array(state.q)
-                    eta = q[3,:,:]   # water surface height
-                    # This doesn't work...(nothing is masked).
-                    # See geoplot.surface to see what is actually plotted...
-                    q[3,:,:] = ma.masked_where(eta > 0,q[3,:,:])  # Mask something
+                    eta = state.q[3,:,:]   # water surface height
+                    mask = eta < 0  # Mask something
+                    mask = ones(eta.shape)
+                    current_data.add_attribute('mask',mask)
 
-                    current_data.add_attribute('q',q)
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
