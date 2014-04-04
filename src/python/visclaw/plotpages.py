@@ -628,6 +628,7 @@ def plotclaw2kml(plotdata):
             if i < numframes-1:
                 gend = time.gmtime(frametimes[framenos[i+1]])
             else:
+                # Plot only appears at when slider is at far right
                 gend = time.gmtime(frametimes[framenos[i]])
 
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
