@@ -238,8 +238,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     yupper = patch.dimensions[1].upper
                     dx = patch.delta[0]
                     dy = patch.delta[1]
-                    xc_edges,yc_edges = patch.grid.c_edges
-                    mask_coarse = ma.make_mask(np.ones(xc_edges.shape))
+                    xc_centers,yc_centers = patch.grid.c_centers
+                    mask_coarse = ma.make_mask(np.ones(xc_centers.shape))
 
                     # iterate over all grids to see which one needs to get masked by this grid.
                     for stateno_fine,state_fine in enumerate(framesoln.states):
@@ -258,17 +258,18 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                         # Figure out if patch1 overlaps current patch. If so, we need to set
                         # corresponding values in mask to 0.
-                        tolx = dx/10
-                        toly = dy/10
-                        m1 = ma.masked_inside(xc_edges,xlower_fine-tolx,xupper_fine+tolx)
-                        m2 = ma.masked_inside(yc_edges,ylower_fine-toly,yupper_fine+toly)
+                        m1 = ma.masked_inside(xc_centers,xlower_fine,xupper_fine)
+                        m2 = ma.masked_inside(yc_centers,ylower_fine,yupper_fine)
                         mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
 
-                    # Create dummy mask
-                    # eta = state.q[3,:,:]   # water surface height
-                    # mask = eta < 0  # Mask something
-                    # mask = np.zeros(eta.shape)
-                    current_data.add_attribute('mask',mask_coarse)
+                    # This doesn't work yet!
+                    # current_data.add_attribute('mask',mask_coarse)
+
+                    # Create dummy mask, just to see if the masking works.
+                    eta = state.q[3,:,:]   # water surface height
+                    # mask = eta > 3  # Mask something
+                    mask = np.zeros(eta.shape)  # no mask
+                    current_data.add_attribute('mask',mask)
 
 
                     if patch.num_dim == 2:
