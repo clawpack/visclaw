@@ -207,14 +207,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 import numpy as np
                 from numpy import ma, where
                 for stateno,state in enumerate(framesoln.states):
-                    # Enumerate over all grids, masking coarser covered regions.
-                    state = framesoln.states[stateno]
-
-
-
-
-
-                for stateno,state in enumerate(framesoln.states):
                     #print '+++ stateno = ',stateno
                     patch = state.patch
 
@@ -229,7 +221,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
 
                     current_data.add_attribute('patch',patch)
-                    current_data.add_attribute('q',state.q)
                     current_data.add_attribute('var',None)
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
@@ -242,10 +233,12 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     mask = np.ma.array(mask)  #  is this needed?
 
                     # mask = np.ma.array(state.q)
-                    this_level = state.level
+                    import pdb
+                    # pdb.set_trace()
+                    this_level = patch.level
                     grid = state.grid  # ?
-                    xlower = patch.dimension[0].lower
-                    xupper = patch.dimension[0].upper
+                    xlower = patch.dimensions[0].lower
+                    xupper = patch.dimensions[0].upper
                     # ylower = ...
                     # yupper = ...
                     dx = patch.delta[0]
@@ -255,16 +248,16 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     for stateno1,state1 in enumerate(framesoln.states):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
-                        if state1.level != level+1:
+                        patch1 = state1.patch
+                        if patch1.level != this_level+1:
                             continue
 
-                        patch1 = state1.patch
-                        xlower = patch1.dimension[0].lower
-                        xupper = patch1.dimension[0].upper
-                        # ylower = ...
-                        # yupper = ...
-                        dx = patch1.delta[0]
-                        # dy = ...
+                        xlower_fine = patch1.dimensions[0].lower
+                        xupper_fine = patch1.dimensions[0].upper
+                        # ylower_fine = ...
+                        # yupper_fine = ...
+                        dx_fine = patch1.delta[0]
+                        # dy_fine = ...
 
                         # Figure out if patch1 overlaps current patch. If so, we need to set
                         # corresponding values in mask to 0.
@@ -272,9 +265,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         # ......
 
 
-                    mask = ma.masked_where(mask==0,mask)
-                    current_data.add_attribute("mask",mask)
-
+                    q = ma.masked_where(mask==0,state.q)
+                    current_data.add_attribute('q',q)
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
