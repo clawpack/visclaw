@@ -195,8 +195,6 @@ class ClawPlotData(clawdata.ClawData):
         outdir = os.path.abspath(outdir)
         key = (frameno, outdir)
 
-        import pdb
-        pdb.set_trace()
         if refresh or (not framesoln_dict.has_key(key)):
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
