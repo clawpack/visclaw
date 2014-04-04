@@ -230,43 +230,45 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     import numpy as np
                     from numpy import ma, where
-                    mask = np.ma.array(state.q[0,:,:])  # Get a mask the same size as q
                     this_level = patch.level
                     grid = state.grid  # ?
                     xlower = patch.dimensions[0].lower
                     xupper = patch.dimensions[0].upper
-                    # ylower = ...
-                    # yupper = ...
+                    ylower = patch.dimensions[1].lower
+                    yupper = patch.dimensions[1].upper
                     dx = patch.delta[0]
-                    # dy = ...
+                    dy = patch.delta[1]
+                    xc_edges,yc_edges = patch.grid.c_edges
+                    mask_coarse = ma.make_mask(np.ones(xc_edges.shape))
 
                     # iterate over all grids to see which one needs to get masked by this grid.
-                    for stateno1,state1 in enumerate(framesoln.states):
+                    for stateno_fine,state_fine in enumerate(framesoln.states):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
-                        patch1 = state1.patch
-                        if patch1.level != this_level+1:
+                        patch_fine = state_fine.patch
+                        if patch_fine.level != this_level+1:
                             continue
 
-                        xlower_fine = patch1.dimensions[0].lower
-                        xupper_fine = patch1.dimensions[0].upper
-                        # ylower_fine = ...
-                        # yupper_fine = ...
-                        dx_fine = patch1.delta[0]
-                        # dy_fine = ...
+                        xlower_fine = patch_fine.dimensions[0].lower
+                        xupper_fine = patch_fine.dimensions[0].upper
+                        ylower_fine = patch_fine.dimensions[1].lower
+                        yupper_fine = patch_fine.dimensions[1].upper
+                        dx = patch_fine.delta[0]
+                        dy = patch_fine.delta[1]
 
                         # Figure out if patch1 overlaps current patch. If so, we need to set
                         # corresponding values in mask to 0.
-
-                        # ......
+                        tolx = dx/10
+                        toly = dy/10
+                        m1 = ma.masked_inside(xc_edges,xlower_fine-tolx,xupper_fine+tolx)
+                        m2 = ma.masked_inside(yc_edges,ylower_fine-toly,yupper_fine+toly)
+                        mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
 
                     # Create dummy mask
-                    import pdb
-                    # pdb.set_trace()
-                    eta = state.q[3,:,:]   # water surface height
-                    mask = eta < 0  # Mask something
-                    mask = np.zeros(eta.shape)
-                    current_data.add_attribute('mask',mask)
+                    # eta = state.q[3,:,:]   # water surface height
+                    # mask = eta < 0  # Mask something
+                    # mask = np.zeros(eta.shape)
+                    current_data.add_attribute('mask',mask_coarse)
 
 
                     if patch.num_dim == 2:
