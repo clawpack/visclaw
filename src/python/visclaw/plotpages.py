@@ -619,11 +619,17 @@ def plotclaw2kml(plotdata):
 
         filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        for i in range(0,numframes-1):
-            frameno = framenos[i]
-            gbegin = time.gmtime(frametimes[i])
+        for i in range(0,numframes):
+            frameno = framenos[i]  # This is a key in the frametimes dictionary...
+            gbegin = time.gmtime(frametimes[frameno])
             timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin)
-            gend = time.gmtime(frametimes[i+1])
+
+            # Plot will stay be visible in TimeSpan [gbegin,gend]
+            if i < numframes-1:
+                gend = time.gmtime(frametimes[framenos[i+1]])
+            else:
+                gend = time.gmtime(frametimes[framenos[i]])
+
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname = fname + 'fig%s' % figno

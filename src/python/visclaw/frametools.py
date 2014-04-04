@@ -265,7 +265,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     # pdb.set_trace()
                     eta = state.q[3,:,:]   # water surface height
                     mask = eta < 0  # Mask something
-                    mask = ones(eta.shape)
+                    mask = np.zeros(eta.shape)
                     current_data.add_attribute('mask',mask)
 
 
