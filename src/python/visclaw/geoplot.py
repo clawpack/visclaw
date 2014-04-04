@@ -199,10 +199,13 @@ def surface_or_depth(current_data):
     h = q[0,:,:]
     eta = q[3,:,:]
     topo = eta - h
+
+    # With this version, the land was plotted as white in png files for KML.
     # surface = ma.masked_where(h <= drytol, eta)
     # depth = ma.masked_where(h <= drytol, h)
     # surface_or_depth = where(topo<0, surface, depth)
-    sd = where(topo < 0,eta,h)
+
+    # With this version, the land is transparent.
     surface_or_depth = ma.masked_where(h <= drytol,where(topo<0,eta,h))
     return surface_or_depth
 
