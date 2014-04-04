@@ -264,8 +264,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                         # ......
 
+                    import pdb
+                    # pdb.set_trace()
+                    q = np.ma.array(state.q)
+                    eta = q[3,:,:]   # water surface height
+                    # This doesn't work...(nothing is masked).
+                    # See geoplot.surface to see what is actually plotted...
+                    q[3,:,:] = ma.masked_where(eta > 0,q[3,:,:])  # Mask something
 
-                    q = ma.masked_where(mask==0,state.q)
                     current_data.add_attribute('q',q)
 
                     if patch.num_dim == 2:
