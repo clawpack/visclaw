@@ -180,8 +180,6 @@ def surface(current_data):
     h = q[0,:,:]
     eta = q[3,:,:]
 
-    import pdb
-    # pdb.set_trace()
     # Mask out covered coarse regions
     m = ma.masked_where(h <= drytol,current_data.mask)
     water = ma.masked_where(m, eta)
@@ -201,9 +199,11 @@ def surface_or_depth(current_data):
     h = q[0,:,:]
     eta = q[3,:,:]
     topo = eta - h
-    surface = ma.masked_where(h<=drytol, eta)
-    depth = ma.masked_where(h<=drytol, h)
-    surface_or_depth = where(topo<0, surface, depth)
+    # surface = ma.masked_where(h <= drytol, eta)
+    # depth = ma.masked_where(h <= drytol, h)
+    # surface_or_depth = where(topo<0, surface, depth)
+    sd = where(topo < 0,eta,h)
+    surface_or_depth = ma.masked_where(h <= drytol,where(topo<0,eta,h))
     return surface_or_depth
 
 
