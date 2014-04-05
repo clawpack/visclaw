@@ -204,16 +204,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # ----------------
 
                 # Mask out covered coarse grid regions.
-                import numpy as np
-                from numpy import ma, where
-                for stateno,state in enumerate(framesoln.states):
-                    # Enumerate over all grids, masking coarser covered regions.
-                    state = framesoln.states[stateno]
-
-
-
-
-
                 for stateno,state in enumerate(framesoln.states):
                     #print '+++ stateno = ',stateno
                     patch = state.patch
@@ -229,8 +219,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
 
                     current_data.add_attribute('patch',patch)
-                    current_data.add_attribute('q',state.q)
                     current_data.add_attribute('var',None)
+                    current_data.add_attribute('q',state.q)
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
                     current_data.add_attribute('xupper',patch.dimensions[0].upper)
@@ -238,42 +228,48 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
 
-                    mask = np.ones(state.grid.num_cells)
-                    mask = np.ma.array(mask)  #  is this needed?
-
-                    # mask = np.ma.array(state.q)
-                    this_level = state.level
+                    import numpy as np
+                    from numpy import ma, where
+                    this_level = patch.level
                     grid = state.grid  # ?
-                    xlower = patch.dimension[0].lower
-                    xupper = patch.dimension[0].upper
-                    # ylower = ...
-                    # yupper = ...
+                    xlower = patch.dimensions[0].lower
+                    xupper = patch.dimensions[0].upper
+                    ylower = patch.dimensions[1].lower
+                    yupper = patch.dimensions[1].upper
                     dx = patch.delta[0]
-                    # dy = ...
+                    dy = patch.delta[1]
+                    xc_centers,yc_centers = patch.grid.c_centers
+                    mask_coarse = ma.make_mask(np.ones(xc_centers.shape))
 
                     # iterate over all grids to see which one needs to get masked by this grid.
-                    for stateno1,state1 in enumerate(framesoln.states):
+                    for stateno_fine,state_fine in enumerate(framesoln.states):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
-                        if state1.level != level+1:
+                        patch_fine = state_fine.patch
+                        if patch_fine.level != this_level+1:
                             continue
 
-                        patch1 = state1.patch
-                        xlower = patch1.dimension[0].lower
-                        xupper = patch1.dimension[0].upper
-                        # ylower = ...
-                        # yupper = ...
-                        dx = patch1.delta[0]
-                        # dy = ...
+                        xlower_fine = patch_fine.dimensions[0].lower
+                        xupper_fine = patch_fine.dimensions[0].upper
+                        ylower_fine = patch_fine.dimensions[1].lower
+                        yupper_fine = patch_fine.dimensions[1].upper
+                        dx = patch_fine.delta[0]
+                        dy = patch_fine.delta[1]
 
                         # Figure out if patch1 overlaps current patch. If so, we need to set
                         # corresponding values in mask to 0.
+                        m1 = ma.masked_inside(xc_centers,xlower_fine,xupper_fine)
+                        m2 = ma.masked_inside(yc_centers,ylower_fine,yupper_fine)
+                        mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
 
-                        # ......
+                    # This doesn't work yet!
+                    # current_data.add_attribute('mask',mask_coarse)
 
-
-                    mask = ma.masked_where(mask==0,mask)
-                    current_data.add_attribute("mask",mask)
+                    # Create dummy mask, just to see if the masking works.
+                    eta = state.q[3,:,:]   # water surface height
+                    # mask = eta > 3  # Mask something
+                    mask = np.zeros(eta.shape)  # no mask
+                    current_data.add_attribute('mask',mask)
 
 
                     if patch.num_dim == 2:

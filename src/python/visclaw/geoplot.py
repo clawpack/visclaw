@@ -3,7 +3,7 @@ Useful things for plotting GeoClaw results.
 """
 
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize 
+from matplotlib.colors import Normalize
 from clawpack.geoclaw import topotools
 from numpy import ma
 
@@ -32,17 +32,17 @@ TSUNAMI_MAX_AMPLITUDE = 0.6
 tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,
                                             TSUNAMI_MAX_AMPLITUDE:red})
-                                            
+
 land1_colormap = colormaps.make_colormap({0.0:dark_green,
                                           1000.0:green,
                                           2000.0:light_green,
                                           4000.0:tan})
-                                         
+
 land2_colormap = colormaps.make_colormap({0:dark_green,
                                           50:green,
                                           100:light_green,
                                           200:tan})
-                                          
+
 water_land_colormap = colormaps.make_colormap({-1000:dark_blue,
                                                -500:blue,
                                                0:light_blue,
@@ -52,13 +52,13 @@ water_land_colormap = colormaps.make_colormap({-1000:dark_blue,
                                                1000:green,
                                                2000:light_green,
                                                4000:tan})
-                                               
+
 bathy1_colormap = colormaps.make_colormap({-1000:brown,
                                            0:tan,
                                            .1:dark_green,
                                            1000:green,
                                            2000:light_green})
-       
+
 bathy2_colormap = colormaps.make_colormap({-1000:brown,
                                            -100:tan,
                                            0:dark_green,
@@ -78,25 +78,25 @@ land_colormap = colormaps.make_colormap({ 0:[0.95,0.9,0.7],
                                           1:[.2,.5,.2]})
 
 
-                                           
+
 colormaps_list = {"tsunami":tsunami_colormap,"land1":land1_colormap,
              "land2":land2_colormap,"water_land":water_land_colormap,
              "bathy1":bathy1_colormap,"bathy2":bathy2_colormap}
-        
+
 def plot_colormaps():
     r"""Plots all colormaps avaiable or the ones specified"""
-        
+
     import numpy as np
     import matplotlib.pyplot as plt
-    
+
     a = np.linspace(0, 1, 256).reshape(1,-1)
     a = np.vstack((a,a))
-    
+
     nmaps = len(colormaps_list) + 1
 
     fig = plt.figure(figsize=(5,10))
     fig.subplots_adjust(top=0.99, bottom=0.01, left=0.2, right=0.99)
-    
+
     for i,name in enumerate(colormaps_list):
         ax = plt.subplot(nmaps,1,i+1)
         plt.axis("off")
@@ -124,8 +124,8 @@ drytol_default = 1.e-3
 
 
 def topo(current_data):
-   """ 
-   Return topography = eta - h. 
+   """
+   Return topography = eta - h.
    Surface eta is assumed to be output as 4th column of fort.q files.
    """
    q = current_data.q
@@ -179,12 +179,15 @@ def surface(current_data):
     q = current_data.q
     h = q[0,:,:]
     eta = q[3,:,:]
-    water = ma.masked_where(h<=drytol, eta)
+
+    # Mask out covered coarse regions
+    m = ma.masked_where(h <= drytol,current_data.mask)
+    water = ma.masked_where(m, eta)
     return water
 
 def surface_or_depth(current_data):
     """
-    Return a masked array containing the surface elevation where the topo is 
+    Return a masked array containing the surface elevation where the topo is
     below sea level or the water depth where the topo is above sea level.
     Mask out dry cells.  Assumes sea level is at topo=0.
     Surface is eta = h+topo, assumed to be output as 4th column of fort.q
@@ -196,15 +199,20 @@ def surface_or_depth(current_data):
     h = q[0,:,:]
     eta = q[3,:,:]
     topo = eta - h
-    surface = ma.masked_where(h<=drytol, eta)
-    depth = ma.masked_where(h<=drytol, h)
-    surface_or_depth = where(topo<0, surface, depth)
+
+    # With this version, the land was plotted as white in png files for KML.
+    # surface = ma.masked_where(h <= drytol, eta)
+    # depth = ma.masked_where(h <= drytol, h)
+    # surface_or_depth = where(topo<0, surface, depth)
+
+    # With this version, the land is transparent.
+    surface_or_depth = ma.masked_where(h <= drytol,where(topo<0,eta,h))
     return surface_or_depth
 
 
 class TopoPlotData(object):
     def __init__(self, fname):
-        self.fname = fname 
+        self.fname = fname
         self.topotype = 3
         self.neg_cmap = None
         self.pos_cmap = None
@@ -225,7 +233,7 @@ class TopoPlotData(object):
 
     def plot(self):
         plot_topo_file(self)
-        
+
 
 def plot_topo_file(topoplotdata):
     """
@@ -236,7 +244,7 @@ def plot_topo_file(topoplotdata):
     import pylab
     from clawpack.clawutil.data import ClawData
 
-    fname = topoplotdata.fname 
+    fname = topoplotdata.fname
     topotype = topoplotdata.topotype
     if topoplotdata.climits:
         # deprecated option
@@ -316,7 +324,7 @@ def plot_topo_file(topoplotdata):
 
     else:
         raise Exception("*** Only topotypes 1 and 3 supported so far")
-    
+
 
     if coarsen > 1:
         topo = topo[slice(0,nrows,coarsen), slice(0,ncols,coarsen)]

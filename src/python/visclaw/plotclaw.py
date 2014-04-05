@@ -46,7 +46,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',format='ascii'
     plotdata.setplot = setplot
     plotdata.format = format
 
-    plotpages.plotclaw_driver(plotdata,plotdata.verbose, format=format)
+    plotpages.plotclaw_driver(plotdata,verbose=False, format=format)
 
 #----------------------------------------------------------
 
