@@ -16,6 +16,8 @@ From most Clawpack applications directories the command
 will call the plotclaw function from this module.
 
 """
+import matplotlib
+matplotlib.use('Agg') 
 
 import sys, os
 import pylab
