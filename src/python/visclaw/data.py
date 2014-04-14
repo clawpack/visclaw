@@ -294,7 +294,7 @@ class ClawPlotData(clawdata.ClawData):
 
                 # Check to make sure the gauge requested is in the data file
                 if gaugeno not in gauge_data.gauge_numbers:
-                    raise Exception("Could not find guage %s in gauges data file.")
+                    raise Exception("Could not find gauge %s in gauges.data file.")
             
                 # Extract locations from gauge data file to be used with the
                 # solutions below
@@ -303,7 +303,9 @@ class ClawPlotData(clawdata.ClawData):
                     locations[gauge[0]] = gauge[1:3]
 
             except:
-                print "*** WARNING *** Could not read gauges data file."
+                print "*** WARNING *** Could not read gauges.data file from"
+                print "     %s" % outdir
+                print "*** Unable to determine gauge locations"
                 # raise Warning()
 
             # Read in all gauges
