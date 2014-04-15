@@ -12,9 +12,12 @@ for example, to get colors ranging from white to green.
 See matplotlib._cm for the data defining various maps.
 """
 
+import numpy
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 
 #-------------------------
-def make_colormap(colors):
+def make_colormap(color_list):
 #-------------------------
     """
     Define a new color map based on values specified in the dictionary
@@ -26,22 +29,21 @@ def make_colormap(colors):
     html hex string, e.g. "#ff0000" for red.
     """
 
-    from matplotlib.colors import LinearSegmentedColormap, ColorConverter
-    from numpy import sort
     
-    z = sort(colors.keys())
+    
+    z = numpy.sort(color_list.keys())
     n = len(z)
     z1 = min(z)
     zn = max(z)
     x0 = (z - z1) / (zn - z1)
     
-    CC = ColorConverter()
+    CC = colors.ColorConverter()
     R = []
     G = []
     B = []
     for i in range(n):
         #i'th color at level z[i]:
-        Ci = colors[z[i]]      
+        Ci = color_list[z[i]]      
         if type(Ci) == str:
             # a hex string of form '#ff0000' for example (for red)
             RGB = CC.to_rgb(Ci)
@@ -56,7 +58,7 @@ def make_colormap(colors):
     cmap_dict['red'] = [(x0[i],R[i],R[i]) for i in range(len(R))]
     cmap_dict['green'] = [(x0[i],G[i],G[i]) for i in range(len(G))]
     cmap_dict['blue'] = [(x0[i],B[i],B[i]) for i in range(len(B))]
-    mymap = LinearSegmentedColormap('mymap',cmap_dict)
+    mymap = colors.LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
 
 
@@ -98,33 +100,30 @@ def add_colormaps(colormaps, break_location=0.5):
 
 
 def showcolors(cmap):
-    from pylab import colorbar, clf, axes, linspace, pcolor, \
-         meshgrid, show, axis, title
     #from scitools.easyviz.matplotlib_ import colorbar, clf, axes, linspace,\
                  #pcolor, meshgrid, show, colormap
-    clf()
-    x = linspace(0,1,21)
-    X,Y = meshgrid(x,x)
-    pcolor(X,Y,0.5*(X+Y), cmap=cmap, edgecolors='k')
-    axis('equal')
-    colorbar()
-    title('Plot of x+y using colormap')
+    plt.clf()
+    x = numpy.linspace(0,1,21)
+    X,Y = numpy.meshgrid(x,x)
+    plt.pcolor(X,Y,0.5*(X+Y), cmap=cmap, edgecolors='k')
+    plt.axis('equal')
+    plt.colorbar()
+    plt.title('Plot of x+y using colormap')
 
 
 def schlieren_colormap(color=[0,0,0]):
     """
     For Schlieren plots:
     """
-    from numpy import linspace, array
     if color=='k': color = [0,0,0]
     if color=='r': color = [1,0,0]
     if color=='b': color = [0,0,1]
     if color=='g': color = [0,0.5,0]
-    color = array([1,1,1]) - array(color)
-    s  = linspace(0,1,20)
+    color = numpy.array([1,1,1]) - numpy.array(color)
+    s  = numpy.linspace(0,1,20)
     colors = {}
     for key in s:
-        colors[key] = array([1,1,1]) - key**0.1 * color
+        colors[key] = numpy.array([1,1,1]) - key**0.1 * color
     schlieren_colors = make_colormap(colors)
     return schlieren_colors
 
