@@ -239,9 +239,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     dx = patch.delta[0]
                     dy = patch.delta[1]
                     xc_centers,yc_centers = patch.grid.c_centers
-                    mask_coarse = ma.make_mask(np.ones(xc_centers.shape))
+                    mask_coarse = ma.make_mask(np.zeros(xc_centers.shape))
 
-                    # iterate over all grids to see which one needs to get masked by this grid.
+                    # iterate over all grids to see which one masks this grid
                     for stateno_fine,state_fine in enumerate(framesoln.states):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
@@ -260,16 +260,17 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         # corresponding values in mask to 0.
                         m1 = ma.masked_inside(xc_centers,xlower_fine,xupper_fine)
                         m2 = ma.masked_inside(yc_centers,ylower_fine,yupper_fine)
-                        mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
+                        mask_coarse = ma.make_mask((m1.mask & m2.mask) | mask_coarse)
+
 
                     # This doesn't work yet!
-                    # current_data.add_attribute('mask',mask_coarse)
+                    current_data.add_attribute('mask',mask_coarse)
 
                     # Create dummy mask, just to see if the masking works.
-                    eta = state.q[3,:,:]   # water surface height
+                    # eta = state.q[3,:,:]   # water surface height
                     # mask = eta > 3  # Mask something
-                    mask = np.zeros(eta.shape)  # no mask
-                    current_data.add_attribute('mask',mask)
+                    # mask = np.zeros(eta.shape)  # no mask
+                    # current_data.add_attribute('mask',mask)
 
 
                     if patch.num_dim == 2:
