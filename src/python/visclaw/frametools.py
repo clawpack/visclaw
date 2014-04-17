@@ -271,7 +271,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     mask = np.zeros(eta.shape)  # no mask
                     current_data.add_attribute('mask',mask)
 
-
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])

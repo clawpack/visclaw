@@ -597,69 +597,11 @@ def plotclaw2kml(plotdata):
 #------------------STEPH-------------------
 # Working so far!
 #------------------------------------------
+
     doc = KML.kml(
     KML.Document(
     KML.Folder()))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    figno = 0
-
-    for i in range(0,numframes-1):
-        frameno = framenos[i]
-        gbegin = time.gmtime(frametimes[i])
-        timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin) 
-        gend = time.gmtime(frametimes[i+1])
-        timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend) 
-        fname = 'frameKML' + str(frameno).rjust(4, '0')
-        fname = fname + 'fig%s' % figno
-        fname = fname + '.png'
-
-        doc.Document.Folder.append(
-            KML.GroundOverlay(
-                KML.TimeSpan(
-                    KML.begin(timestrbegin),
-                    KML.end(timestrend)),
-                KML.drawOrder(i),
-                KML.altitude(0.0),
-                KML.altitudeMode("clampToGround"),
-                KML.Icon(
-                    KML.href(fname)),
-                KML.LatLonBox(
-                    KML.north(0.0),
-                    KML.south(-60.0),
-                    KML.east(-60.0),
-                    KML.west(-120.0),
-                    KML.rotation(0.0)) 
-                )
-        )
-        
-        doc.Document.Folder.append(
-            KML.GroundOverlay(
-                KML.TimeSpan(
-                    KML.begin('2013-10-02T09:00:00Z'),
-                    KML.end('2013-10-02T09:00:00Z')),
-                KML.drawOrder(i),
-                KML.altitude(0.0),
-                KML.altitudeMode("clampToGround"),
-                KML.Icon(
-                    KML.href(fname)),
-                KML.LatLonBox(
-                KML.north(0.0),
-                KML.south(-60.0),
-                KML.east(-60.0),
-                KML.west(-120.0),
-                KML.rotation(0.0)) 
-            )
-        )
-        
-
-    filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
-
-    filekml.close()
-=======
-=======
->>>>>>> donna/googleearth
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -682,11 +624,11 @@ def plotclaw2kml(plotdata):
             gbegin = time.gmtime(frametimes[frameno])
             timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin)
 
-            # Plot will stay be visible in TimeSpan [gbegin,gend]
+            # Plot will stay visible in TimeSpan [gbegin,gend]
             if i < numframes-1:
                 gend = time.gmtime(frametimes[framenos[i+1]])
             else:
-                # Plot only appears at when slider is at far right
+                # Plot only appears when slider is at far right
                 gend = time.gmtime(frametimes[framenos[i]])
 
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
@@ -711,16 +653,11 @@ def plotclaw2kml(plotdata):
                         KML.west(plotfigure.kml_xlimits[1]),
                         KML.rotation(0.0))))
         # end range loop
-
+        
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
 
     # end figure loop
-
-<<<<<<< HEAD
->>>>>>> donna/googleearth
-=======
->>>>>>> donna/googleearth
 
     os.chdir(startdir)
 
