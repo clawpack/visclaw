@@ -415,7 +415,13 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     current_data.patch = patch
     current_data.q = state.q
     current_data.aux = state.aux
-    current_data.level = patch.level
+
+    try:
+        current_data.level = patch.level
+    except:
+        # AMR not currently supported in 1d code
+        pass
+
     t = framesoln.t
 
     # the following plot parameters should be set and independent of 
