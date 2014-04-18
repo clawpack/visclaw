@@ -416,11 +416,8 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     current_data.q = state.q
     current_data.aux = state.aux
 
-    try:
-        current_data.level = patch.level
-    except:
-        # AMR not currently supported in 1d code
-        pass
+    # level not currently set in 1d, default to level = 1:
+    current_data.level = getattr(patch,'level',1)
 
     t = framesoln.t
 
