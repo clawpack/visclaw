@@ -244,7 +244,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     mask_coarse = np.empty(xc_centers.shape, dtype=bool)
                     mask_coarse.fill(False)
 
-                    # iterate over all grids to see which one needs to get masked by this grid.
+                    # iterate over all grids to see which one masks this grid
                     for stateno_fine,state_fine in enumerate(framesoln.states):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
@@ -264,12 +264,13 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         # m1 = ma.masked_inside(xc_centers,xlower_fine,xupper_fine)
                         # m2 = ma.masked_inside(yc_centers,ylower_fine,yupper_fine)
                         # mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
-                        
+
                         m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
                         m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
 
                         mask_coarse = (m1 & m2)|mask_coarse
-                        
+
+
                     # This doesn't work yet!
                     current_data.add_attribute('mask',mask_coarse)
 
