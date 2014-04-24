@@ -181,7 +181,8 @@ def surface(current_data):
     eta = q[3,:,:]
 
     # Mask out covered coarse regions
-    m = ma.masked_where(h <= drytol,current_data.mask)
+    # m = ma.masked_where(h <= drytol,current_data.mask)
+    m = h <= drytol|current_data.mask
     water = ma.masked_where(m, eta)
     return water
 
