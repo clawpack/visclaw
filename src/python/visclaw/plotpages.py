@@ -1923,9 +1923,16 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             frametools.plotframe(frameno, plotdata, verbose)
             print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
-        for gaugeno in gaugenos:
-            gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print 'Gauge %i ' % gaugeno
+        gaugenos_input = tuple(gaugenos)
+        gaugenos = []
+        for gaugeno in gaugenos_input:
+            try:
+                gaugetools.plotgauge(gaugeno, plotdata, verbose)
+                print 'Found data for Gauge %i ' % gaugeno
+                gaugenos.append(gaugeno)
+            except:
+                print '*** Warning: Unable to plot Gauge %i' \
+                        % gaugeno
 
 
     if plotdata.latex:
