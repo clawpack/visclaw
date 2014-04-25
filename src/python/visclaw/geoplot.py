@@ -214,6 +214,7 @@ def surface_or_depth(current_data):
     # To mask out coarse grids, include this line.
     m = current_data.mask_coarse
     surface_or_depth = ma.masked_where(m,surface_or_depth)
+
     return surface_or_depth
 
 

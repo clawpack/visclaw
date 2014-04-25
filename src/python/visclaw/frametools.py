@@ -261,7 +261,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         # Mask all fine grid regions
                         mask_coarse = (m1 & m2) | mask_coarse
 
-
                     current_data.add_attribute('mask_coarse',mask_coarse)
                     # -------------------------------------------------------------
                     # Done with masking
