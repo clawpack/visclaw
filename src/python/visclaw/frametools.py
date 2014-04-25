@@ -235,7 +235,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     import numpy as np
                     this_level = patch.level
 
-                    # Create a blank mask with size of xc_centers on the coarse grid
                     xc_centers,yc_centers = patch.grid.c_centers
                     mask_coarse = np.empty(xc_centers.shape, dtype=bool)
                     mask_coarse.fill(False)
