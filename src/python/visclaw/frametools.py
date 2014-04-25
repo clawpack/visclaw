@@ -228,19 +228,15 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
 
+                    # -------------------------------------------------------------
+                    # Mask out all coarse grid regions that are under fine grids
+                    # This could be made into a subroutine
+                    # -------------------------------------------------------------
                     import numpy as np
-                    from numpy import ma, where
                     this_level = patch.level
-                    grid = state.grid  # ?
-                    xlower = patch.dimensions[0].lower
-                    xupper = patch.dimensions[0].upper
-                    ylower = patch.dimensions[1].lower
-                    yupper = patch.dimensions[1].upper
-                    dx = patch.delta[0]
-                    dy = patch.delta[1]
-                    xc_centers,yc_centers = patch.grid.c_centers
-                    # mask_coarse = ma.make_mask(np.ones(xc_centers.shape))
 
+                    # Create a blank mask with size of xc_centers on the coarse grid
+                    xc_centers,yc_centers = patch.grid.c_centers
                     mask_coarse = np.empty(xc_centers.shape, dtype=bool)
                     mask_coarse.fill(False)
 
@@ -249,6 +245,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         # iterate over all patches, and find any finer level grids that are
                         # sitting on top of this patch/grid/state.
                         patch_fine = state_fine.patch
+
+                        # Only look at patches one level finer
                         if patch_fine.level != this_level+1:
                             continue
 
@@ -256,29 +254,18 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         xupper_fine = patch_fine.dimensions[0].upper
                         ylower_fine = patch_fine.dimensions[1].lower
                         yupper_fine = patch_fine.dimensions[1].upper
-                        dx = patch_fine.delta[0]
-                        dy = patch_fine.delta[1]
-
-                        # Figure out if patch1 overlaps current patch. If so, we need to set
-                        # corresponding values in mask to 0.
-                        # m1 = ma.masked_inside(xc_centers,xlower_fine,xupper_fine)
-                        # m2 = ma.masked_inside(yc_centers,ylower_fine,yupper_fine)
-                        # mask_coarse = ma.masked_where(m1.mask & m2.mask,mask_coarse)
 
                         m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
                         m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
 
-                        mask_coarse = (m1 & m2)|mask_coarse
+                        # Mask all fine grid regions
+                        mask_coarse = (m1 & m2) | mask_coarse
 
 
-                    # This doesn't work yet!
-                    current_data.add_attribute('mask',mask_coarse)
-
-                    # Create dummy mask, just to see if the masking works.
-                    # eta = state.q[3,:,:]   # water surface height
-                    # mask = eta > 3  # Mask something
-                    # mask = np.zeros(eta.shape)  # no mask
-                    # current_data.add_attribute('mask',mask)
+                    current_data.add_attribute('mask_coarse',mask_coarse)
+                    # -------------------------------------------------------------
+                    # Done with masking
+                    # -------------------------------------------------------------
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
