@@ -180,12 +180,12 @@ def surface(current_data):
     h = q[0,:,:]
     eta = q[3,:,:]
 
-    # Mask out covered coarse regions
     water = ma.masked_where(h <= drytol,eta)
 
-    # Do this to mask out covered coarse regions
+    # Mask covered coarse regions
     m = current_data.mask_coarse
     water = ma.masked_where(m, eta)
+
     return water
 
 def surface_or_depth(current_data):
@@ -211,7 +211,7 @@ def surface_or_depth(current_data):
     # With this version, the land is transparent.
     surface_or_depth = ma.masked_where(h <= drytol,where(topo<0,eta,h))
 
-    # To mask out coarse grids, include this line.
+    # Mask covered coarse regions
     m = current_data.mask_coarse
     surface_or_depth = ma.masked_where(m,surface_or_depth)
 
