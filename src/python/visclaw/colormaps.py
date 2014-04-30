@@ -66,12 +66,24 @@ def add_colormaps(colormaps, break_location=0.5):
     r"""Concatenate colormaps in *colormaps* list.
 
     Appends the colormaps in the list *colormaps* causing a break to occur at
-    *break_location*.  Only currently works with two colormaps.  This
+    *break_location*.  Currently only works with two colormaps.  This
     functionality is planned to be included in matplotlib at a future date.
 
     Originally contributed by Damon McDougall
 
     returns `matplotlib.colors.LinearSegmentedColormap`
+
+    Example
+    -------
+    This example takes two colormaps whose data ranges from [-1.0, 5.0] where 
+    the break in the colormaps occurs at 1.0.
+
+    >>> import matplotlib.pyplot as plt
+    >>> import clawpack.visclaw.colormaps as colormaps
+    >>> data_limits = [-1.0,5.0]
+    >>> loc = 1.0 - data_limits[1] / (data_limits[1] - data_limits[0])
+    >>> cmaps = (plt.get_cmap("BuGn_r"), plt.get_cmap("Blues_r"))
+    >>> new_cmap = colormaps.add_colormaps(cmaps, break_location=loc)
 
     """
     
