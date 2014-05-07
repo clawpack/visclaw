@@ -202,6 +202,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     patch = state.patch
 
                     current_data.add_attribute('patch',patch)
+                    current_data.add_attribute("level",1)
                     current_data.add_attribute('q',state.q)
                     current_data.add_attribute('var',None)
                     current_data.add_attribute('aux',state.aux)
