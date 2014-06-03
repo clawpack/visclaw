@@ -631,13 +631,14 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     # Grid mapping:
 
     xc_edges, yc_edges = patch.grid.c_edges
+    xc_centers, yc_centers = patch.grid.c_centers
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
 
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
+        raise Exception("MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        X_center, Y_center = pp['mapc2p'](current_data.x, current_data.y)
+        X_center, Y_center = pp['mapc2p'](xc_centers, yc_centers)
         X_edge, Y_edge = pp['mapc2p'](xc_edges, yc_edges)
     else:
         X_center, Y_center = current_data.x, current_data.y
