@@ -641,7 +641,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         X_center, Y_center = pp['mapc2p'](xc_centers, yc_centers)
         X_edge, Y_edge = pp['mapc2p'](xc_edges, yc_edges)
     else:
-        X_center, Y_center = current_data.x, current_data.y
+        X_center, Y_center = xc_centers, yc_centers
         X_edge, Y_edge = xc_edges, yc_edges
 
     pylab.hold(True)
