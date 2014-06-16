@@ -80,10 +80,20 @@ def add_colormaps(colormaps, break_location=0.5):
 
     >>> import matplotlib.pyplot as plt
     >>> import clawpack.visclaw.colormaps as colormaps
+    >>> import numpy
     >>> data_limits = [-1.0,5.0]
-    >>> loc = 1.0 - data_limits[1] / (data_limits[1] - data_limits[0])
+    >>> break_location = 1.0
+    >>> loc = (break_location - data_limits[0]) / (data_limits[1] - data_limits[0])
     >>> cmaps = (plt.get_cmap("BuGn_r"), plt.get_cmap("Blues_r"))
     >>> new_cmap = colormaps.add_colormaps(cmaps, break_location=loc)
+    >>> x = numpy.linspace(-1,1,100)
+    >>> y = x
+    >>> X, Y = numpy.meshgrid(x, y)
+    >>> fig = plt.figure()
+    >>> axes = fig.add_subplot(1,1,1)
+    >>> plot = axes.pcolor(X, Y, 3.0 * X + 2.0, cmap=new_cmap)
+    >>> fig.colorbar(plot)
+    >>> plt.show()
 
     """
     
