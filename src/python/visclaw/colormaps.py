@@ -62,12 +62,14 @@ def make_colormap(color_list):
     return mymap
 
 
-def add_colormaps(colormaps, break_location=0.5):
+def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_name="something"):
     r"""Concatenate colormaps in *colormaps* list.
 
-    Appends the colormaps in the list *colormaps* causing a break to occur at
-    *break_location*.  Currently only works with two colormaps.  This
-    functionality is planned to be included in matplotlib at a future date.
+    Appends the colormaps in the list *colormaps* adjusting the mapping to the
+    colormap such that it maps the data space limits *data_limits* and puts the
+    break in the colormaps at *data_break* which is again in data space.  The 
+    argument *colormap_name* labels the colormap and is passed to the init 
+    method of `matplotlib.colors.LinearSegmentedColormap`.
 
     Originally contributed by Damon McDougall
 
@@ -81,11 +83,9 @@ def add_colormaps(colormaps, break_location=0.5):
     >>> import matplotlib.pyplot as plt
     >>> import clawpack.visclaw.colormaps as colormaps
     >>> import numpy
-    >>> data_limits = [-1.0,5.0]
-    >>> break_location = 1.0
-    >>> loc = (break_location - data_limits[0]) / (data_limits[1] - data_limits[0])
     >>> cmaps = (plt.get_cmap("BuGn_r"), plt.get_cmap("Blues_r"))
-    >>> new_cmap = colormaps.add_colormaps(cmaps, break_location=loc)
+    >>> new_cmap = colormaps.add_colormaps(cmaps, data_limits=[-1.0, 5.0], 
+        data_break=1.0)
     >>> x = numpy.linspace(-1,1,100)
     >>> y = x
     >>> X, Y = numpy.meshgrid(x, y)
@@ -96,6 +96,9 @@ def add_colormaps(colormaps, break_location=0.5):
     >>> plt.show()
 
     """
+
+    break_location = (data_break - data_limits[0])      \
+                            / (data_limits[1] - data_limits[0])
     
     lhs_dict = colormaps[0]._segmentdata
     rhs_dict = colormaps[1]._segmentdata
@@ -113,12 +116,13 @@ def add_colormaps(colormaps, break_location=0.5):
         val_list = lhs_dict[key]
         # print(key, val_list)
         for val in val_list:
-            new_dict[key].append((break_location + val[0] * (1.0 - break_location), val[1], val[2]))
+            new_dict[key].append((break_location + val[0] * \
+                                    (1.0 - break_location), val[1], val[2]))
 
     N = 256
     gamma = 1.0
 
-    return colors.LinearSegmentedColormap('something', new_dict, N, gamma)
+    return colors.LinearSegmentedColormap(colormap_name, new_dict, N, gamma)
 
 
 def showcolors(cmap):
