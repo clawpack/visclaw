@@ -193,7 +193,8 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if refresh or (not framesoln_dict.has_key(key)):
-            framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
+            framesoln = solution.Solution(frameno,path=outdir, \
+                        file_format=self.format,read_aux=False)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
