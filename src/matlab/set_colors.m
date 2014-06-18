@@ -86,10 +86,8 @@ switch  colormapping
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
         
-    case 'ProcessorPartitions'
-        % This assumes that q = mpirank = 0,1,2,...NP-1, where NP is the
-        % total number of runs used for the run.  
-        qcolors = round(q)+1;
+    case 'parallelpartitions'
+        qcolors = getmpirank()+1;
         set(p,'CData',qcolors);
         
         set(p,'CDataMapping','direct');  % Scale into current color map.

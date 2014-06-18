@@ -70,6 +70,8 @@ if (PlotType <= 3)
 	  'function was found.']);
   end
 
+  set_value('plotparallelpartitions','PlotParallelPartitions',0);  
+  
   set_value('usercolormapping','UserColorMapping',0);
   if (usercolormapping == 1 & ~exist('setcolors'))
     error(['*** UserColorMapping = 1, but no ''setcolors'' ',...
@@ -78,6 +80,8 @@ if (PlotType <= 3)
 
   if (underoverflag == 1)
     colormapping = 'underover';
+  elseif (plotparallelpartitions == 1)
+      colormapping = 'parallelpartitions';
   elseif (usercolormapping == 1)
     colormapping = 'usercolormapping';
   else
