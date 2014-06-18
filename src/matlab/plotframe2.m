@@ -214,7 +214,7 @@ for ng = 1:ngrids,
       mpirank = amrdata(ng).mpirank;
       set_mpirank(mpirank);
   else
-      mpirank = 0;
+      set_mpirank(0);
   end
 
   mx = amrdata(ng).mx;
@@ -298,7 +298,7 @@ for ng = 1:ngrids,
     end
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
 	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,...
-	maskflag,ng,blockno,mpirank,colormapping);
+	maskflag,ng,blockno,colormapping);
   end;  % end of plotting for PlotType == 3
 
   if (PlotType == 4)
