@@ -77,6 +77,8 @@ elseif (strcmp(lower(outputflag),'hdf') == 1)
   [amr,t] = readamrdata_hdf(dim,Frame,dir);
 elseif (strcmp(lower(outputflag),'chombo') == 1)
   [amr,t] = readamrdata_chombo(dim,Frame,dir,outputprefix);
+elseif (strcmp(lower(outputflag),'forestclaw') == 1)
+  [amr,t] = readamrdata_forestclaw(dim,Frame,dir,outputprefix);
 else
   str = sprintf(['readamrdata : ''%s'' is not a valid OutputFlag. Use ',...
 	'flag = ''ascii'' or flag = ''hdf''.'],flag);
