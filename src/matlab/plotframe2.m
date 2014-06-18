@@ -209,9 +209,13 @@ for ng = 1:ngrids,
   end;
 
   % Set block number for multi-block calculations.
-  if (readblocknumber)
-    set_blocknumber(blockno);
-  end;
+  set_blocknumber(blockno);
+  if (forestclaw)
+      mpirank = amrdata(ng).mpirank;
+      set_mpirank(mpirank);
+  else
+      mpirank = 0;
+  end
 
   mx = amrdata(ng).mx;
   my = amrdata(ng).my;
@@ -294,7 +298,7 @@ for ng = 1:ngrids,
     end
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
 	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,...
-	maskflag,ng,blockno,colormapping);
+	maskflag,ng,blockno,mpirank,colormapping);
   end;  % end of plotting for PlotType == 3
 
   if (PlotType == 4)
