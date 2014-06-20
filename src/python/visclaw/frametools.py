@@ -219,6 +219,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
 
                     current_data.add_attribute('patch',patch)
+                    current_data.add_attribute("level",1)
+                    current_data.add_attribute('q',state.q)
                     current_data.add_attribute('var',None)
                     current_data.add_attribute('q',state.q)
                     current_data.add_attribute('aux',state.aux)
@@ -716,16 +718,17 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     # Grid mapping:
 
     xc_edges, yc_edges = patch.grid.c_edges
+    xc_centers, yc_centers = patch.grid.c_centers
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
 
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
+        raise Exception("MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        X_center, Y_center = pp['mapc2p'](current_data.x, current_data.y)
+        X_center, Y_center = pp['mapc2p'](xc_centers, yc_centers)
         X_edge, Y_edge = pp['mapc2p'](xc_edges, yc_edges)
     else:
-        X_center, Y_center = current_data.x, current_data.y
+        X_center, Y_center = xc_centers, yc_centers
         X_edge, Y_edge = xc_edges, yc_edges
 
     pylab.hold(True)

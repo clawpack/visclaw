@@ -482,8 +482,15 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
 
     if gaugenos=='all':
         gaugenos = setgauges.gauge_numbers
+        gauges = setgauges.gauges
+    else:
+        gauges = []
+        for gauge_num in gaugenos:
+            for gauge in setgauges.gauges:
+                if gauge_num == gauge[0]:
+                    gauges.append(gauge)
 
-    for gauge in setgauges.gauges:
+    for gauge in gauges:
         try:
             xn,yn = gauge[1:3]
             if mapc2p:
