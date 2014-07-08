@@ -1127,7 +1127,7 @@ def plotclaw2html(plotdata):
                         print "    for otherfigure ",name
                         raise
 
-                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
+            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
         html.write('<p></ul>\n')  
     
     html.write('</body></html>')

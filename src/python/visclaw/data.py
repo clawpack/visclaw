@@ -90,7 +90,12 @@ class ClawPlotData(clawdata.ClawData):
                                         # in each frame are done
 
         self.add_attribute('plotfigure_dict',{})  
-        self.add_attribute('otherfigure_dict',{})  
+        try:
+            from collections import OrderedDict   # new in Python 2.7
+            d = OrderedDict()  
+        except:
+            d = {}
+        self.add_attribute('otherfigure_dict',d)  
 
         self.add_attribute('framesoln_dict',{})        # dictionary for holding framesoln
                                         # objects associated with plots
@@ -553,6 +558,7 @@ class ClawPlotData(clawdata.ClawData):
         self._otherfignames.append(name)
         otherfigure = ClawOtherFigure(name,self)
         self.otherfigure_dict[name] = otherfigure
+        otherfigure.fname = fname
         return otherfigure
 
     def set_outdirs(self):
