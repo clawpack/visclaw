@@ -184,10 +184,10 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             for i, framesoln in enumerate(framesolns):
 
-                if framesoln.t != t:
+                if abs(framesoln.t - t) > 1e-12:
                     print '*** Warning: t values do not agree for frame ',frameno
-                    print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
+                    print '*** t = %22.15e for outdir = %s' % (t,plotdata.outdir)
+                    print '*** t = %22.15e for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
 
                 current_data.add_attribute('framesoln',framesoln)
 
