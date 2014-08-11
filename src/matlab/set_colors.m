@@ -87,11 +87,79 @@ switch  colormapping
         set(p,'FaceColor','flat');
         
     case 'parallelpartitions'
-        qcolors = getmpirank()+1;
+        
+        pp = parallelpartitions(q);
+        npmax = pp.npmax;
+        
+        % Seed to use for random processor colormap.
+        s = pp.seed;
+        ppcm = multicolormap(npmax,s);
+
+        mpirank = getmpirank();  % mpirank for this patch        
+        
+        if (isempty(pp.qcolors))            
+            cm_extended = ppcm;
+            qcolors = mpirank+1 + zeros(size(q));            
+        else
+            % == NAN where processor colors should be used. 
+            qcolors = pp.qcolors;  
+            m = ~isnan(qcolors);
+                        
+            n = size(pp.colormap,1);
+            
+            qmin = pp.qmin;
+            qmax = pp.qmax;            
+            
+            qm = qcolors(m);
+            cidx = zeros(size(qm));
+                        
+            % Everything less than qmin will take processor color
+            m1 = qm < qmin;
+            % cidx(m1) = mpirank + 1;
+            cidx(m1) = npmax + 2;
+            
+            % Everything between qmin and qmax, map linearly into 
+            % pp.colormap.
+            m2 = qmin <= qm & qm <= qmax;
+            if (~isempty(qm))
+                cidx(m2) = floor((n-1)/(qmax-qmin)*(qm(m2) - qmin)) + 1;
+            end
+            cidx(m2) = cidx(m2) + npmax;
+            
+            % Everything larger than qmax is white
+            m3 = qm > qmax;
+            cidx(m3) = npmax + n + 1;
+            
+            qcolors(m) = cidx;
+            qcolors(~m) = mpirank + 1;
+
+            
+            w = [1 1 1]; 
+            cm_extended = [ppcm;pp.colormap;w];
+
+        end
+        
+        % -----------------------
+        % Modify patch handle
+        % -----------------------
+        
+        % Color by indexing directly into the color map
         set(p,'CData',qcolors);
         
-        set(p,'CDataMapping','direct');  % Scale into current color map.
-        set(p,'FaceColor','flat');       % Single color per cell
+        % Retrieve FaceVertex data so we can set rgb triples directly
+        fv_idx = get(p,'FaceVertexCData');
+        
+        if (sum(isnan(fv_idx)) > 0)
+            error('setcolors : nans remain in index used for colormap');
+        end;
+        
+        % Hardwire colors for the patch
+        set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        
+        % Use 'flat' so that each mesh cell has single identifing color
+        set(p,'FaceColor','flat');
+            
+        set(gca,'clim',[qmin, qmax]);
                         
     case 'usercolormapping'
         setcolors(p,x,y,z,q);
