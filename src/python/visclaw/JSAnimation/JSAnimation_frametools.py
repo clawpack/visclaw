@@ -35,7 +35,7 @@ def save_frame(frameno, plotdir='_plots', fname_base='frame', verbose=False):
     """
 
     plt.draw()
-    filename = '_plots/%s%s.png' % (fname_base, str(frameno).zfill(5))
+    filename = '%s/%s%s.png' % (plotdir, fname_base, str(frameno).zfill(5))
     plt.savefig(filename)
     if verbose:
         print "Saved ",filename
