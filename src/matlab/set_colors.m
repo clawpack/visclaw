@@ -159,7 +159,8 @@ switch  colormapping
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
             
-        set(gca,'clim',[qmin, qmax]);
+        set(gca,'clim',[pp.qmin, pp.qmax]);
+        setopengl;
                         
     case 'usercolormapping'
         setcolors(p,x,y,z,q);
