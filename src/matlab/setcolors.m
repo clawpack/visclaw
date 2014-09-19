@@ -68,6 +68,6 @@ function setcolors(p,x,y,z,q)
 
 str = [...
       'setcolors : Make a local copy of this routine and specify \n',...
-      'user-defined mapping']);
+      'user-defined mapping'];
 
 error(str);
