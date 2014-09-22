@@ -206,6 +206,9 @@ for ng = 1:ngrids,
   gridno = amrdata(ng).gridno;
   blockno = amrdata(ng).blockno;   % == 0 if there is only one block
   level = amrdata(ng).level;
+  if (forestclaw)
+      level = level + 1;   % ForestClaw levels start at 0
+  end
 
   % if we're not plotting data at this level, skip to next grid
   if (PlotData(level) == 0)
