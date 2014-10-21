@@ -66,6 +66,9 @@ switch  colormapping
         m_over = q >= (uo.value_upper + uo.tol);
         idx(m_over) = nmax + 2*cm_buff;   % last index of cm_extended
         
+        m_leftover = ~(m0 | m_under | m_over);
+        idx(m_leftover) = -1;
+        
         % -----------------------
         % Modify patch handle
         % -----------------------
@@ -78,8 +81,15 @@ switch  colormapping
         
         if (sum(isnan(fv_idx)) > 0)
             error('setcolors : nans remain in index used for colormap');
-        end;
-        
+        end
+        if (~isfield(uo,'color_nan'))
+            fprintf(['WARNING : No color has been set for ',...'
+                'underover.color_nan;  using white\n']);
+            uo.color_nan = [1 1 1];
+        end
+        cm_extended = [cm_extended; uo.color_nan];
+        fv_idx(fv_idx < 0) = length(cm_extended);
+                
         % Hardwire colors for the patch
         set(p,'FaceVertexCData',cm_extended(fv_idx,:));
         
