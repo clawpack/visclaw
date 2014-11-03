@@ -38,6 +38,15 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
         if varname is not None:
             ax.set_ylabel(varname)
 
+    ivar = 0
+
+    frame = frame_list[0]
+    ndim = len(frame.q.shape)-1
+    if ndim == 1:
+        fig = plt.figure(figsize=(8,4))
+        ax = plt.axes()
+        xc = frame.state.grid.p_centers
+        im, = ax.plot([], [])
     elif ndim == 2:
         fig = plt.figure(figsize=(4,4))
         xc, yc = frame.state.grid.p_centers
