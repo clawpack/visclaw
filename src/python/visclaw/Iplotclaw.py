@@ -130,8 +130,8 @@ class Iplotclaw(Iplot):
                 self.frames[str(frameno)] = ''
             else:
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=False)
-        except IOError:
-            print "Swallowing IOError to avoid crashing in interactive mode."
+        except IOError as e:
+            print str(e)
     def help_n(self):
         print 'n: advance to next frame\n'
 
