@@ -79,15 +79,14 @@ switch  colormapping
         % Retrieve FaceVertex data so we can set rgb triples directly
         fv_idx = get(p,'FaceVertexCData');
         
-        if (sum(isnan(fv_idx)) > 0)
-            error('setcolors : nans remain in index used for colormap');
-        end
         if (~isfield(uo,'color_nan'))
-            fprintf(['WARNING : No color has been set for ',...'
-                'underover.color_nan;  using white\n']);
-            uo.color_nan = [1 1 1];
+            color_nan = [1 1 1]*0.9;   % Should allow background to show through
+        else
+            color_nan = uo.color_nan;
         end
-        cm_extended = [cm_extended; uo.color_nan];
+        cm_extended = [cm_extended; color_nan];
+
+        % Set index to last entry in the colormap.
         fv_idx(fv_idx < 0) = length(cm_extended);
                 
         % Hardwire colors for the patch
