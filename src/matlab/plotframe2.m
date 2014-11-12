@@ -70,6 +70,8 @@ if (PlotType <= 3)
 	  'function was found.']);
   end
 
+  set_value('plotparallelpartitions','PlotParallelPartitions',0);  
+  
   set_value('usercolormapping','UserColorMapping',0);
   if (usercolormapping == 1 & ~exist('setcolors'))
     error(['*** UserColorMapping = 1, but no ''setcolors'' ',...
@@ -78,6 +80,8 @@ if (PlotType <= 3)
 
   if (underoverflag == 1)
     colormapping = 'underover';
+  elseif (plotparallelpartitions == 1)
+      colormapping = 'parallelpartitions';
   elseif (usercolormapping == 1)
     colormapping = 'usercolormapping';
   else
@@ -202,6 +206,9 @@ for ng = 1:ngrids,
   gridno = amrdata(ng).gridno;
   blockno = amrdata(ng).blockno;   % == 0 if there is only one block
   level = amrdata(ng).level;
+  if (forestclaw)
+      level = level + 1;   % ForestClaw levels start at 0
+  end
 
   % if we're not plotting data at this level, skip to next grid
   if (PlotData(level) == 0)
@@ -209,9 +216,13 @@ for ng = 1:ngrids,
   end;
 
   % Set block number for multi-block calculations.
-  if (readblocknumber)
-    set_blocknumber(blockno);
-  end;
+  set_blocknumber(blockno);
+  if (forestclaw)
+      mpirank = amrdata(ng).mpirank;
+      set_mpirank(mpirank);
+  else
+      set_mpirank(0);
+  end
 
   mx = amrdata(ng).mx;
   my = amrdata(ng).my;
