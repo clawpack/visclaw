@@ -27,7 +27,8 @@ if sys.platform in ['win32','cygwin']:
     sys.path.append(pypath)
 
 
-def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',format='ascii'):
+def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
+             format='ascii', msgfile=''):
     """
     Create html and/or latex versions of plots.
 
@@ -45,6 +46,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',format='ascii'
     plotdata.plotdir = plotdir
     plotdata.setplot = setplot
     plotdata.format = format
+    plotdata.msgfile = msgfile
 
     plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
