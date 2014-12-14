@@ -653,7 +653,7 @@ def plotclaw2kml(plotdata):
                         KML.west(plotfigure.kml_xlimits[1]),
                         KML.rotation(0.0))))
         # end range loop
-        
+
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
 
@@ -1244,7 +1244,7 @@ def plotclaw2html(plotdata):
                         print "    for otherfigure ",name
                         raise
 
-                html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))
+            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))
         html.write('<p></ul>\n')
 
     html.write('</body></html>')

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """
 Module frametools for plotting frames of time-dependent data.
-
 """
 
 import os,sys
@@ -73,7 +72,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     but usually from different output directories.
     """
 
-    if not (type(framesolns) is list):
+    if type(framesolns) is not list:
         framesolns = [framesolns]
 
     t = framesolns[0].t
@@ -86,24 +85,15 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     current_data.add_attribute('plotdata',plotdata)
     current_data.add_attribute('frameno',frameno)
     current_data.add_attribute('t',t)
+    current_data.add_attribute('var',None)
+    current_data.add_attribute('plotaxes',None)
+    current_data.add_attribute('plotfigure',None)
 
     # call beforeframe if present, which might define additional
     # attributes in current_data or otherwise set up plotting for this
     # frame.
-
     beforeframe =  getattr(plotdata, 'beforeframe', None)
-    if beforeframe:
-        if isinstance(beforeframe, str):
-            # a string to be executed
-            exec(beforeframe)
-        else:
-            # assume it's a function
-            try:
-                output = beforeframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in beforeframe ***'
-                raise
+    current_data = run_str_or_func(beforeframe,current_data)
 
 
     # iterate over each single plot that makes up this frame:
@@ -169,6 +159,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             exec(axescmd)
             plt.hold(True)
 
+            current_data.plotaxes = plotaxes
+            current_data.plotfigure = plotaxes._plotfigure
+
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -179,10 +172,10 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             for i, framesoln in enumerate(framesolns):
 
-                if framesoln.t != t:
+                if abs(framesoln.t - t) > 1e-12:
                     print '*** Warning: t values do not agree for frame ',frameno
-                    print '*** t = %g for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %g for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
+                    print '*** t = %22.15e for outdir = %s' % (t,plotdata.outdir)
+                    print '*** t = %22.15e for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
 
                 current_data.add_attribute('framesoln',framesoln)
 
@@ -208,8 +201,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute("level",1)
-                    current_data.add_attribute('q',state.q)
-                    current_data.add_attribute('var',None)
                     current_data.add_attribute('q',state.q)
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
@@ -258,9 +249,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     if patch.num_dim == 2:
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])
-
-                    current_data.add_attribute('plotaxes',None)
-                    current_data.add_attribute('plotfigure',None)
 
                     # loop over items:
                     # ----------------
@@ -316,8 +304,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
                         cbar = plt.colorbar(pobj, \
-                                shrink=plotitem.colorbar_shrink,\
-                                ticks=plotitem.colorbar_ticks)
+                                     shrink=plotitem.colorbar_shrink,\
+                                     ticks=plotitem.colorbar_ticks)
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
                                 cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
@@ -341,20 +329,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
-            if afteraxes:
-                if isinstance(afteraxes, str):
-                    # a string to be executed
-                    exec(afteraxes)
-                else:
-                    # assume it's a function
-                    try:
-                        current_data.plotaxes = plotaxes
-                        current_data.plotfigure = plotaxes._plotfigure
-                        output = afteraxes(current_data)
-                        if output: current_data = output
-                    except:
-                        print '*** Error in afteraxes ***'
-                        raise
+            current_data = run_str_or_func(afteraxes,current_data)
 
             if plotaxes.scaled:
                 plt.axis('scaled')
@@ -392,26 +367,13 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 except:
                     pass  # let axis be set automatically
 
-
-
             # end of loop over plotaxes
         # end of loop over plotfigures
 
 
     # call an afterframe function if present:
     afterframe =  getattr(plotdata, 'afterframe', None)
-    if afterframe:
-        if isinstance(afterframe, str):
-            # a string to be executed
-            exec(afterframe)
-        else:
-            # assume it's a function
-            try:
-                output = afterframe(current_data)
-                if output: current_data = output
-            except:
-                print '*** Error in afterframe ***'
-                raise
+    current_data = run_str_or_func(afterframe,current_data)
 
     if plotdata.mode() == 'iplotclaw':
         plt.ion()
@@ -440,10 +402,19 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                              verbose=verbose,kml_fig=False)
 
     return current_data
-
     # end of plotframe
 
 
+def run_str_or_func(str_or_func,current_data):
+    if str_or_func is None:
+        return current_data
+    if isinstance(str_or_func, str):
+        exec(str_or_func)
+    else:
+        output = str_or_func(current_data)
+        if output:
+            return output
+    return current_data
 
 
 def params_dict(plotitem, base_params, level_params, level):
@@ -530,11 +501,6 @@ m
         raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
 
     if pp['plot_type'] == '1d_fill_between':
-        try: plt.fill_between
-        except:
-            print "*** This version of plt is missing fill_between"
-            print "*** Reverting to 1d_plot"
-            pp['plot_type'] = '1d_plot'
         var  = get_var(state,pp['plot_var'],current_data)
         var2 = get_var(state,pp['plot_var2'],current_data)
         current_data.var = var
@@ -592,7 +558,7 @@ m
 
             # interpolate to the current time t:
             try:
-                i1 = plt.find(gauget < t)[-1]
+                i1 = np.where(gauget < t)[0][-1]
                 i1 = min(i1,len(gauget)-2)
                 slope = (gaugeq[i1+1]-gaugeq[i1]) / (gauget[i1+1]-gauget[i1])
                 qt = gaugeq[i1] + slope * (t-gauget[i1])
@@ -772,7 +738,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
-            pobj = plt.imshow(plt.flipud(var.T), extent=xylimits, \
+            pobj = plt.imshow(np.flipud(var.T), extent=xylimits, \
                     cmap=pp['imshow_cmap'], interpolation='nearest', \
                     norm=color_norm)
 
@@ -800,16 +766,16 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             if (pp['contour_min'] is not None) and \
                     (pp['contour_max'] is not None):
 
-                pp['contour_levels'] = plt.linspace(pp['contour_min'], \
+                pp['contour_levels'] = np.linspace(pp['contour_min'], \
                        pp['contour_max'], pp['contour_nlevels'])
                 levels_set = True
 
 
         if pp['celledges_show']:
-            pobj = pc_mth(X_edge, Y_edge, plt.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
         elif pp['patch_bgcolor'] is not 'w':
-            pobj = pc_mth(X_edge, Y_edge, plt.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
         plt.hold(True)
 
@@ -872,11 +838,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     elif pp['plot_type'] == '2d_patch':
         # plot only the patches, no data:
         if pp['celledges_show']:
-            pobj = pc_mth(X_edge, Y_edge, plt.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'],\
                     shading='faceted')
         else:
-            pobj = pc_mth(X_edge, Y_edge, plt.zeros(var.shape), \
+            pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
 
 
@@ -884,9 +850,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # plot 2-norm of gradient of variable var:
 
         # No idea why this next line is needed...maybe a 64-/32-bit incompatibility issue?
-        var = plt.array(var)
-        (vx,vy) = plt.gradient(var)
-        vs = plt.sqrt(vx**2 + vy**2)
+        var = np.array(var)
+        (vx,vy) = np.gradient(var)
+        vs = np.sqrt(vx**2 + vy**2)
 
         pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp['schlieren_cmap']"
@@ -1035,7 +1001,6 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     if plotdir != '.':
         fname = os.path.join(plotdir,fname)
     if verbose:  print '    Saving plot to file ', fname
-
     if kml_fig:
         # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
         # This was added so that in KML, axes, tick labels, etc do not get printed.
@@ -1053,6 +1018,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
                       pad_inches=0,dpi=kml_dpi)
     else:
         plt.savefig(fname)
+
 
 #------------------------------------------------------------------
 def var_limits(plotdata,vars,padding=0.1):
@@ -1133,7 +1099,6 @@ def var_minmax(plotdata,framenos,vars):
 
     """
 
-    from plt import inf
     framenos = only_most_recent(framenos, plotdata.outdir)
     if len(framenos) == 0:
         print '*** No frames found in var_minmax!'
@@ -1147,11 +1112,11 @@ def var_minmax(plotdata,framenos,vars):
         print "*** Error in var_minmax: vars == 'all' is not implemented yet"
         return (varmin,varmax)
     for var in vars:
-        varmin[var] = {'all': inf}
-        varmax[var] = {'all': -inf}
+        varmin[var] = {'all': np.inf}
+        varmax[var] = {'all': -np.inf}
         for frameno in framenos:
-            varmin[var][frameno] = inf
-            varmax[var][frameno] = -inf
+            varmin[var][frameno] = np.inf
+            varmax[var][frameno] = -np.inf
 
     for frameno in framenos:
         solution = plotdata.getframe(frameno, plotdata.outdir)

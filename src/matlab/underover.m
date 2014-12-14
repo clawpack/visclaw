@@ -9,6 +9,7 @@ function uo = underover()
 %
 %             uo.color_under     the rgb triple used to color undershoots
 %             uo.color_over      the rgb triple used to color overshoots
+%             uo.color_nan       the color to use for NAN values
 %             uo.value_lower     lower value of exact solution
 %             uo.value_upper     upper value of exact solution
 %             uo.tol             tolerance for under/over shoots
@@ -35,6 +36,7 @@ function uo = underover()
 %
 %    uo = struct('color_under',[0 1 1],...  % cyan
 %                'color_over',[1 0 1],...   % magenta
+%                'color_nan',[1 1 1],...    % white
 %                'value_lower',0, ...       % theoretical minimum
 %    	         'value_upper',1,...        % theoretical maximum
 %    	         'tol',1e-4,...             % acceptable numerical over/undershoot

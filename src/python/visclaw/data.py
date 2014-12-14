@@ -39,11 +39,15 @@ class ClawPlotData(clawdata.ClawData):
             # inherit some values from controller
             self.add_attribute('rundir',copy.copy(controller.rundir))
             self.add_attribute('outdir',copy.copy(controller.outdir))
+            if len(controller.frames)>0:
+                for i,frame in enumerate(controller.frames):
+                    self.framesoln_dict[str(i)] = frame
+            self.add_attribute('format',copy.copy(controller.output_format))
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
+            self.add_attribute('format','ascii')
 
-        self.add_attribute('format','ascii')
 
         self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
         self.add_attribute('overwrite',True)           # ok to overwrite old plotdir?
@@ -93,7 +97,12 @@ class ClawPlotData(clawdata.ClawData):
                                         # in each frame are done
 
         self.add_attribute('plotfigure_dict',{})
-        self.add_attribute('otherfigure_dict',{})
+        try:
+            from collections import OrderedDict   # new in Python 2.7
+            d = OrderedDict()
+        except:
+            d = {}
+        self.add_attribute('otherfigure_dict',d)
 
         self.add_attribute('framesoln_dict',{})        # dictionary for holding framesoln
                                         # objects associated with plots
@@ -326,8 +335,8 @@ class ClawPlotData(clawdata.ClawData):
                         gauge_numbers = []
                     else:
                         # Convert type for equality comparison:
-                        raw_numbers = np.array(raw_data[:,0], dtype=int)    
-                        
+                        raw_numbers = np.array(raw_data[:,0], dtype=int)
+
                         gauge_numbers = list(set(raw_numbers))
                         gauge_numbers.sort()
                         print "In fort.gauge file, found gauge numbers %s" \
@@ -339,7 +348,7 @@ class ClawPlotData(clawdata.ClawData):
                             loc = locations[n]
                         except:
                             loc = None
-                        gauge = gaugetools.GaugeSolution(gaugeno, 
+                        gauge = gaugetools.GaugeSolution(gaugeno,
                                                          location=loc)
                         gauge_indices = np.nonzero(n == raw_numbers)[0]
 
@@ -554,6 +563,7 @@ class ClawPlotData(clawdata.ClawData):
         self._otherfignames.append(name)
         otherfigure = ClawOtherFigure(name,self)
         self.otherfigure_dict[name] = otherfigure
+        otherfigure.fname = fname
         return otherfigure
 
     def set_outdirs(self):
