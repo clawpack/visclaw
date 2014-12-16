@@ -593,14 +593,10 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-
-#------------------STEPH-------------------
-# Working so far!
-#------------------------------------------
-
     doc = KML.kml(
     KML.Document(
     KML.Folder()))
+
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
@@ -624,9 +620,9 @@ def plotclaw2kml(plotdata):
         #      --gbegin  (time/date to start simulation)
         #      --range (height, in meters from sealevel)
         #      --tilt ?
-        #
-        # TODO : Are coordinates of the LatLong box correct?
-
+        # Include "LookAt" tags ...
+        # Print statements indicating what is
+        # TODO : Set GDAL_DATA to point to gcs.csv file.
 
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
@@ -645,9 +641,9 @@ def plotclaw2kml(plotdata):
             fname_str = fname + 'fig%s' % figno
             fname_png = fname_str + '.png'
 
-            import pdb
-            pdb.set_trace()
-
+            ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+            ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+            lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
             doc.Document.Folder.append(
                 KML.NetworkLink(
@@ -657,32 +653,32 @@ def plotclaw2kml(plotdata):
                         KML.end(timestrend)),
                     KML.Region(
                         KML.LatLonBox(
-                            KML.north(plotfigure.kml_ylimits[1]),
-                            KML.south(plotfigure.kml_ylimits[0]),
-                            KML.east(plotfigure.kml_xlimits[0]),
-                            KML.west(plotfigure.kml_xlimits[1]),
+                            KML.north(ur[1]),KML.south(lr[1]),KML.east(ul[0]),KML.west(ur[0]),
                             KML.rotation(0.0))),
                     KML.Link(
                         KML.href("%s/doc.kml" % fname_str),
                         KML.viewRefreshMode("onRegion"),
                         KML.viewFormat())))
 
-            # TODO : Add calls to gdal_translate, gdal_warp and gdal2tiles.py for this frame.
-            im = imread(fname_png)
+            im = plt.imread(fname_png)
             sx = im.shape[0]
             sy = im.shape[1]
-            os.sys("gdal_translate -of VRT \
-            -a_srs EPSG:4326 \
-            -gcp 0      0  %f   %f      \
-            -gcp %d     0  %f   %f      \
-            -gcp %d     %d  %f   %f  -90 \
-            %s.png %s.vrt" %(plotfigure.kml_ylimits[1],plotfigure.kml_xlimits[0],sx,
-                             plotfigure.kml_ylimits[1],plotfigure.kml_xlimits[0],sx,sy,
-                             plotfigure.kml_ylimits[1],plotfigure.kml_xlimits[1]))
 
-            os.sys("gdalwarp -of VRT -t_srs EPSG:4326 %s.vrt %s.vrt" % (fname_str,fname_str))
+            gdal_str = "gdal_translate -of VRT " \
+                   "-a_srs EPSG:4326 " \
+                   "-gcp %d     %d  %f   %f      " \
+                   "-gcp %d     %d  %f   %f      " \
+                   "-gcp %d     %d  %f   %f  -90 " \
+                   "%s.png %s_tmp.vrt" %(0,0,ul[0],ul[1],
+                                         sx,0,ur[0],ur[1],
+                                         sx,sy,lr[0],lr[1],
+                                         fname_str,fname_str)
+            os.system(gdal_str)
+            os.system("gdalwarp -of VRT -t_srs EPSG:4326 -overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
 
-            os.sys("gdal2tiles.py --profile=geodetic  --force-kml --resampling=near %s.vrt" % (fname_str))
+            os.system("gdal2tiles.py --profile=geodetic  --force-kml --resampling=near %s.vrt" % (fname_str))
+            os.system("rm -rf %s_tmp.vrt" % (fname_str))
+
 
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
