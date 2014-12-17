@@ -649,17 +649,19 @@ def plotclaw2kml(plotdata):
             if i < numframes-1:
                 gend = time.gmtime(frametimes[framenos[i+1]])
             else:
-                # Plot only appears when slider is at far right
-                # Add extra simlulation time so the last file shows up.
-                dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
-                gend = time.gmtime(frametimes[framenos[i]] + dt/2)
+                if numframes == 1:
+                    gend = gbegin
+                else:
+                    # Add extra simlulation time so the last file shows up in GE
+                    dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
+                    gend = time.gmtime(frametimes[framenos[i]] + dt/2)
 
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
             print '\n'
-            print "Tiling %.png and adding KML entry" % (fname_str)
+            print "Tiling %s.png and adding KML entry to doc.kml" % (fname_str)
 
             doc.Document.Folder.append(
                 KML.NetworkLink(
@@ -677,8 +679,8 @@ def plotclaw2kml(plotdata):
                         KML.viewFormat())))
 
             im = plt.imread("%s.png" % fname_str)
-            sx = im.shape[0]
-            sy = im.shape[1]
+            sx = im.shape[1]   # reversed?
+            sy = im.shape[0]
 
             gdal_str = "gdal_translate -of VRT " \
                    "-a_srs EPSG:4326 " \
@@ -707,7 +709,6 @@ def plotclaw2kml(plotdata):
             os.remove("%s_tmp.vrt" % (fname_str))
             os.remove("%s.vrt" % (fname_str))
             shutil.rmtree(fname_str)
-
 
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
