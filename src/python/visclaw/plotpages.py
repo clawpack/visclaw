@@ -597,6 +597,9 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
+    import zipfile
+    import shutil
+
     doc = KML.kml(
     KML.Document(
     KML.Folder()))
@@ -612,10 +615,19 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
-        fname = plotdata.kml_index_fname + str(figno) + '.kml'
-        print '\nCreating kml file %s for figure %d\n' % (fname,figno)
+        ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+        ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+        lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-        filekml = open(fname,'w')
+        # Open zip file (which will be renamed a .kmz file)
+        fname_kmz = plotdata.kml_index_fname + str(figno)
+        zip = zipfile.ZipFile("%s.zip" % (fname_kmz),'w')
+
+        # Start doc.kml file (which will be head node in .kmz file)
+        fname_kml = "doc.kml"
+        print '\nCreating kml file %s for figure %d\n' % (fname_kml,figno)
+
+        filekml = open(fname_kml,'w')
 
         filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
@@ -638,16 +650,16 @@ def plotclaw2kml(plotdata):
                 gend = time.gmtime(frametimes[framenos[i+1]])
             else:
                 # Plot only appears when slider is at far right
-                gend = time.gmtime(frametimes[framenos[i]])
+                # Add extra simlulation time so the last file shows up.
+                dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
+                gend = time.gmtime(frametimes[framenos[i]] + dt/2)
 
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
-            fname_png = fname_str + '.png'
 
-            ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
-            ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
-            lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
+            print '\n'
+            print "Tiling %.png and adding KML entry" % (fname_str)
 
             doc.Document.Folder.append(
                 KML.NetworkLink(
@@ -664,7 +676,7 @@ def plotclaw2kml(plotdata):
                         KML.viewRefreshMode("onRegion"),
                         KML.viewFormat())))
 
-            im = plt.imread(fname_png)
+            im = plt.imread("%s.png" % fname_str)
             sx = im.shape[0]
             sy = im.shape[1]
 
@@ -681,16 +693,33 @@ def plotclaw2kml(plotdata):
             os.system("gdalwarp -of VRT -t_srs EPSG:4326 -overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
 
             os.system("gdal2tiles.py --profile=geodetic  --force-kml --resampling=near %s.vrt" % (fname_str))
-            os.system("rm -rf %s_tmp.vrt" % (fname_str))
+
+            # Add the <fname>.vrt file
+            zip.write("%s.vrt" % (fname_str))
+
+            # Add the <fname>/ directory
+            for dirname, subdirs, files in os.walk(fname_str):
+                zip.write(dirname)
+                for filename in files:
+                    zip.write(os.path.join(dirname, filename))
+
+            # Clean up files
+            os.remove("%s_tmp.vrt" % (fname_str))
+            os.remove("%s.vrt" % (fname_str))
+            shutil.rmtree(fname_str)
 
 
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
 
+        zip.write("doc.kml")   # Root KML file
 
+        # Clean up one more file
+        os.remove("doc.kml")
 
-
-
+        # Rename zip file so it can be read in Google Earth
+        os.rename("%s.zip" %(fname_kmz),"%s.kmz" % (fname_kmz))
+        zip.close()
 
     # end figure loop
 
@@ -1726,7 +1755,7 @@ def redirect_stdouts(f):
         stdout_save = sys.stdout
         stderr_save = sys.stderr
         try:
-            return f(*args, **kwds) 
+            return f(*args, **kwds)
         finally:
             # reset stdout for future print statements
             sys.stdout = stdout_save
@@ -2063,7 +2092,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                                plotdata.html_index_fname)
     print_html_pointers(path_to_html_index)
 
-   
+
 
     return plotdata
     # end of printframes
