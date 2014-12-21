@@ -9,9 +9,9 @@ latex/pdf pages displaying the plots.
 # Moved KML utilities up here
 #------------------------------------------
 from lxml import etree
-from pykml.factory import KML_ElementMaker as KML
-from pykml.factory import ATOM_ElementMaker as ATOM
-from pykml.factory import GX_ElementMaker as GX
+# from pykml.factory import KML_ElementMaker as KML
+# from pykml.factory import ATOM_ElementMaker as ATOM
+# from pykml.factory import GX_ElementMaker as GX
 
 import os, time, string, glob
 import sys
@@ -619,9 +619,9 @@ def plotclaw2kml(plotdata):
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-        # Open zip file (which will be renamed a .kmz file)
+        # Open zip file
         fname_kmz = plotdata.kml_index_fname + str(figno)
-        zip = zipfile.ZipFile("%s.zip" % (fname_kmz),'w')
+        zip = zipfile.ZipFile("%s.kmz" % (fname_kmz),'w')
 
         # Start doc.kml file (which will be head node in .kmz file)
         fname_kml = "doc.kml"
@@ -633,12 +633,20 @@ def plotclaw2kml(plotdata):
 
         # TODO : Make user options :
         # (look at how dpi, use_for_kml, etc are set in setplot.py
-        #      --gbegin  (time/date to start simulation)
-        #      --range (height, in meters from sealevel)
-        #      --tilt ?
-        # Include "LookAt" tags ...
-        # Print statements indicating what is
-        # TODO : Set GDAL_DATA to point to gcs.csv file.
+        #      -- gbegin  (time/date to start simulation)
+        #      -- range (height, in meters from sealevel)
+        #      -- tilt ?
+        #      -- Include "LookAt" tags ...
+        #      -- Add option to just print kml file with raw .png files?
+        #      -- Get rid of reliance on lxml/kml?
+        #      -- add URL options so users could get files from a server? (in this case,
+        #         we don't include .png files into zipped images)
+        #      -- Add color bar
+        #      -- Fix time slider so it starts at time zero (and not all files are loaded)
+        #      -- Add placemarks for Gauges files
+        #      -- Create index.html file as part of .kmz file
+        #      -- Different publishing options (.kmz will all files; .kmz with http links;
+        #         index.html file for Google Earth plug-in.)
 
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
@@ -694,7 +702,11 @@ def plotclaw2kml(plotdata):
             os.system(gdal_str)
             os.system("gdalwarp -of VRT -t_srs EPSG:4326 -overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
 
-            os.system("gdal2tiles.py --profile=geodetic  --force-kml --resampling=near %s.vrt" % (fname_str))
+            os.system("gdal2tiles.py " \
+                      "--profile=geodetic  " \
+                      "--force-kml " \
+                      "--resampling=near " \
+                      "%s.vrt" % (fname_str))
 
             # Add the <fname>.vrt file
             zip.write("%s.vrt" % (fname_str))
@@ -719,7 +731,6 @@ def plotclaw2kml(plotdata):
         os.remove("doc.kml")
 
         # Rename zip file so it can be read in Google Earth
-        os.rename("%s.zip" %(fname_kmz),"%s.kmz" % (fname_kmz))
         zip.close()
 
     # end figure loop
