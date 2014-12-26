@@ -435,7 +435,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     
 def read_setgauges(datadir):
     """
-    Read the info from setgauges.data.
+    Read the info from gauges.data.
     """
 
     try:
@@ -462,14 +462,14 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
     Plot gauge locations on current axes.
     format_string specifies the symbol to be plotted.
     If add_labels==True then labels will also be added (gauge number).
-    This routine determines locations from the file setgauges.data in
+    This routine determines locations from the file gauges.data in
     directory plotdata.rundir.  It does not require reading in the fort.gauge file
     produced by running the code.
     """
 
     from pylab import figure, plot, clf, title, text
 
-    datadir = plotdata.rundir  # this should contain setgauges.data
+    datadir = plotdata.rundir  # this should contain gauges.data
 
     try:
         setgauges = read_setgauges(datadir)
@@ -477,7 +477,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
         return
 
     if len(setgauges.gauges) == 0:
-        print "*** plot_gauge_locations: No gauges specified in setgauges.data"
+        print "*** plot_gauge_locations: No gauges specified in gauges.data"
         return
 
     if gaugenos=='all':
@@ -824,11 +824,11 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
 
     matches = True
     for gaugeno in gaugenos:
-        g1 = plotdata1.getgauge(gaugeno)
+        g1 = plotdata1.getgauge(gaugeno,verbose=verbose)
         t1 = g1.t
         q1 = g1.q
 
-        g2 = plotdata2.getgauge(gaugeno)
+        g2 = plotdata2.getgauge(gaugeno,verbose=verbose)
         t2 = g2.t
         q2 = g2.q
 
