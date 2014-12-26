@@ -834,7 +834,7 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
 
         dt = abs(t1-t2).max()
         if verbose:
-            print  "Max difference in t array at gauge %s is %g" % (gaugeno,dt)
+            print  "Max difference in t[:] at gauge %s is %g" % (gaugeno,dt)
         matches = matches and (dt <= tol)
 
         if q_components == 'all':
