@@ -41,10 +41,14 @@ def save_frame(frameno, plotdir='_plots', fname_base='frame', verbose=False):
         print "Saved ",filename
 
 
-def make_anim(plotdir, fname_base='frame', figsize=(10,6)):
+def make_anim(plotdir, fname_base=None, figno=None, figsize=(10,6)):
     """
     Assumes that a set of frames are available as png files in directory _plots,
     numbered consecutively, e.g. frame0000.png, frame0001.png, etc.
+
+    For Clawpack output, more typically labelled frame0000fig0.png, etc.,
+    so if figno is specified, look for this pattern.  In this case
+    fname_base is ignored.
 
     Creates an animation based display each frame in turn, and returns anim.
 
@@ -54,8 +58,17 @@ def make_anim(plotdir, fname_base='frame', figsize=(10,6)):
 
     import glob   # for finding all files matching a pattern
 
+    if figno is None:
+        if fname_base is None:
+            fname_base = 'frame'
+    else:
+        if fname_base is not None:
+            print "*** Warning: figno is specified so fname_base ignored"
+        fname_base = 'frame*fig%s' % figno
+
     # Find all frame files:
-    filenames = glob.glob('%s/%s*.png' % (plotdir, fname_base))
+    pattern = '%s/%s*.png' % (plotdir, fname_base)
+    filenames = glob.glob(pattern)
 
     # sort them into increasing order:
     filenames=sorted(filenames)
