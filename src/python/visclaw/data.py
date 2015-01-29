@@ -271,7 +271,7 @@ class ClawPlotData(clawdata.ClawData):
                    print 'Cleared data for frame ',frameno
 
 
-    def getgauge(self, gaugeno, outdir=None):
+    def getgauge(self, gaugeno, outdir=None, verbose=True):
         """
         ClawPlotData.getgauge:
         Return an object of class clawdata.Gauge containing the solution
@@ -314,10 +314,11 @@ class ClawPlotData(clawdata.ClawData):
                     locations[gauge[0]] = gauge[1:3]
 
             except:
-                print "*** WARNING *** Could not read gauges.data file from"
-                print "     %s" % outdir
-                print "*** Unable to determine gauge locations"
-                # raise Warning()
+                if verbose:
+                    print "*** WARNING *** Could not read gauges.data file from"
+                    print "     %s" % outdir
+                    print "*** Unable to determine gauge locations"
+                    # raise Warning()
 
             # Read in all gauges
             try:
@@ -326,7 +327,8 @@ class ClawPlotData(clawdata.ClawData):
                     print '*** Warning: cannot find gauge data file %s'%file_path
                     pass
                 else:
-                    print "Reading gauge data from %s" % file_path
+                    if verbose:
+                        print "Reading gauge data from %s" % file_path
                     raw_data = np.loadtxt(file_path)
 
                     gauge_read_string = ""
@@ -339,8 +341,9 @@ class ClawPlotData(clawdata.ClawData):
 
                         gauge_numbers = list(set(raw_numbers))
                         gauge_numbers.sort()
-                        print "In fort.gauge file, found gauge numbers %s" \
-                          % gauge_numbers
+                        if verbose:
+                            print "In fort.gauge file, found gauge numbers %s" \
+                                   % gauge_numbers
 
 
                     for n in gauge_numbers:
@@ -360,7 +363,8 @@ class ClawPlotData(clawdata.ClawData):
 
                         self.gaugesoln_dict[(n, outdir)] = gauge
 
-                    print "Read in gauges [%s]" % gauge_read_string[1:]
+                    if verbose:
+                        print "Read in gauges [%s]" % gauge_read_string[1:]
 
             except Exception as e:
                 print '*** Error reading gauges in ClawPlotData.getgauge'
