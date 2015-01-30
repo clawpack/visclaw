@@ -9,7 +9,7 @@ latex/pdf pages displaying the plots.
 # Moved KML utilities up here
 #------------------------------------------
 from lxml import etree
-# from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import KML_ElementMaker as KML
 # from pykml.factory import ATOM_ElementMaker as ATOM
 # from pykml.factory import GX_ElementMaker as GX
 
@@ -690,23 +690,48 @@ def plotclaw2kml(plotdata):
             sx = im.shape[1]   # reversed?
             sy = im.shape[0]
 
-            gdal_str = "gdal_translate -of VRT " \
-                   "-a_srs EPSG:4326 " \
-                   "-gcp %d     %d  %f   %f      " \
-                   "-gcp %d     %d  %f   %f      " \
-                   "-gcp %d     %d  %f   %f  -90 " \
-                   "%s.png %s_tmp.vrt" %(0,0,ul[0],ul[1],
-                                         sx,0,ur[0],ur[1],
-                                         sx,sy,lr[0],lr[1],
-                                         fname_str,fname_str)
-            os.system(gdal_str)
-            os.system("gdalwarp -of VRT -t_srs EPSG:4326 -overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
+            # gdal_str = "gdal_translate -of VRT " \
+            #        "-a_srs EPSG:4326 " \
+            #        "-gcp %d     %d  %f   %f      " \
+            #        "-gcp %d     %d  %f   %f      " \
+            #        "-gcp %d     %d  %f   %f  -90 " \
+            #        "%s.png %s_tmp.vrt" %(0,0,ul[0],ul[1],
+            #                              sx,0,ur[0],ur[1],
+            #                              sx,sy,lr[0],lr[1],
+            #                              fname_str,fname_str)
+            # os.system(gdal_str)
+            # os.system("gdalwarp -of VRT -t_srs EPSG:4326 " \
+            #           "-overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
+            #
+            # os.system("gdal2tiles.py " \
+            #           "--profile=geodetic  " \
+            #           "--force-kml " \
+            #           "--resampling=near " \
+            #           "%s.vrt" % (fname_str))
 
-            os.system("gdal2tiles.py " \
-                      "--profile=geodetic  " \
-                      "--force-kml " \
-                      "--resampling=near " \
-                      "%s.vrt" % (fname_str))
+            arg_list = ["gdal_translate", "-of", "VRT", \
+                        "-a_srs", "EPSG:4326",  \
+                        "-gcp", "0",         "0",        "%f"%(ul[0]),   "%f"%(ul[1]), \
+                        "-gcp", "%d"%(sx),   "0",        "%f"%(ur[0]),   "%f"%(ur[1]), \
+                        "-gcp", "%d"%(sx),   "%d"%(sy),  "%f"%(lr[0]),   "%f"%(lr[1]), "-90", \
+                        "%s.png"%(fname_str), "%s_tmp.vrt"%(fname_str)];
+            import subprocess
+            retval = subprocess.call(arg_list)
+
+            arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", \
+                        "-overwrite", "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
+            retval = retval or subprocess.call(arg_list)
+
+            arg_list = ["gdal2tiles.py", \
+                       "--profile=geodetic", \
+                       "--force-kml", \
+                       "--resampling=near", \
+                       "%s.vrt" % (fname_str)]
+            retval = retval or subprocess.call(arg_list)
+
+            if retval > 0:
+                print "gdal : something went wrong!\n"
+                sys.exit(1)
 
             # Add the <fname>.vrt file
             zip.write("%s.vrt" % (fname_str))
