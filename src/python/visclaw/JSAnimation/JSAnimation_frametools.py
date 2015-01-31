@@ -7,7 +7,6 @@ Requires the JSAnimation package,
 import glob
 from matplotlib import image, animation
 from matplotlib import pyplot as plt
-from JSAnimation import IPython_display
 
 def make_plotdir(plotdir='_plots', clobber=True):
     """
@@ -100,7 +99,7 @@ def make_html(anim, file_name='anim.html', title=None, \
     html file.
     """
 
-    from JSAnimation.IPython_display import anim_to_html
+    from clawpack.visclaw.JSAnimation.IPython_display import anim_to_html
 
     html_body = anim_to_html(anim, fps=fps, embed_frames=embed_frames, \
                  default_mode=default_mode)
