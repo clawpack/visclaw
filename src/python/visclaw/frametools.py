@@ -504,7 +504,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
             # assume it's a function
             try:
                 # set values that may be needed in afterpatch:
-                #current_data.plotitem = plotitem
+                #current_data.patchno = patch.patch_index # can get from patch
                 current_data.add_attribute('plotitem',plotitem)
                 current_data.patch = patch
                 current_data.var = var
@@ -843,7 +843,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 exec(pp['afterpatch'])
             else:
                 # assume it's a function
-                #current_data.plotitem = plotitem
+                #current_data.patchno = patch.patch_index # can get from patch
                 current_data.add_attribute('plotitem',plotitem)
                 current_data.patch = patch
                 current_data.var = var
