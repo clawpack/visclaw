@@ -247,6 +247,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     # -------------------------------------------------------------
 
                     if patch.num_dim == 2:
+                        current_data.add_attribute('ylower',patch.dimensions[1].lower)
+                        current_data.add_attribute('yupper',patch.dimensions[1].upper)
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])
 
@@ -585,8 +587,8 @@ m
             # assume it's a function
             try:
                 # set values that may be needed in afterpatch:
-                current_data.patchno = patchno
-                current_data.plotitem = plotitem
+                #current_data.patchno = patch.patch_index # can get from patch
+                current_data.add_attribute('plotitem',plotitem)
                 current_data.patch = patch
                 current_data.var = var
                 current_data.xlower = patch.dimensions[0].lower
@@ -924,8 +926,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 exec(pp['afterpatch'])
             else:
                 # assume it's a function
-                current_data.patchno = patchno
-                current_data.plotitem = plotitem
+                #current_data.patchno = patch.patch_index # can get from patch
+                current_data.add_attribute('plotitem',plotitem)
                 current_data.patch = patch
                 current_data.var = var
                 current_data.xlower = patch.dimensions[0].lower
