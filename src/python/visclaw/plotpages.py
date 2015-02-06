@@ -648,22 +648,30 @@ def plotclaw2kml(plotdata):
         #      -- Different publishing options (.kmz will all files; .kmz with http links;
         #         index.html file for Google Earth plug-in.)
 
+
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
-            gbegin = time.gmtime(frametimes[frameno])
-            timestrbegin = time.strftime("2013-10-02T%H:%M:%SZ", gbegin)
+            # gbegin = time.gmtime(frametimes[frameno])
+            gbegin = plotfigure.kml_starttime;
+            gbegin.extend([0,0,-1])
+            timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
 
             # Plot will stay visible in TimeSpan [gbegin,gend]
+            gend = plotfigure.kml_starttime
             if i < numframes-1:
+                # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
                 gend = time.gmtime(frametimes[framenos[i+1]])
             else:
                 if numframes == 1:
                     gend = gbegin
                 else:
                     # Add extra simlulation time so the last file shows up in GE
+                    # (same as above) Convert  gend to seconds;  add framenos[i+1};
+                    # convert back to tuple
                     dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
                     gend = time.gmtime(frametimes[framenos[i]] + dt/2)
 
+            # Fix string to reflect user time stamp.
             timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
