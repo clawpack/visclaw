@@ -648,19 +648,28 @@ def plotclaw2kml(plotdata):
         #      -- Different publishing options (.kmz will all files; .kmz with http links;
         #         index.html file for Google Earth plug-in.)
 
+        # Assume no user input
+        starttime = time.mktime(time.localtime())    # seconds  since Epoch (Jan 1, 1970) (local)
 
+        t1 = starttime
+        t2 = time.mktime(time.gmtime())       # seconds since Epoch (UTC)
+        time_offset = time.gmtime(t2 - t1)
+        time_offset_str = time.strftime("%H:%M",time_offset)
+        time_offset_str = "-%s" % (time_offset_str)
+        import pdb
+        # pdb.set_trace()
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
-            # gbegin = time.gmtime(frametimes[frameno])
-            gbegin = plotfigure.kml_starttime;
-            gbegin.extend([0,0,-1])
-            timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
+            gbegin = time.localtime(starttime + frametimes[frameno])
+            timestr1 = time.strftime("%Y-%m-%dT%H:%M:%S", gbegin)
+            timestrbegin = "%s%s" %(timestr1,time_offset_str)
 
             # Plot will stay visible in TimeSpan [gbegin,gend]
             gend = plotfigure.kml_starttime
             if i < numframes-1:
                 # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
-                gend = time.gmtime(frametimes[framenos[i+1]])
+                # gend = time.gmtime(frametimes[framenos[i+1]])
+                gend = time.localtime(starttime + frametimes[framenos[i+1]])
             else:
                 if numframes == 1:
                     gend = gbegin
@@ -669,10 +678,12 @@ def plotclaw2kml(plotdata):
                     # (same as above) Convert  gend to seconds;  add framenos[i+1};
                     # convert back to tuple
                     dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
-                    gend = time.gmtime(frametimes[framenos[i]] + dt/2)
+                    gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/2)
+
 
             # Fix string to reflect user time stamp.
-            timestrend = time.strftime("2013-10-02T%H:%M:%SZ", gend)
+            timestr1 = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
+            timestrend = "%s%s" %(timestr1,time_offset_str)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
@@ -761,7 +772,7 @@ def plotclaw2kml(plotdata):
         zip.write("doc.kml")   # Root KML file
 
         # Clean up one more file
-        os.remove("doc.kml")
+        # os.remove("doc.kml")
 
         # Rename zip file so it can be read in Google Earth
         zip.close()
