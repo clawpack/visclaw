@@ -5,14 +5,6 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
-#------------------STEPH-------------------
-# Moved KML utilities up here
-#------------------------------------------
-from lxml import etree
-from pykml.factory import KML_ElementMaker as KML
-# from pykml.factory import ATOM_ElementMaker as ATOM
-# from pykml.factory import GX_ElementMaker as GX
-
 import os, time, string, glob
 import sys
 from functools import wraps
@@ -566,6 +558,13 @@ def plotclaw2kml(plotdata):
     print '\n-----------------------------------\n'
     print '\nCreating kml files ...'
 
+    #------------------STEPH-------------------
+    # Moved KML utilities up here
+    #------------------------------------------
+    from lxml import etree
+    from pykml.factory import KML_ElementMaker as KML
+    import zipfile
+    import shutil
 
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
@@ -596,9 +595,6 @@ def plotclaw2kml(plotdata):
     numfigs = len(fignos)
 
     creationtime = current_time()
-
-    import zipfile
-    import shutil
 
     doc = KML.kml(
     KML.Document(
@@ -648,28 +644,30 @@ def plotclaw2kml(plotdata):
         #      -- Different publishing options (.kmz will all files; .kmz with http links;
         #         index.html file for Google Earth plug-in.)
 
-        # Assume no user input
-        starttime = time.mktime(time.localtime())    # seconds  since Epoch (Jan 1, 1970) (local)
-
-        t1 = starttime
-        t2 = time.mktime(time.gmtime())       # seconds since Epoch (UTC)
-        time_offset = time.gmtime(t2 - t1)
-        time_offset_str = time.strftime("%H:%M",time_offset)
-        time_offset_str = "-%s" % (time_offset_str)
         import pdb
-        # pdb.set_trace()
+        pdb.set_trace()
+
+        try:
+            # If kml_starttime is already time_struct, we won't be able to
+            # extend it this try block will fail
+            user_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
+            user_time.extend([0,0,-1])                # Extend to 9 tuple
+        except:
+            user_time = time.gmtime()                 # 9-tuple local time
+
+        # This doesnt' really do the right thing.
+        starttime = time.mktime(user_time)
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
-            gbegin = time.localtime(starttime + frametimes[frameno])
-            timestr1 = time.strftime("%Y-%m-%dT%H:%M:%S", gbegin)
-            timestrbegin = "%s%s" %(timestr1,time_offset_str)
+            gbegin = time.gmtime(starttime + frametimes[frameno])
+            timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
 
             # Plot will stay visible in TimeSpan [gbegin,gend]
             gend = plotfigure.kml_starttime
             if i < numframes-1:
                 # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
                 # gend = time.gmtime(frametimes[framenos[i+1]])
-                gend = time.localtime(starttime + frametimes[framenos[i+1]])
+                gend = time.gmtime(starttime + frametimes[framenos[i+1]])
             else:
                 if numframes == 1:
                     gend = gbegin
@@ -682,8 +680,7 @@ def plotclaw2kml(plotdata):
 
 
             # Fix string to reflect user time stamp.
-            timestr1 = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
-            timestrend = "%s%s" %(timestr1,time_offset_str)
+            timestrend = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
