@@ -435,7 +435,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     
 def read_setgauges(datadir):
     """
-    Read the info from setgauges.data.
+    Read the info from gauges.data.
     """
 
     try:
@@ -462,14 +462,14 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
     Plot gauge locations on current axes.
     format_string specifies the symbol to be plotted.
     If add_labels==True then labels will also be added (gauge number).
-    This routine determines locations from the file setgauges.data in
+    This routine determines locations from the file gauges.data in
     directory plotdata.rundir.  It does not require reading in the fort.gauge file
     produced by running the code.
     """
 
     from pylab import figure, plot, clf, title, text
 
-    datadir = plotdata.rundir  # this should contain setgauges.data
+    datadir = plotdata.rundir  # this should contain gauges.data
 
     try:
         setgauges = read_setgauges(datadir)
@@ -477,7 +477,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
         return
 
     if len(setgauges.gauges) == 0:
-        print "*** plot_gauge_locations: No gauges specified in setgauges.data"
+        print "*** plot_gauge_locations: No gauges specified in gauges.data"
         return
 
     if gaugenos=='all':
@@ -777,3 +777,84 @@ def printgauges(plotdata=None, verbose=True):
     return plotdata
     # end of printframes
 
+
+def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
+                    tol=0., verbose=True, plot=False):
+
+    """
+    Compare gauge output in two output directories.
+
+    :Input:
+     - *outdir1, outdir2* -- output directories
+     - *gaugenos* -- list of gauge numbers to compare, or 'all' in which case
+       outdir1/gauges.data will be used to determine gauge numbers.
+     - *q_components* -- list of components of q to compare.
+     - *tol* -- tolerance for checking equality
+     - *verbose* -- print out dt and dq for each comparison?
+     - *plot* -- if True, will produce a plot for each gauge, with a
+       subfigure for each component of q.
+
+
+    Returns True if everything matches to tolerance *tol*, else False.
+    """
+
+    from clawpack.visclaw.data import ClawPlotData
+    from matplotlib import pyplot as plt
+    
+    if gaugenos == 'all':
+        # attempt to read from gauges.data:
+        try:
+            setgauges1 = read_setgauges(outdir1)
+            setgauges2 = read_setgauges(outdir2)
+        except:
+            print '*** could not read gauges.data from one of the outdirs'
+            return
+        gaugenos = setgauges1.gauge_numbers
+        if setgauges2.gauge_numbers != gaugenos:
+            print '*** warning -- outdirs have different sets of gauges'
+
+        if len(gaugenos)==0:
+            print "*** No gauges found in gauges.data"
+            return
+
+    plotdata1 = ClawPlotData()
+    plotdata1.outdir = outdir1
+    plotdata2 = ClawPlotData()
+    plotdata2.outdir = outdir2
+
+    matches = True
+    for gaugeno in gaugenos:
+        g1 = plotdata1.getgauge(gaugeno,verbose=verbose)
+        t1 = g1.t
+        q1 = g1.q
+
+        g2 = plotdata2.getgauge(gaugeno,verbose=verbose)
+        t2 = g2.t
+        q2 = g2.q
+
+        dt = abs(t1-t2).max()
+        if verbose:
+            print  "Max difference in t[:] at gauge %s is %g" % (gaugeno,dt)
+        matches = matches and (dt <= tol)
+
+        if q_components == 'all':
+            q_components = range(q1.shape[0])
+
+        for m in q_components:
+            dq = abs(q1[m,:]-q2[m,:]).max()
+            if verbose:
+                print  "Max difference in q[%s] at gauge %s is %g" % (m,gaugeno,dq)
+            matches = matches and (dq <= tol)
+
+        if plot:
+            plt.figure(gaugeno)
+            plt.clf()
+            mq = len(q_components)
+            for k,m in enumerate(q_components):
+                plt.subplot(mq,1,k+1)
+                plt.plot(g1.t,g1.q[m,:],'b',label='outdir1')
+                plt.plot(g2.t,g2.q[m,:],'r',label='outdir2')
+                plt.legend()
+                plt.title('q[%s] at gauge number %s' % (m,gaugeno))
+        
+    return matches       

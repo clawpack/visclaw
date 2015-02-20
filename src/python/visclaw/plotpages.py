@@ -8,6 +8,9 @@ latex/pdf pages displaying the plots.
 
 
 import os, time, string, glob
+import sys
+from functools import wraps
+
 
 # Required for new animation style modified MAY 2013
 import numpy as np
@@ -20,6 +23,7 @@ if clawdir is not None:
     logo = os.path.join(clawdir,'doc/images/clawlogo.jpg')
     if not os.path.isfile(logo):
         logo = None
+
 
 
 #===========================
@@ -1568,8 +1572,21 @@ def massage_gauges_data(plot_pages_data):
     ppd._gauge_allfigsfile = allfigsfile
     return ppd
 
+def redirect_stdouts(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        stdout_save = sys.stdout
+        stderr_save = sys.stderr
+        try:
+            return f(*args, **kwds) 
+        finally:
+            # reset stdout for future print statements
+            sys.stdout = stdout_save
+            sys.stderr = stderr_save
+    return wrapper
 
 #============================================
+@redirect_stdouts
 def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
@@ -1895,8 +1912,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                                plotdata.html_index_fname)
     print_html_pointers(path_to_html_index)
 
-    # reset stdout for future print statements
-    sys.stdout = sys.__stdout__
+   
 
     return plotdata
     # end of printframes

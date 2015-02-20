@@ -31,9 +31,9 @@ for ii = 1:N1,
       zlow = (kk-1)/N3;
       cm(k,:) = [xlow ylow zlow] + rc(k)./[N1 N2 N3];
       k = k + 1;
-    end;
-  end;
-end;
+    end
+  end
+end
 
 % Choose colors randomly from colors chosen for each subcube
 [r,idx] = sort(rand(npmax,1));
