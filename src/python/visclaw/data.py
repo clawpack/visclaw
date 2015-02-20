@@ -85,7 +85,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational
-	                                    # points to physical
+                                        # points to physical
 
 
         self.add_attribute('beforeframe',None)         # function called before all plots 
@@ -217,34 +217,39 @@ class ClawPlotData(clawdata.ClawData):
 
         return framesoln
         
-    def gettime(self,frameno,outdir='./',format='ascii'):
+    def gettime(self, frameno, outdir='./', format='ascii'):
         r"""Fetch time from solution corresponding to frame number in outdir
         
-        This method only works for ascii and petsc formatted files
+        Some of the file formats do not have the appropriate function and so
+        this routine returns None if that's the case.
         """
-        if format=='petsc':
-            from clawpack.petclaw import io
-            read_t = io.petsc.read_t
-        elif format=='ascii': 
-            from clawpack.pyclaw import io
-            read_t = io.ascii.read_t
+        if format == 'petsc':
+            import clawpack.petclaw.io
+            read_t = clawpack.petclaw.io.petsc.read_t
 
+        else:
+            module = __import__("clawpack.pyclaw.io.%s" % format, 
+                                                fromlist=['clawpack.pyclaw.io'])
+            if "read_t" in dir(module):
+                read_t = module.read_t
+            else:
+                return None
 
-        t,meqn,npatches,maux,num_dim = read_t(frameno,path=outdir)
-        return t
+        header_info = read_t(frameno, path=outdir)
+        return header_info[0]
 
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	    Does not clear the frames of solution data already read in.
-	    For that use clearframes.
+        Does not clear the frames of solution data already read in.
+        For that use clearframes.
         """
 
-	self.plotfigure_dict.clear()
-	self._fignames = []
-	self._fignos = []
-	self._next_FIG = 1000
-	self._otherfignames = []
+        self.plotfigure_dict.clear()
+        self._fignames = []
+        self._fignos = []
+        self._next_FIG = 1000
+        self._otherfignames = []
 
 
     def clearframes(self, framenos='all'):
@@ -636,9 +641,9 @@ class ClawPlotFigure(clawdata.ClawData):
         """
         Create a new axes that will be plotted in this figure.
         If type='each_frame' it is an axes that will be plotted 
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is an axes that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         If type='empty' it is created without doing any plots using the
         pyclaw tools.  Presumably the user will create a plot within an
         afteraxes command, for example.
@@ -779,8 +784,8 @@ class ClawPlotItem(clawdata.ClawData):
                                         # if _plotdata.mapc2p is not None.
 
         self.add_attribute('mapc2p',None)              # function to map computational
-	                                # points to physical (over-rides
-	                                # plotdata.mapc2p if set for item
+                                    # points to physical (over-rides
+                                    # plotdata.mapc2p if set for item
 
 
         self.add_attribute('afterpatch',None)           # function called after each patch is
