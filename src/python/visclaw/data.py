@@ -220,15 +220,19 @@ class ClawPlotData(clawdata.ClawData):
         this routine returns None if that's the case.
         """
         if format == 'petsc':
-            from clawpack.petclaw import io
-            read_t = io.petsc.read_t
-        elif format == 'ascii': 
-            from clawpack.pyclaw import io
-            read_t = io.ascii.read_t
+            import clawpack.petclaw.io
+            read_t = clawpack.petclaw.io.petsc.read_t
 
+        else:
+            module = __import__("clawpack.pyclaw.io.%s" % format, 
+                                                fromlist=['clawpack.pyclaw.io'])
+            if "read_t" in dir(module):
+                read_t = module.read_t
+            else:
+                return None
 
-        t, meqn, npatches, maux, num_dim = read_t(frameno, path=outdir)
-        return t
+        header_info = read_t(frameno, path=outdir)
+        return header_info[0]
 
     def clearfigures(self):
         """
