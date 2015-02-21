@@ -8,6 +8,8 @@ import glob
 from matplotlib import image, animation
 from matplotlib import pyplot as plt
 
+from clawpack.visclaw.JSAnimation import IPython_display
+
 def make_plotdir(plotdir='_plots', clobber=True):
     """
     Utility function to create a directory for storing a sequence of plot
