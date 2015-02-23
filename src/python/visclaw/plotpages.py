@@ -1766,8 +1766,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     fignames = plotdata._figname_from_num
 
     # Only grab times by loading in time
+    import clawpack.pyclaw.controller
+    output_controller = clawpack.pyclaw.controller.OutputController(plotdata.outdir, plotdata.format)
     for frameno in framenos:
-        frametimes[frameno] = plotdata.gettime(frameno, plotdata.outdir, format=plotdata.format)
+        frametimes[frameno] = output_controller.get_time(frameno)
+        # frametimes[frameno] = plotdata.gettime(frameno, plotdata.outdir, format=plotdata.format)
     # for frameno in framenos:
     #     frametimes[frameno] = plotdata.getframe(frameno, plotdata.outdir).t
 

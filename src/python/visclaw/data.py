@@ -216,27 +216,6 @@ class ClawPlotData(clawdata.ClawData):
             framesoln = self.framesoln_dict[key]
 
         return framesoln
-        
-    def gettime(self, frameno, outdir='./', format='ascii'):
-        r"""Fetch time from solution corresponding to frame number in outdir
-        
-        Some of the file formats do not have the appropriate function and so
-        this routine returns None if that's the case.
-        """
-        if format == 'petsc':
-            import clawpack.petclaw.io
-            read_t = clawpack.petclaw.io.petsc.read_t
-
-        else:
-            module = __import__("clawpack.pyclaw.io.%s" % format, 
-                                                fromlist=['clawpack.pyclaw.io'])
-            if "read_t" in dir(module):
-                read_t = module.read_t
-            else:
-                return None
-
-        header_info = read_t(frameno, path=outdir)
-        return header_info[0]
 
     def clearfigures(self):
         """
