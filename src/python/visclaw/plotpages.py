@@ -644,9 +644,6 @@ def plotclaw2kml(plotdata):
         #      -- Different publishing options (.kmz will all files; .kmz with http links;
         #         index.html file for Google Earth plug-in.)
 
-        import pdb
-        pdb.set_trace()
-
         try:
             # If kml_starttime is already time_struct, we won't be able to
             # extend it this try block will fail
