@@ -12,6 +12,7 @@ import logging
 import clawpack.clawutil.data as clawdata
 import gaugetools
 
+import clawpack.pyclaw.controller
 
 # ============================================================================
 #  Subclass ClawPlotData containing data for plotting results
@@ -47,6 +48,11 @@ class ClawPlotData(clawdata.ClawData):
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
             self.add_attribute('format','ascii')
+
+        # This should eventually replace all need for recording the above
+        # information
+        self.output_controller = clawpack.pyclaw.controller.OutputController(
+                                           self.outdir, file_format=self.format)
 
 
         self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
