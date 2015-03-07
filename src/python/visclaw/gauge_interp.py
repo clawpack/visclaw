@@ -1,28 +1,28 @@
 
 """
-    Tools to assist interpolating from fort.gauge output to a given
-    set of times (e.g. equally spaced).
+Tools to assist interpolating from fort.gauge output to a given
+set of times (e.g. equally spaced).
 
-    Example:
-      Set gaugeno to the desired gauge number, iq to the component of q to 
-      plot, e.g. iq=3 for surface eta.
+Example:
+  Set gaugeno to the desired gauge number, iq to the component of q to 
+  plot, e.g. iq=3 for surface eta.
 
-        import gauge_interp
-        getgauge = gauge_interp.make_getgauge(output='_outdir')
-        gf,t1,t2 = gauge_interp.gauge_function(getgauge, gaugeno, iq)
-        t = numpy.linspace(t1,t2,50)  # desired times of interpolation
-        gt = gf(t)
-        
-    Then gt will be an array of the same length as t containing interpolated 
-    values (piecewise linear).
+    import gauge_interp
+    getgauge = gauge_interp.make_getgauge(output='_outdir')
+    gf,t1,t2 = gauge_interp.gauge_function(getgauge, gaugeno, iq)
+    t = numpy.linspace(t1,t2,50)  # desired times of interpolation
+    gt = gf(t)
+    
+Then gt will be an array of the same length as t containing interpolated 
+values (piecewise linear).
 
-    See also the test function below, which can be run via:
+See also the test function below, which can be run via:
 
-        $ cd $CLAW/geoclaw/examples/tsunami/chile2010
-        $ make .output
-        $ python
-        >>> import gauge_interp
-        >>> gauge_interp.test()
+    $ cd $CLAW/geoclaw/examples/tsunami/chile2010
+    $ make .output
+    $ python
+    >>> from clawpack.visclaw import gauge_interp
+    >>> gauge_interp.test()
 
 """
 
@@ -38,6 +38,7 @@ def make_getgauge(outdir='_output'):
     getgauge = plotdata.getgauge
     return getgauge
     
+
 def gauge_function(getgauge, gaugeno, iq):
     """
     Given getgauge function, return a function that
@@ -58,16 +59,17 @@ def gauge_function(getgauge, gaugeno, iq):
     t2 = g.t[-1]
     return gf, t1, t2
 
+
 def test(gaugeno=32412, iq=3):
 
     # Test should work in $CLAW/geoclaw/examples/tsunami/chile2010
     import numpy
     import matplotlib.pyplot as plt
 
-    # This is what to do to interpolate at a set of times t:
+    # interpolate at a set of times t:
     getgauge = make_getgauge(outdir='_output')
     gf,t1,t2 = gauge_function(getgauge, gaugeno, iq)
-    t = numpy.linspace(t1,t2,50)
+    t = numpy.linspace(t1,t2,100)
     gt = gf(t)
 
     # Plot the two for comparison:
