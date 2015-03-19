@@ -29,35 +29,41 @@ def make_colormap(color_list):
     html hex string, e.g. "#ff0000" for red.
     """
 
-    
-    
+
+
     z = numpy.sort(color_list.keys())
     n = len(z)
     z1 = min(z)
     zn = max(z)
     x0 = (z - z1) / (zn - z1)
-    
+
     CC = colors.ColorConverter()
     R = []
     G = []
     B = []
+    A = []
     for i in range(n):
         #i'th color at level z[i]:
-        Ci = color_list[z[i]]      
+        Ci = color_list[z[i]]
         if type(Ci) == str:
             # a hex string of form '#ff0000' for example (for red)
-            RGB = CC.to_rgb(Ci)
+            RGBA = CC.to_rgba(Ci,1.0)
         else:
-            # assume it's an RGB triple already:
-            RGB = Ci
-        R.append(RGB[0])
-        G.append(RGB[1])
-        B.append(RGB[2])
+            if (len(Ci) == 3):
+                Ci = [Ci[0],Ci[1],Ci[2],1.0]
+                # assume it's an RGB triple already:
+            RGBA = Ci
+
+        R.append(RGBA[0])
+        G.append(RGBA[1])
+        B.append(RGBA[2])
+        A.append(RGBA[3])
 
     cmap_dict = {}
     cmap_dict['red'] = [(x0[i],R[i],R[i]) for i in range(len(R))]
     cmap_dict['green'] = [(x0[i],G[i],G[i]) for i in range(len(G))]
     cmap_dict['blue'] = [(x0[i],B[i],B[i]) for i in range(len(B))]
+    cmap_dict['alpha'] = [(x0[i],A[i],A[i]) for i in range(len(B))]
     mymap = colors.LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
 
@@ -67,8 +73,8 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
 
     Appends the colormaps in the list *colormaps* adjusting the mapping to the
     colormap such that it maps the data space limits *data_limits* and puts the
-    break in the colormaps at *data_break* which is again in data space.  The 
-    argument *colormap_name* labels the colormap and is passed to the init 
+    break in the colormaps at *data_break* which is again in data space.  The
+    argument *colormap_name* labels the colormap and is passed to the init
     method of `matplotlib.colors.LinearSegmentedColormap`.
 
     Originally contributed by Damon McDougall
@@ -77,14 +83,14 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
 
     Example
     -------
-    This example takes two colormaps whose data ranges from [-1.0, 5.0] where 
+    This example takes two colormaps whose data ranges from [-1.0, 5.0] where
     the break in the colormaps occurs at 1.0.
 
     >>> import matplotlib.pyplot as plt
     >>> import clawpack.visclaw.colormaps as colormaps
     >>> import numpy
     >>> cmaps = (plt.get_cmap("BuGn_r"), plt.get_cmap("Blues_r"))
-    >>> new_cmap = colormaps.add_colormaps(cmaps, data_limits=[-1.0, 5.0], 
+    >>> new_cmap = colormaps.add_colormaps(cmaps, data_limits=[-1.0, 5.0],
         data_break=1.0)
     >>> x = numpy.linspace(-1,1,100)
     >>> y = x
@@ -99,7 +105,7 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
 
     break_location = (data_break - data_limits[0])      \
                             / (data_limits[1] - data_limits[0])
-    
+
     lhs_dict = colormaps[0]._segmentdata
     rhs_dict = colormaps[1]._segmentdata
     new_dict = dict(red=[], green=[], blue=[])
@@ -182,13 +188,13 @@ schlieren_greens = schlieren_colormap('g')
 def make_amrcolors(nlevels=4):
 #-------------------------------
     """
-    Make lists of colors useful for distinguishing different patches when 
+    Make lists of colors useful for distinguishing different patches when
     plotting AMR results.
 
     INPUT::
        nlevels: maximum number of AMR levels expected.
     OUTPUT::
-       (linecolors, bgcolors) 
+       (linecolors, bgcolors)
        linecolors = list of nlevels colors for patch lines, contour lines
        bgcolors = list of nlevels pale colors for patch background
     """
