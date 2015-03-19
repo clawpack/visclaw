@@ -600,7 +600,6 @@ def plotclaw2kml(plotdata):
     KML.Document(
     KML.Folder()))
 
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -614,6 +613,15 @@ def plotclaw2kml(plotdata):
         ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
+
+        doc.Document.Folder.append(
+            KML.LookAt(KML.TimeSpan(),
+                KML.longitude((ul[0]+ur[0])/2),
+                KML.latitude((ur[1]+lr[1])/2),
+                KML.range(15000000),
+                KML.altitude(0),
+                KML.altitudeMode("absolute")))
+
 
         # Open zip file
         fname_kmz = plotdata.kml_index_fname + str(figno)
@@ -659,6 +667,10 @@ def plotclaw2kml(plotdata):
             gbegin = time.gmtime(starttime + frametimes[frameno])
             timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
 
+            if i == 0:
+                doc.Document.Folder.LookAt.TimeSpan.append(
+                    KML.begin(timestrbegin))
+
             # Plot will stay visible in TimeSpan [gbegin,gend]
             gend = plotfigure.kml_starttime
             if i < numframes-1:
@@ -678,6 +690,11 @@ def plotclaw2kml(plotdata):
 
             # Fix string to reflect user time stamp.
             timestrend = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
+            if i == numframes-1:
+                doc.Document.Folder.LookAt.TimeSpan.append(
+                    KML.end(timestrend))
+
+
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
