@@ -1767,6 +1767,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Only grab times by loading in time
     for frameno in framenos:
+        plotdata.output_controller.output_path = plotdata.outdir
         frametimes[frameno] = plotdata.output_controller.get_time(frameno)
 
     # for frameno in framenos:
