@@ -13,6 +13,7 @@ import clawpack.clawutil.data as clawdata
 import gaugetools
 import time
 
+import clawpack.pyclaw.controller
 
 # ============================================================================
 #  Subclass ClawPlotData containing data for plotting results
@@ -48,6 +49,12 @@ class ClawPlotData(clawdata.ClawData):
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
             self.add_attribute('format','ascii')
+
+        # This should eventually replace all need for recording the above
+        # information
+        self.add_attribute('output_controller', None)
+        self.output_controller = clawpack.pyclaw.controller.OutputController(
+                                           self.outdir, file_format=self.format)
 
 
         self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
@@ -89,7 +96,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational
-	                                    # points to physical
+                                        # points to physical
 
 
         self.add_attribute('beforeframe',None)         # function called before all plots
@@ -220,35 +227,18 @@ class ClawPlotData(clawdata.ClawData):
             framesoln = self.framesoln_dict[key]
 
         return framesoln
-
-    def gettime(self,frameno,outdir='./',format='ascii'):
-        r"""Fetch time from solution corresponding to frame number in outdir
-
-        This method only works for ascii and petsc formatted files
-        """
-        if format=='petsc':
-            from clawpack.petclaw import io
-            read_t = io.petsc.read_t
-        elif format=='ascii':
-            from clawpack.pyclaw import io
-            read_t = io.ascii.read_t
-
-
-        t,meqn,npatches,maux,num_dim = read_t(frameno,path=outdir)
-        return t
-
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	    Does not clear the frames of solution data already read in.
-	    For that use clearframes.
+        Does not clear the frames of solution data already read in.
+        For that use clearframes.
         """
 
-	self.plotfigure_dict.clear()
-	self._fignames = []
-	self._fignos = []
-	self._next_FIG = 1000
-	self._otherfignames = []
+        self.plotfigure_dict.clear()
+        self._fignames = []
+        self._fignos = []
+        self._next_FIG = 1000
+        self._otherfignames = []
 
 
     def clearframes(self, framenos='all'):
@@ -643,9 +633,9 @@ class ClawPlotFigure(clawdata.ClawData):
         """
         Create a new axes that will be plotted in this figure.
         If type='each_frame' it is an axes that will be plotted
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is an axes that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         If type='empty' it is created without doing any plots using the
         pyclaw tools.  Presumably the user will create a plot within an
         afteraxes command, for example.
@@ -786,8 +776,8 @@ class ClawPlotItem(clawdata.ClawData):
                                         # if _plotdata.mapc2p is not None.
 
         self.add_attribute('mapc2p',None)              # function to map computational
-	                                # points to physical (over-rides
-	                                # plotdata.mapc2p if set for item
+                                    # points to physical (over-rides
+                                    # plotdata.mapc2p if set for item
 
 
         self.add_attribute('afterpatch',None)           # function called after each patch is

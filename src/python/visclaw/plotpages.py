@@ -1998,7 +1998,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Only grab times by loading in time
     for frameno in framenos:
-        frametimes[frameno] = plotdata.gettime(frameno, plotdata.outdir, format=format)
+        plotdata.output_controller.output_path = plotdata.outdir
+        frametimes[frameno] = plotdata.output_controller.get_time(frameno)
+
     # for frameno in framenos:
     #     frametimes[frameno] = plotdata.getframe(frameno, plotdata.outdir).t
 
@@ -2030,6 +2032,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         try:
             from matplotlib import animation
             from JSAnimation import HTMLWriter
+            from JSAnimation.fix_jsmovies import fix_file
         except:
             print "*** Warning: Your version of matplotlib may not support JSAnimation"
             print "    Switching to 4.x style animation"
@@ -2118,9 +2121,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
             myHTMLwriter=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
                     add_html=pre_html, frame_width=500,file_names=filenames)
-            anim.save('movieframe_allframesfig%s.html' % figno, \
-                 writer=myHTMLwriter)
+            fname = 'movieframe_allframesfig%s.html' % figno
+            anim.save(fname, writer=myHTMLwriter)
             print "Created JSAnimation for figure", figno
+            fix_file(fname, verbose=False)
             # Clean up animation temporary files of the form frame0000.png
             myHTMLwriter.clear_temp = True
             myHTMLwriter.cleanup()
