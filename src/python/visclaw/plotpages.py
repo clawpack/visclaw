@@ -597,8 +597,7 @@ def plotclaw2kml(plotdata):
     creationtime = current_time()
 
     doc = KML.kml(
-    KML.Document(
-    KML.Folder()))
+        KML.Document())
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
@@ -614,7 +613,7 @@ def plotclaw2kml(plotdata):
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-        doc.Document.Folder.append(
+        doc.Document.append(
             KML.LookAt(KML.TimeSpan(),
                 KML.longitude((ul[0]+ur[0])/2),
                 KML.latitude((ur[1]+lr[1])/2),
@@ -667,10 +666,6 @@ def plotclaw2kml(plotdata):
             gbegin = time.gmtime(starttime + frametimes[frameno])
             timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
 
-            if i == 0:
-                doc.Document.Folder.LookAt.TimeSpan.append(
-                    KML.begin(timestrbegin))
-
             # Plot will stay visible in TimeSpan [gbegin,gend]
             gend = plotfigure.kml_starttime
             if i < numframes-1:
@@ -690,31 +685,23 @@ def plotclaw2kml(plotdata):
 
             # Fix string to reflect user time stamp.
             timestrend = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
-            if i == numframes-1:
-                doc.Document.Folder.LookAt.TimeSpan.append(
-                    KML.end(timestrend))
-
-
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
             print '\n'
             print "Tiling %s.png and adding KML entry to doc.kml" % (fname_str)
 
-            doc.Document.Folder.append(
+            doc.Document.append(
                 KML.NetworkLink(
                     KML.name(fname_str),
                     KML.TimeSpan(
                         KML.begin(timestrbegin),
                         KML.end(timestrend)),
-                    KML.Region(
                         KML.LatLonBox(
                             KML.north(ur[1]),KML.south(lr[1]),KML.east(ul[0]),KML.west(ur[0]),
-                            KML.rotation(0.0))),
+                            KML.rotation(0.0)),
                     KML.Link(
-                        KML.href("%s/doc.kml" % fname_str),
-                        KML.viewRefreshMode("onRegion"),
-                        KML.viewFormat())))
+                        KML.href("%s/doc.kml" % fname_str))))
 
             im = plt.imread("%s.png" % fname_str)
             sx = im.shape[1]   # reversed?

@@ -60,9 +60,9 @@ def make_colormap(color_list):
         A.append(RGBA[3])
 
     cmap_dict = {}
-    cmap_dict['red'] = [(x0[i],R[i],R[i]) for i in range(len(R))]
-    cmap_dict['green'] = [(x0[i],G[i],G[i]) for i in range(len(G))]
-    cmap_dict['blue'] = [(x0[i],B[i],B[i]) for i in range(len(B))]
+    cmap_dict['red'] = [(x0[i],R[i],R[i]/2.0) for i in range(len(R))]
+    cmap_dict['green'] = [(x0[i],G[i],G[i]/2.0) for i in range(len(G))]
+    cmap_dict['blue'] = [(x0[i],B[i],B[i]/2.0) for i in range(len(B))]
     cmap_dict['alpha'] = [(x0[i],A[i],A[i]) for i in range(len(B))]
     mymap = colors.LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
