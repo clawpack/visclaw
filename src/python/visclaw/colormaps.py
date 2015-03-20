@@ -27,6 +27,13 @@ def make_colormap(color_list):
     The z values (dictionary keys) are real numbers and the values
     colors[z] can be either an RGB list, e.g. [1,0,0] for red, or an
     html hex string, e.g. "#ff0000" for red.
+
+    Optionally, an alpha channel can be added to indicate levels of transparency.
+    In this case, colors should have a fourth argument, a value between 0 and 1,
+    where zero is transparent and 1 is opaque. Ex.
+
+              blue_semi_transparent = [0.0, 0.0, 1.0, 0.5]
+
     """
 
 
@@ -49,9 +56,9 @@ def make_colormap(color_list):
             # a hex string of form '#ff0000' for example (for red)
             RGBA = CC.to_rgba(Ci,1.0)
         else:
+            # assume it's an RGB (or RGBA) tuple already:
             if (len(Ci) == 3):
-                Ci = [Ci[0],Ci[1],Ci[2],1.0]
-                # assume it's an RGB triple already:
+                Ci = numpy.concatenate((Ci,[1.0]))  # Add alpha channel
             RGBA = Ci
 
         R.append(RGBA[0])
@@ -60,9 +67,9 @@ def make_colormap(color_list):
         A.append(RGBA[3])
 
     cmap_dict = {}
-    cmap_dict['red'] = [(x0[i],R[i],R[i]/2.0) for i in range(len(R))]
-    cmap_dict['green'] = [(x0[i],G[i],G[i]/2.0) for i in range(len(G))]
-    cmap_dict['blue'] = [(x0[i],B[i],B[i]/2.0) for i in range(len(B))]
+    cmap_dict['red'] = [(x0[i],R[i],R[i]) for i in range(len(R))]
+    cmap_dict['green'] = [(x0[i],G[i],G[i]) for i in range(len(G))]
+    cmap_dict['blue'] = [(x0[i],B[i],B[i]) for i in range(len(B))]
     cmap_dict['alpha'] = [(x0[i],A[i],A[i]) for i in range(len(B))]
     mymap = colors.LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
