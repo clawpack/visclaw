@@ -102,6 +102,8 @@ class GaugeSolution(object):
             output = "%4i" % self.number
             output = " ".join((output,"%19.10e" % self.location[0]))
             output = " ".join((output,"%17.10e" % self.location[1]))
+            if len(self.location) == 3:
+                output = " ".join((output,"%17.10e" % self.location[2]))
             output = " ".join((output,"%13.6e" % self.t1))
             output = " ".join((output,"%13.6e\n" % self.t2))
         return output
