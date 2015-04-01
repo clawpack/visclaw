@@ -25,7 +25,7 @@ class ClawPlotData(clawdata.ClawData):
     """
 
     # ========== Initialization routine ======================================
-    def __init__(self, controller=None, num_dim=2):
+    def __init__(self, controller=None):
         """Initialize a PlotData object
         
         """
@@ -48,8 +48,6 @@ class ClawPlotData(clawdata.ClawData):
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
             self.add_attribute('format','ascii')
-
-        self.add_attribute('num_dim',num_dim)
 
         # This should eventually replace all need for recording the above
         # information
@@ -291,7 +289,7 @@ class ClawPlotData(clawdata.ClawData):
                     print "continuing..."
                     return None
                     
-                gauge_data = amrclaw.GaugeData(self.num_dim)
+                gauge_data = amrclaw.GaugeData()
                 gauge_data.read(outdir)
 
                 # Check to make sure the gauge requested is in the data file
@@ -302,7 +300,7 @@ class ClawPlotData(clawdata.ClawData):
                 # solutions below
                 locations = {}
                 for gauge in gauge_data.gauges:
-                    locations[gauge[0]] = gauge[1:1+self.num_dim]
+                    locations[gauge[0]] = gauge[1:-2]
 
             except:
                 if verbose:
