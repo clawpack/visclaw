@@ -300,7 +300,7 @@ class ClawPlotData(clawdata.ClawData):
                 # solutions below
                 locations = {}
                 for gauge in gauge_data.gauges:
-                    locations[gauge[0]] = gauge[1:3]
+                    locations[gauge[0]] = gauge[1:-2]
 
             except:
                 if verbose:
