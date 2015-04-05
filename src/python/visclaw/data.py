@@ -628,7 +628,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_ylimits',None)
         self.add_attribute('kml_starttime',time.gmtime());
         self.add_attribute('kml_tz_offset',0)   # Time zone offset from UTC
-        self.add_attribute('kml_notiles',False);
+        self.add_attribute('kml_tile_images',True);
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
