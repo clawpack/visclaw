@@ -680,7 +680,7 @@ def plotclaw2kml(plotdata):
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
-            if (plotfigure.kml_notiles):
+            if (not plotfigure.kml_tile_images):
                 print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
                 href = KML.href("%s.png" % fname_str)
                 zip.write("%s.png" % (fname_str))
