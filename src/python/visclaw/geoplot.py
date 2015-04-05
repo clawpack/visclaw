@@ -25,18 +25,25 @@ tan = [0.9,0.8,0.2];
 tan = [0.8,0.5,0.2];
 brown = [0.9,0.8,0.2];
 gray8 = [0.8,0.8,0.8];
-purple = [0.8,0.3,0.8];
 
-blue_a = [0.0,0.0,1.0,1.0];
 transparent = [0.0, 0.0, 0.0,0.0]
+blue_a = [0.0,0.0,1.0,1.0];
 red_a = [1.0,0.0,0.0,1.0]
 white_a = [1.0,1.0,1.0,1.0]
+purple_a = [0.8,0.3,0.8,1.0];
 
 # Colormaps
 TSUNAMI_MAX_AMPLITUDE = 0.6
-googleearth_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:white_a,
+googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:purple_a,
                                                 0.0:transparent,
-                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+                                                TSUNAMI_MAX_AMPLITUDE:blue_a})
+
+# Colormaps
+TSUNAMI_MAX_AMPLITUDE = 0.6
+googleearth_white = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:purple_a,
+                                                0.0:transparent,
+                                                TSUNAMI_MAX_AMPLITUDE:blue_a})
+
 
 tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,

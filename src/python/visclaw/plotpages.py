@@ -553,14 +553,29 @@ def plotclaw2kml(plotdata):
     """
     Take a list of figure files and produce kml file to display them.
     """
-    startdir = os.getcwd()
+    # TODO : Make user options :
+    # (look at how dpi, use_for_kml, etc are set in setplot.py
+    #      -- gbegin  (time/date to start simulation)
+    #      -- range (height, in meters from sealevel)
+    #      -- tilt ?
+    #      -- Include "LookAt" tags ...
+    #      -- Add option to just print kml file with raw .png files?
+    #      -- Get rid of reliance on lxml/kml?
+    #      -- add URL options so users could get files from a server? (in this case,
+    #         we don't include .png files into zipped images)
+    #      -- Add color bar
+    #      -- Fix time slider so it starts at time zero (and not all files are loaded)
+    #      -- Add placemarks for Gauges files
+    #      -- Create index.html file as part of .kmz file
+    #      -- Different publishing options (.kmz will all files; .kmz with http links;
+    #         index.html file for Google Earth plug-in.)
+
 
     print '\n-----------------------------------\n'
-    print '\nCreating kml files ...'
+    print '\nCreating .kmz file ...'
 
-    #------------------STEPH-------------------
-    # Moved KML utilities up here
-    #------------------------------------------
+    startdir = os.getcwd()
+
     from lxml import etree
     from pykml.factory import KML_ElementMaker as KML
     import zipfile
@@ -596,8 +611,7 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-    doc = KML.kml(
-        KML.Document())
+    doc = KML.kml(KML.Document())
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
@@ -614,59 +628,37 @@ def plotclaw2kml(plotdata):
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
         doc.Document.append(
-            KML.LookAt(KML.TimeSpan(),
-                KML.longitude((ul[0]+ur[0])/2),
+            KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                 KML.latitude((ur[1]+lr[1])/2),
                 KML.range(15000000),
                 KML.altitude(0),
                 KML.altitudeMode("absolute")))
 
-
         # Open zip file
         fname_kmz = plotdata.kml_index_fname + str(figno)
         zip = zipfile.ZipFile("%s.kmz" % (fname_kmz),'w')
 
-        # Start doc.kml file (which will be head node in .kmz file)
         fname_kml = "doc.kml"
-        print '\nCreating kml file %s for figure %d\n' % (fname_kml,figno)
-
         filekml = open(fname_kml,'w')
-
         filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        # TODO : Make user options :
-        # (look at how dpi, use_for_kml, etc are set in setplot.py
-        #      -- gbegin  (time/date to start simulation)
-        #      -- range (height, in meters from sealevel)
-        #      -- tilt ?
-        #      -- Include "LookAt" tags ...
-        #      -- Add option to just print kml file with raw .png files?
-        #      -- Get rid of reliance on lxml/kml?
-        #      -- add URL options so users could get files from a server? (in this case,
-        #         we don't include .png files into zipped images)
-        #      -- Add color bar
-        #      -- Fix time slider so it starts at time zero (and not all files are loaded)
-        #      -- Add placemarks for Gauges files
-        #      -- Create index.html file as part of .kmz file
-        #      -- Different publishing options (.kmz will all files; .kmz with http links;
-        #         index.html file for Google Earth plug-in.)
-
+        # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
+        # to adjust time from UTC to time in event locale.
         try:
-            # If kml_starttime is already time_struct, we won't be able to
-            # extend it this try block will fail
-            user_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
-            user_time.extend([0,0,-1])                # Extend to 9 tuple
+            event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
+            event_time.extend([0,0,-1])                # Extend to 9 tuple with undefined DST
+            tz_offset = plotfigure.kml_tz_offset*60*60  # Offset in seconds
+            starttime = time.mktime(event_time) - time.timezone + tz_offset
         except:
-            user_time = time.gmtime()                 # 9-tuple local time
+            starttime = time.time()     # Use local time
 
-        # This doesnt' really do the right thing.
-        starttime = time.mktime(user_time)
+
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
+
             gbegin = time.gmtime(starttime + frametimes[frameno])
             timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
 
-            # Plot will stay visible in TimeSpan [gbegin,gend]
             gend = plotfigure.kml_starttime
             if i < numframes-1:
                 # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
@@ -688,91 +680,97 @@ def plotclaw2kml(plotdata):
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
-            print '\n'
-            print "Tiling %s.png and adding KML entry to doc.kml" % (fname_str)
-
-            doc.Document.append(
-                KML.NetworkLink(
-                    KML.name(fname_str),
-                    KML.TimeSpan(
-                        KML.begin(timestrbegin),
-                        KML.end(timestrend)),
+            if (plotfigure.kml_notiles):
+                print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
+                href = KML.href("%s.png" % fname_str)
+                zip.write("%s.png" % (fname_str))
+                doc.Document.append(
+                    KML.GroundOverlay(
+                        KML.name(fname_str),
+                        KML.TimeSpan(
+                            KML.begin(timestrbegin),
+                            KML.end(timestrend)),
                         KML.LatLonBox(
-                            KML.north(ur[1]),KML.south(lr[1]),KML.east(ul[0]),KML.west(ur[0]),
+                            KML.north(ur[1]),
+                            KML.south(lr[1]),
+                            KML.east(ul[0]),
+                            KML.west(ur[0]),
                             KML.rotation(0.0)),
-                    KML.Link(
-                        KML.href("%s/doc.kml" % fname_str))))
+                        KML.Icon(KML.href("%s.png" % fname_str))))
 
-            im = plt.imread("%s.png" % fname_str)
-            sx = im.shape[1]   # reversed?
-            sy = im.shape[0]
+            else:
+                print '\n'
+                print "Tiling %s.png and adding reference to .kmz file" % (fname_str)
 
-            # gdal_str = "gdal_translate -of VRT " \
-            #        "-a_srs EPSG:4326 " \
-            #        "-gcp %d     %d  %f   %f      " \
-            #        "-gcp %d     %d  %f   %f      " \
-            #        "-gcp %d     %d  %f   %f  -90 " \
-            #        "%s.png %s_tmp.vrt" %(0,0,ul[0],ul[1],
-            #                              sx,0,ur[0],ur[1],
-            #                              sx,sy,lr[0],lr[1],
-            #                              fname_str,fname_str)
-            # os.system(gdal_str)
-            # os.system("gdalwarp -of VRT -t_srs EPSG:4326 " \
-            #           "-overwrite %s_tmp.vrt %s.vrt" % (fname_str,fname_str))
-            #
-            # os.system("gdal2tiles.py " \
-            #           "--profile=geodetic  " \
-            #           "--force-kml " \
-            #           "--resampling=near " \
-            #           "%s.vrt" % (fname_str))
+                # Use GDAL library to tile images for faster loading.
+                href = KML.href("%s/doc.kml" % fname_str)
 
-            arg_list = ["gdal_translate", "-of", "VRT", \
-                        "-a_srs", "EPSG:4326",  \
-                        "-gcp", "0",         "0",        "%f"%(ul[0]),   "%f"%(ul[1]), \
-                        "-gcp", "%d"%(sx),   "0",        "%f"%(ur[0]),   "%f"%(ur[1]), \
-                        "-gcp", "%d"%(sx),   "%d"%(sy),  "%f"%(lr[0]),   "%f"%(lr[1]), "-90", \
-                        "%s.png"%(fname_str), "%s_tmp.vrt"%(fname_str)];
-            import subprocess
-            retval = subprocess.call(arg_list)
+                im = plt.imread("%s.png" % fname_str)
+                sx = im.shape[1]   # reversed?
+                sy = im.shape[0]
 
-            arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", \
-                        "-overwrite", "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
-            retval = retval or subprocess.call(arg_list)
+                arg_list = ["gdal_translate", "-of", "VRT", \
+                            "-a_srs", "EPSG:4326",  \
+                            "-gcp", "0",         "0",        "%f"%(ul[0]),   "%f"%(ul[1]), \
+                            "-gcp", "%d"%(sx),   "0",        "%f"%(ur[0]),   "%f"%(ur[1]), \
+                            "-gcp", "%d"%(sx),   "%d"%(sy),  "%f"%(lr[0]),   "%f"%(lr[1]), "-90", \
+                            "%s.png"%(fname_str), "%s_tmp.vrt"%(fname_str)]
 
-            arg_list = ["gdal2tiles.py", \
-                       "--profile=geodetic", \
-                       "--force-kml", \
-                       "--resampling=near", \
-                       "%s.vrt" % (fname_str)]
-            retval = retval or subprocess.call(arg_list)
+                import subprocess
+                retval = subprocess.call(arg_list)
 
-            if retval > 0:
-                print "gdal : something went wrong!\n"
-                sys.exit(1)
+                arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", \
+                            "-overwrite", "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
+                retval = retval or subprocess.call(arg_list)
 
-            # Add the <fname>.vrt file
-            zip.write("%s.vrt" % (fname_str))
+                arg_list = ["gdal2tiles.py", \
+                            "--profile=geodetic", \
+                            "--force-kml", \
+                            "--resampling=near", \
+                            "%s.vrt" % (fname_str)]
 
-            # Add the <fname>/ directory
-            for dirname, subdirs, files in os.walk(fname_str):
-                zip.write(dirname)
-                for filename in files:
-                    zip.write(os.path.join(dirname, filename))
+                retval = retval or subprocess.call(arg_list)
 
-            # Clean up files
-            os.remove("%s_tmp.vrt" % (fname_str))
-            os.remove("%s.vrt" % (fname_str))
-            shutil.rmtree(fname_str)
+                if retval > 0:
+                    print "gdal : something went wrong!\n"
+                    sys.exit(1)
+
+                # Add the <fname>.vrt file to zipped file
+                zip.write("%s.vrt" % (fname_str))
+
+                # Add the <fname>/ directory to zipped file
+                for dirname, subdirs, files in os.walk(fname_str):
+                    zip.write(dirname)
+                    for filename in files:
+                        zip.write(os.path.join(dirname, filename))
+
+                # Clean up files
+                os.remove("%s_tmp.vrt" % (fname_str))
+                os.remove("%s.vrt" % (fname_str))
+                shutil.rmtree(fname_str)
+
+                doc.Document.append(
+                    KML.NetworkLink(
+                        KML.name(fname_str),
+                        KML.TimeSpan(
+                            KML.begin(timestrbegin),
+                            KML.end(timestrend)),
+                        KML.LatLonBox(
+                            KML.north(ur[1]),
+                            KML.south(lr[1]),
+                            KML.east(ul[0]),
+                            KML.west(ur[0]),
+                            KML.rotation(0.0)),
+                        KML.Link(KML.href("%s/doc.kml" % fname_str))))
 
         filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         filekml.close()
 
         zip.write("doc.kml")   # Root KML file
 
-        # Clean up one more file
-        # os.remove("doc.kml")
+        # Clean up one more file (it is stored in .kmz file)
+        os.remove("doc.kml")
 
-        # Rename zip file so it can be read in Google Earth
         zip.close()
 
     # end figure loop
