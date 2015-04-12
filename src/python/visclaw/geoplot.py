@@ -31,8 +31,15 @@ blue_a = [0.0,0.0,1.0,1.0];
 red_a = [1.0,0.0,0.0,1.0]
 white_a = [1.0,1.0,1.0,1.0]
 purple_a = [0.8,0.3,0.8,1.0];
+blue_zodiac = [0.05, 0.15, 0.34]   # Matches Google Earth Ocean color.
+astronaut = [0.16, 0.24, 0.45]
 
 # Colormaps
+TSUNAMI_MAX_AMPLITUDE = 0.6
+googleearth_darkblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
+                                                0.0:astronaut,
+                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+
 TSUNAMI_MAX_AMPLITUDE = 0.6
 googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:purple_a,
                                                 0.0:transparent,
