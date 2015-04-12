@@ -345,7 +345,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         plt.xlim(plotfigure.kml_xlimits[0], plotfigure.kml_xlimits[1])
                     except:
                         print " "
-                        print "*** KML error : Set figure.kml_xlimits"
+                        print "*** KML error : Set plotfigure.kml_xlimits"
                         print " "
                         return
 
@@ -358,16 +358,17 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         print " "
                         return
 
-            elif (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-                try:
-                    plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-                except:
-                    pass  # let axis be set automatically
-            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-                try:
-                    plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-                except:
-                    pass  # let axis be set automatically
+            else:
+                if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
+                    try:
+                        plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                    except:
+                        pass  # let axis be set automatically
+                if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
+                    try:
+                        plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                    except:
+                        pass  # let axis be set automatically
 
             # end of loop over plotaxes
         # end of loop over plotfigures
