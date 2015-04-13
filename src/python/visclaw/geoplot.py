@@ -31,19 +31,26 @@ blue_a = [0.0,0.0,1.0,1.0];
 red_a = [1.0,0.0,0.0,1.0]
 white_a = [1.0,1.0,1.0,1.0]
 purple_a = [0.8,0.3,0.8,1.0];
+
+# from 'Sip.app'
 blue_zodiac = [0.05, 0.15, 0.34]   # Matches Google Earth Ocean color.
 astronaut = [0.16, 0.24, 0.45]
+bay_of_many = [0.18, 0.26, 0.50]
 
 # Colormaps
 TSUNAMI_MAX_AMPLITUDE = 0.6
+googleearth_lightblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
+                                                0.0:bay_of_many,
+                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+
 googleearth_darkblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
-                                                0.0:astronaut,
+                                                0.0:blue_zodiac,
                                                 TSUNAMI_MAX_AMPLITUDE:red_a})
 
 TSUNAMI_MAX_AMPLITUDE = 0.6
-googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:purple_a,
+googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
                                                 0.0:transparent,
-                                                TSUNAMI_MAX_AMPLITUDE:blue_a})
+                                                TSUNAMI_MAX_AMPLITUDE:red_a})
 
 # Colormaps
 TSUNAMI_MAX_AMPLITUDE = 0.6

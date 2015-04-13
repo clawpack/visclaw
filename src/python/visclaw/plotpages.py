@@ -553,23 +553,6 @@ def plotclaw2kml(plotdata):
     """
     Take a list of figure files and produce kml file to display them.
     """
-    # TODO : Make user options :
-    # (look at how dpi, use_for_kml, etc are set in setplot.py
-    #      -- gbegin  (time/date to start simulation)
-    #      -- range (height, in meters from sealevel)
-    #      -- tilt ?
-    #      -- Include "LookAt" tags ...
-    #      -- Add option to just print kml file with raw .png files?
-    #      -- Get rid of reliance on lxml/kml?
-    #      -- add URL options so users could get files from a server? (in this case,
-    #         we don't include .png files into zipped images)
-    #      -- Add color bar
-    #      -- Fix time slider so it starts at time zero (and not all files are loaded)
-    #      -- Add placemarks for Gauges files
-    #      -- Create index.html file as part of .kmz file
-    #      -- Different publishing options (.kmz will all files; .kmz with http links;
-    #         index.html file for Google Earth plug-in.)
-
 
     print '\n-----------------------------------\n'
     print '\nCreating .kmz file ...'
@@ -611,8 +594,6 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
-    doc = KML.kml(KML.Document())
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -623,6 +604,11 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
+        doc = KML.kml(KML.Document())
+
+        if (plotfigure.kml_url != None):
+            doc_remote = KML.kml(KML.Document())
+
         ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
@@ -631,38 +617,48 @@ def plotclaw2kml(plotdata):
             KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                 KML.latitude((ur[1]+lr[1])/2),
                 KML.range(15000000),
-                KML.altitude(0),
                 KML.altitudeMode("absolute")))
 
         # Open zip file
         fname_kmz = plotdata.kml_index_fname + str(figno)
         zip = zipfile.ZipFile("%s.kmz" % (fname_kmz),'w')
 
-        fname_kml = "doc.kml"
-        filekml = open(fname_kml,'w')
-        filekml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        if (plotfigure.kml_url != None):
+            # contains remote links, if a url is specified.
+            fname_kml = plotdata.kml_index_fname + str(figno)
+
+        docfile = open("doc.kml",'w')
+        docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
         # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
         # to adjust time from UTC to time in event locale.
         try:
             event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
-            event_time.extend([0,0,-1])                # Extend to 9 tuple with undefined DST
-            tz_offset = plotfigure.kml_tz_offset*60*60  # Offset in seconds
-            starttime = time.mktime(event_time) - time.timezone + tz_offset
+            event_time.extend([0,0,0])                 # Extend to 9 tuple.
+            starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
+            if (plotfigure.kml_tz_offset == None):
+                tzstr = "Z"  # no offset; could also just set to "+00:00"
+            else:
+                # Google Earth will show time slider time in local time, where
+                # local + offset = UTC.
+                tz_offset = plotfigure.kml_tz_offset*60*60  # Offset in seconds
+                tz = time.gmtime(abs(tz_offset))
+                if (tz_offset > 0):
+                    tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
+                else:
+                    tzstr = time.strftime("-%H:%M",tz)
+
         except:
             starttime = time.time()     # Use local time
-
+            tzstr = "Z"
 
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
 
-            gbegin = time.gmtime(starttime + frametimes[frameno])
-            timestrbegin = time.strftime("%Y-%m-%dT%H:%M:%SZ", gbegin)
-
-            gend = plotfigure.kml_starttime
+            gbegin = time.gmtime(starttime + frametimes[frameno]) # adds time zone back in
+            timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
             if i < numframes-1:
                 # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
-                # gend = time.gmtime(frametimes[framenos[i+1]])
                 gend = time.gmtime(starttime + frametimes[framenos[i+1]])
             else:
                 if numframes == 1:
@@ -672,13 +668,19 @@ def plotclaw2kml(plotdata):
                     # (same as above) Convert  gend to seconds;  add framenos[i+1};
                     # convert back to tuple
                     dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
-                    gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/2)
+                    gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
 
 
-            # Fix string to reflect user time stamp.
-            timestrend = time.strftime("%Y-%m-%dT%H:%M:%S", gend)
+            # Set time span for this figure
+            timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
+
+            if (plotfigure.kml_url != None):
+                loc_str = os.path.join(plotfigure.kml_url,fname_str,'doc.kml')
+            else:
+                loc_str = os.path.join('doc.kml',fname_str)
+
 
             if (not plotfigure.kml_tile_images):
                 print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
@@ -696,16 +698,16 @@ def plotclaw2kml(plotdata):
                             KML.east(ul[0]),
                             KML.west(ur[0]),
                             KML.rotation(0.0)),
-                        KML.Icon(KML.href("%s.png" % fname_str))))
+                        KML.Icon(KML.href("%s.png" % loc_str))))
 
             else:
                 print '\n'
                 print "Tiling %s.png and adding reference to .kmz file" % (fname_str)
 
                 # Use GDAL library to tile images for faster loading.
-                href = KML.href("%s/doc.kml" % fname_str)
+                href = KML.href(os.path.join("%s" % fname_str,"doc.kml"))
 
-                im = plt.imread("%s.png" % fname_str)
+                im = plt.imread("%s.png"% fname_str)
                 sx = im.shape[1]   # reversed?
                 sy = im.shape[0]
 
@@ -761,15 +763,18 @@ def plotclaw2kml(plotdata):
                             KML.east(ul[0]),
                             KML.west(ur[0]),
                             KML.rotation(0.0)),
-                        KML.Link(KML.href("%s/doc.kml" % fname_str))))
+                        KML.Link(KML.href(loc_str))))
 
-        filekml.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
-        filekml.close()
+        docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+        docfile.close()
 
         zip.write("doc.kml")   # Root KML file
 
         # Clean up one more file (it is stored in .kmz file)
-        os.remove("doc.kml")
+        if (plotfigure.kml_url == None):
+            os.remove("doc.kml")
+        else:
+            os.rename("doc.kml","%s.kml"%fname_kmz)    # create lightweight KML file.
 
         zip.close()
 
