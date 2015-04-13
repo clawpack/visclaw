@@ -679,7 +679,7 @@ def plotclaw2kml(plotdata):
             if (plotfigure.kml_url != None):
                 loc_str = os.path.join(plotfigure.kml_url,fname_str,'doc.kml')
             else:
-                loc_str = os.path.join('doc.kml',fname_str)
+                loc_str = os.path.join(fname_str,'doc.kml')
 
 
             if (not plotfigure.kml_tile_images):
@@ -692,12 +692,6 @@ def plotclaw2kml(plotdata):
                         KML.TimeSpan(
                             KML.begin(timestrbegin),
                             KML.end(timestrend)),
-                        KML.LatLonBox(
-                            KML.north(ur[1]),
-                            KML.south(lr[1]),
-                            KML.east(ul[0]),
-                            KML.west(ur[0]),
-                            KML.rotation(0.0)),
                         KML.Icon(KML.href("%s.png" % loc_str))))
 
             else:
@@ -757,12 +751,6 @@ def plotclaw2kml(plotdata):
                         KML.TimeSpan(
                             KML.begin(timestrbegin),
                             KML.end(timestrend)),
-                        KML.LatLonBox(
-                            KML.north(ur[1]),
-                            KML.south(lr[1]),
-                            KML.east(ul[0]),
-                            KML.west(ur[0]),
-                            KML.rotation(0.0)),
                         KML.Link(KML.href(loc_str))))
 
         docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
