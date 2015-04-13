@@ -613,41 +613,38 @@ def plotclaw2kml(plotdata):
         #
 
         doc = KML.kml(KML.Document())  # this will eventually become doc.kml
+
         if (plotfigure.kml_url != None):
             doc_remote = KML.kml(KML.Document())    # will become _GoogleEarthfig?.kml
+            doc_list = [doc, doc_remote]
+        else:
+            doc_list = [doc]
 
         ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-        doc.Document.append(
-            KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
-                       KML.latitude((ur[1]+lr[1])/2),
-                       KML.range(15000000),
-                       KML.altitudeMode("absolute")))
-
-        if (plotfigure.kml_url != None):
-            doc_remote.Document.append(
+        for d in doc_list:
+            d.Document.append(
                 KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                            KML.latitude((ur[1]+lr[1])/2),
                            KML.range(15000000),
                            KML.altitudeMode("absolute")))
 
         # Open zip file
-        fname_kmz = plotdata.kml_index_fname + str(figno)
-        zip = zipfile.ZipFile("%s.kmz" % (fname_kmz),'w')
+        zip = zipfile.ZipFile(plotdata.kml_index_fname + str(figno) + ".kmz",'w')
 
+        docfile = open("doc.kml",'w')
         if (plotfigure.kml_url != None):
             # contains remote links, if a url is specified.
-            #docfile_remote = plotdata.kml_index_fname + str(figno)
             docfile_remote = open(plotdata.kml_index_fname + str(figno) + ".kml",'w')
+            docfile_list = [docfile, docfile_remote]
+        else:
+            docfile_list = [docfile]
 
-        # For some reason this isn't added with doc.KML.
-        docfile = open("doc.kml",'w')
-        docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
-        if (plotfigure.kml_url != None):
-            docfile_remote.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        for d in docfile_list:
+            # For some reason this isn't added with doc.KML.
+            d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
         # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
         # to adjust time from UTC to time in event locale.
@@ -695,33 +692,30 @@ def plotclaw2kml(plotdata):
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
-
-            loc_str = os.path.join(fname_str,'doc.kml')
-            if (plotfigure.kml_url != None):
-                loc_str_remote = os.path.join(plotfigure.kml_url,fname_str,'doc.kml')
-
+            # Don't tile files; reference .png file directly
             if (not plotfigure.kml_tile_images):
                 print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
 
                 # href = KML.href("%s.png" % fname_str)
                 zip.write("%s.png" % (fname_str))  # add image to kmz file
 
-                doc.Document.append(
-                    KML.GroundOverlay(
-                        KML.name(fname_str),
-                        KML.TimeSpan(
-                            KML.begin(timestrbegin),
-                            KML.end(timestrend)),
-                        KML.Icon(KML.href("%s.png" % loc_str))))
+                fstr = "%s.png" % fname_str
+                for n in range(0,len(doc_list)):
+                    if n == 1:
+                        fstr = os.path.join(plotfigure.kml_url,fstr)
 
-                if (plotfigure.kml_url != None):
-                    doc_remote.Document.append(
+                    doc_list[n].Document.append(
                         KML.GroundOverlay(
                             KML.name(fname_str),
+                            KML.LatLonBox(
+                                KML.north(ur[1]),
+                                KML.south(lr[1]),
+                                KML.east(ul[0]),
+                                KML.west(ur[0])),
                             KML.TimeSpan(
                                 KML.begin(timestrbegin),
                                 KML.end(timestrend)),
-                            KML.Icon(KML.href("%s.png" % loc_str_remote))))
+                            KML.Icon(KML.href(fstr))))
 
             else:
                 print '\n'
@@ -774,34 +768,24 @@ def plotclaw2kml(plotdata):
                 os.remove("%s.vrt" % (fname_str))
                 shutil.rmtree(fname_str)
 
-                doc.Document.append(
-                    KML.NetworkLink(
-                        KML.name(fname_str),
-                        KML.TimeSpan(
-                            KML.begin(timestrbegin),
-                            KML.end(timestrend)),
-                        KML.Link(KML.href(loc_str))))
-
-                if (plotfigure.kml_url != None):
-                    doc_remote.Document.append(
+                lstr = os.path.join(fname_str,'doc.kml')
+                for n in range(0,len(doc_list)):
+                    if n == 1:
+                        lstr = os.path.join(plotfigure.kml_url,lstr)
+                    doc_list[n].Document.append(
                         KML.NetworkLink(
                             KML.name(fname_str),
                             KML.TimeSpan(
                                 KML.begin(timestrbegin),
                                 KML.end(timestrend)),
-                            KML.Link(KML.href(loc_str_remote))))
+                            KML.Link(KML.href(lstr))))
 
+        for n in range(0,len(docfile_list)):
+            docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),pretty_print=True))
+            docfile_list[n].close()
 
-        docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
-        docfile.close()
-
-        if (plotfigure.kml_url != None):
-            docfile_remote.write(etree.tostring(etree.ElementTree(doc_remote),pretty_print=True))
-            docfile_remote.close()
-
+        # Store this in the zip file and remove it.
         zip.write("doc.kml")   # Root KML file
-
-        # Store this in zip file.
         os.remove("doc.kml")
 
         zip.close()
