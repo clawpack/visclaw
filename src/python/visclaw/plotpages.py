@@ -628,8 +628,7 @@ def plotclaw2kml(plotdata):
             d.Document.append(
                 KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                            KML.latitude((ur[1]+lr[1])/2),
-                           KML.range(15000000),
-                           KML.altitudeMode("absolute")))
+                           KML.range(15000000)))
 
         # Open zip file
         zip = zipfile.ZipFile(plotdata.kml_index_fname + str(figno) + ".kmz",'w')
@@ -643,8 +642,10 @@ def plotclaw2kml(plotdata):
             docfile_list = [docfile]
 
         for d in docfile_list:
-            # For some reason this isn't added with doc.KML.
+            # This is handy, if only so that editors (Emacs?) will
+            # recognize how to do syntax highlighting.
             d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            pass
 
         # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
         # to adjust time from UTC to time in event locale.
@@ -696,33 +697,47 @@ def plotclaw2kml(plotdata):
             if (not plotfigure.kml_tile_images):
                 print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
 
-                # href = KML.href("%s.png" % fname_str)
-                zip.write("%s.png" % (fname_str))  # add image to kmz file
+                shutil.rmtree(fname_str,True)  # remove directory and ignore errors
+                os.mkdir(fname_str)
+                shutil.copy("%s.png"%fname_str,fname_str)
+
+                # The 'etree'
+                doc_notile = KML.kml(KML.Document())
+
+                # The actual file to be written <framename>/doc.kml
+                docfile = os.path.join(fname_str,'doc.kml')
+                docfile_notile = open(docfile,'w')
+
+                # Handy (see above)
+                docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
                 fstr = "%s.png" % fname_str
-                for n in range(0,len(doc_list)):
-                    if n == 1:
-                        fstr = os.path.join(plotfigure.kml_url,fstr)
+                doc_notile.Document.append(
+                    KML.GroundOverlay(
+                    KML.name(fname_str),
+                    KML.Icon(KML.href(fstr)),
+                    KML.LatLonBox(
+                        KML.north(ur[1]),
+                        KML.south(lr[1]),
+                        KML.east(ur[0]),
+                        KML.west(ul[0]))))
 
-                    doc_list[n].Document.append(
-                        KML.GroundOverlay(
-                            KML.name(fname_str),
-                            KML.LatLonBox(
-                                KML.north(ur[1]),
-                                KML.south(lr[1]),
-                                KML.east(ul[0]),
-                                KML.west(ur[0])),
-                            KML.TimeSpan(
-                                KML.begin(timestrbegin),
-                                KML.end(timestrend)),
-                            KML.Icon(KML.href(fstr))))
+                docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),pretty_print=True))
+                docfile_notile.close()
+
+                # Add the <fname>/ directory to zipped file
+                # <dir>/doc.kml and <dir>/<fname_str>.png
+                for dirname, subdirs, files in os.walk(fname_str):
+                    zip.write(dirname)
+                    for filename in files:
+                        zip.write(os.path.join(dirname, filename))
+
+                # remove directory created
+                shutil.rmtree(fname_str)
 
             else:
                 print '\n'
                 print "Tiling %s.png and adding reference to .kmz file" % (fname_str)
-
-                # Use GDAL library to tile images for faster loading.
-                href = KML.href(os.path.join("%s" % fname_str,"doc.kml"))
 
                 im = plt.imread("%s.png"% fname_str)
                 sx = im.shape[1]   # reversed?
@@ -739,7 +754,7 @@ def plotclaw2kml(plotdata):
                 retval = subprocess.call(arg_list)
 
                 arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", \
-                            "-overwrite", "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
+                            "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
                 retval = retval or subprocess.call(arg_list)
 
                 arg_list = ["gdal2tiles.py", \
@@ -766,20 +781,39 @@ def plotclaw2kml(plotdata):
                 # Clean up files
                 os.remove("%s_tmp.vrt" % (fname_str))
                 os.remove("%s.vrt" % (fname_str))
+
+                # remove directory created
                 shutil.rmtree(fname_str)
 
-                lstr = os.path.join(fname_str,'doc.kml')
-                for n in range(0,len(doc_list)):
-                    if n == 1:
-                        lstr = os.path.join(plotfigure.kml_url,lstr)
-                    doc_list[n].Document.append(
-                        KML.NetworkLink(
-                            KML.name(fname_str),
-                            KML.TimeSpan(
-                                KML.begin(timestrbegin),
-                                KML.end(timestrend)),
-                            KML.Link(KML.href(lstr))))
+            # add Network link to high level doc.kml file.  This will referenece either
+            # tiled files or non-tiled files.
+            lstr = os.path.join(fname_str,'doc.kml')
+            for n in range(0,len(doc_list)):
+                if n == 1:
+                    lstr = os.path.join(plotfigure.kml_url,lstr)
+                doc_list[n].Document.append(
+                    KML.NetworkLink(
+                        KML.name(fname_str),
+                        KML.TimeSpan(
+                            KML.begin(timestrbegin),
+                            KML.end(timestrend)),
+                        KML.Link(KML.href(lstr))))
 
+        # Add links to regions.kml, gauges.kml etc
+        fstr_list = ['regions','gauges','box','quad']
+        for file_to_add in fstr_list:
+            for n in range(0,len(doc_list)):
+                if n == 1:
+                    file = os.path.join(plotfigure.kml_url,file_to_add)
+                else:
+                    file = file_to_add
+
+                doc_list[n].Document.append(
+                KML.NetworkLink(
+                    KML.name(file),
+                    KML.Link(KML.href("../" + file + ".kml"))))
+
+        # Write out the etree to file 'doc.kml'
         for n in range(0,len(docfile_list)):
             docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),pretty_print=True))
             docfile_list[n].close()
