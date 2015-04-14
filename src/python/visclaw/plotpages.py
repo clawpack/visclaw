@@ -714,13 +714,13 @@ def plotclaw2kml(plotdata):
                 fstr = "%s.png" % fname_str
                 doc_notile.Document.append(
                     KML.GroundOverlay(
-                    KML.name(fname_str),
-                    KML.Icon(KML.href(fstr)),
-                    KML.LatLonBox(
-                        KML.north(ur[1]),
-                        KML.south(lr[1]),
-                        KML.east(ur[0]),
-                        KML.west(ul[0]))))
+                        KML.name(fname_str),
+                        KML.Icon(KML.href(fstr)),
+                        KML.LatLonBox(
+                            KML.north(ur[1]),
+                            KML.south(lr[1]),
+                            KML.east(ur[0]),
+                            KML.west(ul[0]))))
 
                 docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),pretty_print=True))
                 docfile_notile.close()
