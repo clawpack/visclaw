@@ -427,3 +427,25 @@ def plot_topo_file(topoplotdata):
     topodata.topo = topo
 
     return topodata
+
+def build_ge_colorbar(plotdata,cmap):
+
+    from matplotlib import pyplot
+    import matplotlib as mpl
+    from clawpack.visclaw import plotpages
+    import os
+
+    fig = pyplot.figure(figsize=(1.2,3.5))
+    ax1 = fig.add_axes([0.1, 0.075, 0.4, 0.85])
+
+    norm = mpl.colors.Normalize(vmin=-TSUNAMI_MAX_AMPLITUDE,
+                                vmax=TSUNAMI_MAX_AMPLITUDE)
+
+    cb1 = mpl.colorbar.ColorbarBase(ax1,cmap=cmap,
+                                    norm=norm,
+                                    orientation='vertical')
+    #cb1.set_label('Sea surface height')
+    startdir = os.getcwd()
+    plotpages.cd_with_mkdir(plotdata.plotdir,plotdata.overwrite, plotdata.verbose)
+    pyplot.savefig('ge_colorbar.png')
+    os.chdir(startdir)
