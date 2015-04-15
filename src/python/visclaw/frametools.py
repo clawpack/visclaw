@@ -302,6 +302,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** or  ClawPlotItem.afterpatch instead"
                 try:
                     if plotfigure.use_for_kml:
+                        # Build colorbar for Google Earth (now done in setplot.py)
                         pass
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
@@ -977,7 +978,7 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True, kml_fig=False, kml_dpi=''):
+             verbose=True, kml_fig=False, kml_dpi=None):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
