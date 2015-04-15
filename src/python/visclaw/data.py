@@ -626,7 +626,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_dpi',200)
         self.add_attribute('kml_xlimits',None)
         self.add_attribute('kml_ylimits',None)
-        self.add_attribute('kml_starttime',time.gmtime());
+        self.add_attribute('kml_starttime',None);
         self.add_attribute('kml_tz_offset',None)   # Time zone offset to UTC
         self.add_attribute('kml_tile_images',True)
         self.add_attribute('kml_url',None)  # location of published files - unzip .kmz file here
