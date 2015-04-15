@@ -649,25 +649,26 @@ def plotclaw2kml(plotdata):
 
         # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
         # to adjust time from UTC to time in event locale.
-        try:
+        if (plotfigure.kml_starttime == None):
+            starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
+            tz_offset = 0 # time.timezone/(60.*60.)
+        else:
             event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
             event_time.extend([0,0,0])                 # Extend to 9 tuple.
             starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
-            if (plotfigure.kml_tz_offset == None):
-                tzstr = "Z"  # no offset; could also just set to "+00:00"
-            else:
-                # Google Earth will show time slider time in local time, where
-                # local + offset = UTC.
-                tz_offset = plotfigure.kml_tz_offset*60*60  # Offset in seconds
-                tz = time.gmtime(abs(tz_offset))
-                if (tz_offset > 0):
-                    tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
-                else:
-                    tzstr = time.strftime("-%H:%M",tz)
+            tz_offset = plotfigure.kml_tz_offset
 
-        except:
-            starttime = time.time()     # Use local time
-            tzstr = "Z"
+        if (tz_offset == None):
+            tzstr = "Z"  # no offset; could also just set to "+00:00"
+        else:
+            # Google Earth will show time slider time in local time, where
+            # local + offset = UTC.
+            tz_offset = tz_offset*60*60  # Offset in seconds
+            tz = time.gmtime(abs(tz_offset))
+            if (tz_offset > 0):
+                tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
+            else:
+                tzstr = time.strftime("-%H:%M",tz)
 
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
@@ -682,11 +683,8 @@ def plotclaw2kml(plotdata):
                     gend = gbegin
                 else:
                     # Add extra simlulation time so the last file shows up in GE
-                    # (same as above) Convert  gend to seconds;  add framenos[i+1};
-                    # convert back to tuple
                     dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
                     gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
-
 
             # Set time span for this figure
             timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
@@ -812,6 +810,16 @@ def plotclaw2kml(plotdata):
                 KML.NetworkLink(
                     KML.name(file),
                     KML.Link(KML.href("../" + file + ".kml"))))
+
+        # Add colorbar as screen overlay. Assume it is in plotdir.
+        import geoplot
+        colorbar = KML.ScreenOverlay(
+            KML.name("colorbar"),
+            KML.Icon(KML.href("ge_colorbar.png")),  # assumes file is in working directory
+            KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+            KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+        doc_list[0].Document.append(colorbar)
+        zip.write("ge_colorbar.png")
 
         # Write out the etree to file 'doc.kml'
         for n in range(0,len(docfile_list)):
