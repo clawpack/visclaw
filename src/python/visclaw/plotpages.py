@@ -751,7 +751,7 @@ def plotclaw2kml(plotdata):
                 import subprocess
                 retval = subprocess.call(arg_list)
 
-                arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", \
+                arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", "-overwrite", \
                             "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
                 retval = retval or subprocess.call(arg_list)
 
@@ -799,7 +799,10 @@ def plotclaw2kml(plotdata):
 
         # Add links to regions.kml, gauges.kml etc
         fstr_list = ['regions','gauges','box','quad']
-        for file_to_add in fstr_list:
+        vis = [0,1,0,0]
+        for m in [0,1]:    # hold off on including boxes, quads for now
+            file_to_add = fstr_list[m]
+            fname = fstr_list[m]
             for n in range(0,len(doc_list)):
                 if n == 1:
                     file = os.path.join(plotfigure.kml_url,file_to_add)
@@ -808,18 +811,20 @@ def plotclaw2kml(plotdata):
 
                 doc_list[n].Document.append(
                 KML.NetworkLink(
-                    KML.name(file),
+                    KML.name(fname.capitalize()),
+                    KML.visibility(vis[m]),
                     KML.Link(KML.href("../" + file + ".kml"))))
 
         # Add colorbar as screen overlay. Assume it is in plotdir.
         import geoplot
         colorbar = KML.ScreenOverlay(
-            KML.name("colorbar"),
-            KML.Icon(KML.href("ge_colorbar.png")),  # assumes file is in working directory
+            KML.name("Colorbar"),
+            KML.Icon(KML.href("ge_colorbar.png")),
             KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
             KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
         doc_list[0].Document.append(colorbar)
-        zip.write("ge_colorbar.png")
+        if os.path.isfile("ge_colorbar.png"):
+            zip.write("ge_colorbar.png")
 
         # Write out the etree to file 'doc.kml'
         for n in range(0,len(docfile_list)):
