@@ -579,6 +579,7 @@ def plotclaw2kml(plotdata):
         gauge_htmlfile = plotdata._gauge_htmlfile
         gauge_allfigsfile = plotdata._gauge_allfigsfile
 
+
     framenos = plotdata.timeframes_framenos
     frametimes = plotdata.timeframes_frametimes
     fignos = plotdata.timeframes_fignos
@@ -611,6 +612,10 @@ def plotclaw2kml(plotdata):
         #  _GoogleEarthfig?_remote.kml : kml file which references remote links to images,
         #                                but not the images or image directories themselves/
         #
+
+        if plotfigure.kml_colorbar is not None:
+            # Build colorbar in <plotdir>
+            plotfigure.kml_colorbar()
 
         doc = KML.kml(KML.Document())  # this will eventually become doc.kml
 
@@ -816,13 +821,17 @@ def plotclaw2kml(plotdata):
                     KML.Link(KML.href("../" + file + ".kml"))))
 
         # Add colorbar as screen overlay. Assume it is in plotdir.
-        import geoplot
-        colorbar = KML.ScreenOverlay(
-            KML.name("Colorbar"),
-            KML.Icon(KML.href("ge_colorbar.png")),
-            KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
-            KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
-        doc_list[0].Document.append(colorbar)
+        lstr = "ge_colorbar.png"
+        for n in range(0,len(doc_list)):
+            if n == 1:
+                lstr = os.path.join(plotfigure.kml_url,lstr)
+            colorbar = KML.ScreenOverlay(
+                KML.name("Colorbar"),
+                KML.Icon(KML.href(lstr)),
+                KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+                KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+            doc_list[n].Document.append(colorbar)
+
         if os.path.isfile("ge_colorbar.png"):
             zip.write("ge_colorbar.png")
 
