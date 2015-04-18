@@ -428,24 +428,20 @@ def plot_topo_file(topoplotdata):
 
     return topodata
 
-def build_ge_colorbar(plotdata,cmap):
+def kml_build_colorbar(cmap,cmin,cmax):
 
     from matplotlib import pyplot
     import matplotlib as mpl
-    from clawpack.visclaw import plotpages
-    import os
 
-    fig = pyplot.figure(figsize=(1.2,3.5))
-    ax1 = fig.add_axes([0.1, 0.075, 0.4, 0.85])
+    fig = pyplot.figure(figsize=(0.8,3))
+    ax1 = fig.add_axes([0.1, 0.075, 0.25, 0.85])
+    tick = ax1.yaxis.get_major_ticks()
+    pyplot.tick_params(axis='y', which='major', labelsize=8)
 
-    norm = mpl.colors.Normalize(vmin=-TSUNAMI_MAX_AMPLITUDE,
-                                vmax=TSUNAMI_MAX_AMPLITUDE)
+    norm = mpl.colors.Normalize(vmin=cmin,vmax=cmax)
 
     cb1 = mpl.colorbar.ColorbarBase(ax1,cmap=cmap,
                                     norm=norm,
                                     orientation='vertical')
-    #cb1.set_label('Sea surface height')
-    startdir = os.getcwd()
-    plotpages.cd_with_mkdir(plotdata.plotdir,plotdata.overwrite, plotdata.verbose)
-    pyplot.savefig('ge_colorbar.png')
-    os.chdir(startdir)
+    # This is called from plotpages, in <plotdir>.
+    pyplot.savefig('ge_colorbar.png',Transparent=True)
