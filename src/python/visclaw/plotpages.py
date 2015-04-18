@@ -613,10 +613,6 @@ def plotclaw2kml(plotdata):
         #                                but not the images or image directories themselves/
         #
 
-        if plotfigure.kml_colorbar is not None:
-            # Build colorbar in <plotdir>
-            plotfigure.kml_colorbar()
-
         doc = KML.kml(KML.Document())  # this will eventually become doc.kml
 
         if (plotfigure.kml_url != None):
@@ -821,19 +817,27 @@ def plotclaw2kml(plotdata):
                     KML.Link(KML.href("../" + file + ".kml"))))
 
         # Add colorbar as screen overlay. Assume it is in plotdir.
-        lstr = "ge_colorbar.png"
+        # First build the colorbar (done here, because here is where
+        # we know the file name and <plotdir>.
+        if plotfigure.kml_colorbar is not None:
+            # Build colorbar in <plotdir>
+            cb_filename = "ge_colorbarfig%s.png" % figno
+            plotfigure.kml_colorbar(cb_filename)
+
+        cb_str = cb_filename
         for n in range(0,len(doc_list)):
             if n == 1:
-                lstr = os.path.join(plotfigure.kml_url,lstr)
+                cb_str = os.path.join(plotfigure.kml_url,cb_str)
             colorbar = KML.ScreenOverlay(
                 KML.name("Colorbar"),
-                KML.Icon(KML.href(lstr)),
+                KML.Icon(KML.href(cb_str)),
                 KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
                 KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
             doc_list[n].Document.append(colorbar)
 
-        if os.path.isfile("ge_colorbar.png"):
-            zip.write("ge_colorbar.png")
+        if os.path.isfile(cb_filename):
+            zip.write(cb_filename)
+            os.remove(cb_filename)
 
         # Write out the etree to file 'doc.kml'
         for n in range(0,len(docfile_list)):
