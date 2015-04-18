@@ -630,6 +630,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_tz_offset',None)   # Time zone offset to UTC
         self.add_attribute('kml_tile_images',False)
         self.add_attribute('kml_url',None)  # location of published files - unzip .kmz file here
+        self.add_attribute('kml_colorbar',None)
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
