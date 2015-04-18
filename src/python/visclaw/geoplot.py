@@ -29,10 +29,10 @@ gray8 = [0.8,0.8,0.8];
 transparent = [0.0, 0.0, 0.0,0.0]
 blue_a = [0.0,0.0,1.0,1.0];
 red_a = [1.0,0.0,0.0,1.0]
-white_a = [1.0,1.0,1.0,1.0]
 purple_a = [0.8,0.3,0.8,1.0];
 
 # from 'Sip.app'
+white_a = [1.0,1.0,1.0,1.0]
 blue_zodiac = [0.05, 0.15, 0.34]   # Matches Google Earth Ocean color.
 astronaut = [0.16, 0.24, 0.45]
 bay_of_many = [0.18, 0.26, 0.50]
@@ -47,17 +47,16 @@ googleearth_darkblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
                                                 0.0:blue_zodiac,
                                                 TSUNAMI_MAX_AMPLITUDE:red_a})
 
+
+googleearth_white = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
+                                                0.0:white_a,
+                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+
+
 TSUNAMI_MAX_AMPLITUDE = 0.6
 googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
                                                 0.0:transparent,
                                                 TSUNAMI_MAX_AMPLITUDE:red_a})
-
-# Colormaps
-TSUNAMI_MAX_AMPLITUDE = 0.6
-googleearth_white = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:purple_a,
-                                                0.0:transparent,
-                                                TSUNAMI_MAX_AMPLITUDE:blue_a})
-
 
 tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,
@@ -428,7 +427,7 @@ def plot_topo_file(topoplotdata):
 
     return topodata
 
-def kml_build_colorbar(cmap,cmin,cmax):
+def kml_build_colorbar(cb_filename,cmap,cmin,cmax):
 
     from matplotlib import pyplot
     import matplotlib as mpl
@@ -444,4 +443,4 @@ def kml_build_colorbar(cmap,cmin,cmax):
                                     norm=norm,
                                     orientation='vertical')
     # This is called from plotpages, in <plotdir>.
-    pyplot.savefig('ge_colorbar.png',Transparent=True)
+    pyplot.savefig(cb_filename,Transparent=True)
