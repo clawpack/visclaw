@@ -670,9 +670,11 @@ def plotclaw2kml(plotdata):
             else:
                 tzstr = time.strftime("-%H:%M",tz)
 
+        # ------------------- Loop over frames ----------------------
         for i in range(0,numframes):
             frameno = framenos[i]  # This is a key in the frametimes dictionary...
 
+            # ------------------- get time span ----------------------
             gbegin = time.gmtime(starttime + frametimes[frameno]) # adds time zone back in
             timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
             if i < numframes-1:
@@ -686,12 +688,11 @@ def plotclaw2kml(plotdata):
                     dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
                     gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
 
-            # Set time span for this figure
             timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
-            # Don't tile files; reference .png file directly
+            # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
                 print "===> Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
 
@@ -797,6 +798,9 @@ def plotclaw2kml(plotdata):
                             KML.end(timestrend)),
                         KML.Link(KML.href(lstr))))
 
+        # ----------------- Done with frame loop --------------------
+
+
         # Add links to regions.kml, gauges.kml etc
         if plotdata.gauges_fignos is not None:
             try:
@@ -834,8 +838,7 @@ def plotclaw2kml(plotdata):
                 pass
 
 
-        # -------------- add gauge image and KML files -----------------
-        # Create some auxilliary directories for storing extra kml files, images.
+        # -------------- Create resource subdirectories -----------------
         kml_dir = 'kml'
         shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
         os.mkdir(kml_dir)
@@ -870,9 +873,10 @@ def plotclaw2kml(plotdata):
             shutil.move(gauge_kml_file,kml_dir)
 
         # Add any gauge PNG files to images directory.
-        for k in gauge_pngfile.keys():
-            if os.path.isfile(gauge_pngfile[k]):
-                shutil.move(gauge_pngfile[k],img_dir)
+        if plotdata.gauges_fignos is not None:
+            for k in gauge_pngfile.keys():
+                if os.path.isfile(gauge_pngfile[k]):
+                    shutil.move(gauge_pngfile[k],img_dir)
 
         # -------------- add colorbar image file -----------------
         # Build the colorbar.
