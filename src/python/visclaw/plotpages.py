@@ -567,11 +567,8 @@ def plotclaw2kml(plotdata):
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting plots2kml"
+        print "*** Error, aborting plotclaw2kml"
         raise
-
-    creationtime = current_time()
-    plotdata = massage_frames_data(plotdata)
 
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
@@ -579,6 +576,8 @@ def plotclaw2kml(plotdata):
         gauge_htmlfile = plotdata._gauge_htmlfile
         gauge_allfigsfile = plotdata._gauge_allfigsfile
 
+    creationtime = current_time()
+    plotdata = massage_frames_data(plotdata)
 
     framenos = plotdata.timeframes_framenos
     frametimes = plotdata.timeframes_frametimes
@@ -694,7 +693,7 @@ def plotclaw2kml(plotdata):
 
             # Don't tile files; reference .png file directly
             if (not plotfigure.kml_tile_images):
-                print "Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
+                print "===> Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
 
                 shutil.rmtree(fname_str,True)  # remove directory and ignore errors
                 os.mkdir(fname_str)
@@ -736,7 +735,7 @@ def plotclaw2kml(plotdata):
 
             else:
                 print '\n'
-                print "Tiling %s.png and adding reference to .kmz file" % (fname_str)
+                print "===> Tiling %s.png and adding reference to .kmz file" % (fname_str)
 
                 im = plt.imread("%s.png"% fname_str)
                 sx = im.shape[1]   # reversed?
@@ -765,7 +764,7 @@ def plotclaw2kml(plotdata):
                 retval = retval or subprocess.call(arg_list)
 
                 if retval > 0:
-                    print "gdal : something went wrong!\n"
+                    print "===> gdal : something went wrong!\n"
                     sys.exit(1)
 
                 # Add the <fname>.vrt file to zipped file
@@ -799,47 +798,123 @@ def plotclaw2kml(plotdata):
                         KML.Link(KML.href(lstr))))
 
         # Add links to regions.kml, gauges.kml etc
-        fstr_list = ['regions','gauges','box','quad']
-        vis = [0,1,0,0]
-        for m in [0,1]:    # hold off on including boxes, quads for now
-            file_to_add = fstr_list[m]
-            fname = fstr_list[m]
-            for n in range(0,len(doc_list)):
-                if n == 1:
-                    file = os.path.join(plotfigure.kml_url,file_to_add)
-                else:
-                    file = file_to_add
+        if plotdata.gauges_fignos is not None:
+            try:
+                cwd = os.getcwd()
+                os.chdir("../")
+                print "===> Calling setrun (needed to create gauge.kml)"
+                import setrun
+                reload(setrun)
 
-                doc_list[n].Document.append(
+                # call this here rather than from kmltools, because KML tools will crash if
+                # run data fails.  Here, the worst that can happen is that the gauge file
+                # doesn't have the right name.
+                rundata = setrun.setrun()
+                from clawpack.geoclaw import kmltools
+
+                # Create gauges.kml in <plotdir>.  This will be used
+                # by local KMZ files
+                os.chdir(cwd)
+                kmltools.gauges2kml(rundata=rundata,
+                                    fname='gauges.kml',
+                                    verbose=True,
+                                    plotdata=plotdata)
+
+                # Need a second file for the KML files with an absolute
+                # path to gauge image file.
+                if plotfigure.kml_url is not None:
+                    kmltools.gauges2kml(rundata=rundata,
+                                        fname='gauges_url.kml',
+                                        verbose=True,
+                                        plotdata=plotdata,
+                                        kml_url=plotfigure.kml_url)
+
+            except:
+                print "===> Cannot run setrun.py;  gauges.kml file will not be created"
+                pass
+
+
+        # -------------- add gauge image and KML files -----------------
+        # Create some auxilliary directories for storing extra kml files, images.
+        kml_dir = 'kml'
+        shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
+        os.mkdir(kml_dir)
+
+        img_dir = 'images'
+        shutil.rmtree(img_dir,True)  # remove directory and ignore errors
+        os.mkdir(img_dir)
+
+        # -------------- add gauge image and KML files -----------------
+        gauge_kml_file = "gauges.kml"
+        doc.Document.append(
+            KML.NetworkLink(
+                KML.name("Gauges"),
+                KML.visibility(1),
+                KML.Link(KML.href(os.path.join(kml_dir,
+                                               gauge_kml_file)))))
+
+        if os.path.isfile(gauge_kml_file):
+                shutil.move(gauge_kml_file,kml_dir)
+
+        gauge_kml_file = 'gauges_url.kml'
+        if plotfigure.kml_url is not None:
+            doc_remote.Document.append(
                 KML.NetworkLink(
-                    KML.name(fname.capitalize()),
-                    KML.visibility(vis[m]),
-                    KML.Link(KML.href("../" + file + ".kml"))))
+                    KML.name("Gauges"),
+                    KML.visibility(1),
+                    KML.Link(KML.href(os.path.join(plotfigure.kml_url,
+                                                   kml_dir,
+                                                   gauge_kml_file)))))
 
-        # Add colorbar as screen overlay. Assume it is in plotdir.
-        # First build the colorbar (done here, because here is where
-        # we know the file name and <plotdir>.
+        if os.path.isfile(gauge_kml_file):
+            shutil.move(gauge_kml_file,kml_dir)
+
+        # Add any gauge PNG files to images directory.
+        for k in gauge_pngfile.keys():
+            if os.path.isfile(gauge_pngfile[k]):
+                shutil.move(gauge_pngfile[k],img_dir)
+
+        # -------------- add colorbar image file -----------------
+        # Build the colorbar.
         if plotfigure.kml_colorbar is not None:
-            # Build colorbar in <plotdir>
-            cb_filename = "ge_colorbarfig%s.png" % figno
-            plotfigure.kml_colorbar(cb_filename)
+            cb_filename = "colorbarfig%s.png" % figno
+            try:
+                plotfigure.kml_colorbar(cb_filename)
+                shutil.move(cb_filename,img_dir)
+            except:
+                print "Warning : Something went wrong when creating colorbar"
 
-        cb_str = cb_filename
-        for n in range(0,len(doc_list)):
-            if n == 1:
-                cb_str = os.path.join(plotfigure.kml_url,cb_str)
+            # add link to KML file, even if colorbar didn't get created.
+            cb_str = os.path.join(img_dir,cb_filename)
             colorbar = KML.ScreenOverlay(
-                KML.name("Colorbar"),
+            KML.name("Colorbar"),
                 KML.Icon(KML.href(cb_str)),
                 KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
                 KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
-            doc_list[n].Document.append(colorbar)
 
-        if os.path.isfile(cb_filename):
-            zip.write(cb_filename)
-            os.remove(cb_filename)
+            doc.Document.append(colorbar)
 
-        # Write out the etree to file 'doc.kml'
+            if plotfigure.kml_url is not None:
+                cb_str = os.path.join(plotfigure.kml_url,img_dir,cb_filename)
+                colorbar = KML.ScreenOverlay(
+                    KML.name("Colorbar"),
+                    KML.Icon(KML.href(cb_str)),
+                    KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+                    KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+
+                doc_remote.Document.append(colorbar)
+
+        # ----------- zip additional directories and clean up ------------
+        dir_list = [kml_dir, img_dir]
+        for d in dir_list:
+            for dirname, subdirs, files in os.walk(d):
+                zip.write(dirname)
+                for filename in files:
+                    zip.write(os.path.join(dirname, filename))
+
+            shutil.rmtree(d)
+
+        # ----------- Write doc.kml file --------------------
         for n in range(0,len(docfile_list)):
             docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),pretty_print=True))
             docfile_list[n].close()
