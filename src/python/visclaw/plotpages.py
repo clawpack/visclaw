@@ -625,10 +625,11 @@ def plotclaw2kml(plotdata):
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
         for d in doc_list:
-            d.Document.append(
-                KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
+            d.Document.append(KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                            KML.latitude((ur[1]+lr[1])/2),
                            KML.range(15000000)))
+            d.Document.append(
+                KML.Folder(KML.name('PColor Layer')))
 
         # Open zip file
         zip = zipfile.ZipFile(plotdata.kml_index_fname + str(figno) + ".kmz",'w')
@@ -672,10 +673,10 @@ def plotclaw2kml(plotdata):
 
         # ------------------- Loop over frames ----------------------
         for i in range(0,numframes):
-            frameno = framenos[i]  # This is a key in the frametimes dictionary...
+            frameno = framenos[i]
 
             # ------------------- get time span ----------------------
-            gbegin = time.gmtime(starttime + frametimes[frameno]) # adds time zone back in
+            gbegin = time.gmtime(starttime + frametimes[frameno])
             timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
             if i < numframes-1:
                 # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
@@ -790,7 +791,7 @@ def plotclaw2kml(plotdata):
             for n in range(0,len(doc_list)):
                 if n == 1:
                     lstr = os.path.join(plotfigure.kml_url,lstr)
-                doc_list[n].Document.append(
+                doc_list[n].Document.Folder.append(
                     KML.NetworkLink(
                         KML.name(fname_str),
                         KML.TimeSpan(
@@ -804,7 +805,7 @@ def plotclaw2kml(plotdata):
         cwd = os.getcwd()
         os.chdir("../")
         try:
-            print "===> Calling setrun (needed to create gauge.kml)"
+            print "===> Calling setrun (needed to create gauges.kml and regions.kml)"
             import setrun
             reload(setrun)
             rundata = setrun.setrun()
@@ -836,6 +837,7 @@ def plotclaw2kml(plotdata):
                                         plotdata=plotdata,
                                         kml_url=plotfigure.kml_url)
             if regions is not None:
+                # Create regions.kml
                 kmltools.regions2kml(rundata=rundata,
                                      fname='regions.kml',
                                      verbose=True)
@@ -883,7 +885,7 @@ def plotclaw2kml(plotdata):
         if plotdata.gauges_fignos is not None:
             for k in gauge_pngfile.keys():
                 if os.path.isfile(gauge_pngfile[k]):
-                    shutil.move(gauge_pngfile[k],img_dir)
+                    shutil.copy(gauge_pngfile[k],img_dir)
 
 
         # ------------------ add region KML files -----------------
