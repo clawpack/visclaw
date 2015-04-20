@@ -604,13 +604,13 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
-        # Three files have to get created :
+        # Files that get created :
         #
         #                      doc.kml : contains (local) links to images or image files;
         #         _GoogleEarthfig?.kmz : zipfiles which stores the doc.kml file, and images
-        #  _GoogleEarthfig?_remote.kml : kml file which references remote links to images,
-        #                                but not the images or image directories themselves/
-        #
+        #         _GoogleEarthfig?.kml : kml file which references remote links to images,
+        #                   gauges.kml : If gauges are begin used
+        #                  regions.kml : If regions are begin used
 
         doc = KML.kml(KML.Document())  # this will eventually become doc.kml
 
@@ -800,25 +800,28 @@ def plotclaw2kml(plotdata):
 
         # ----------------- Done with frame loop --------------------
 
+        # Build additional KML files
+        cwd = os.getcwd()
+        os.chdir("../")
+        try:
+            print "===> Calling setrun (needed to create gauge.kml)"
+            import setrun
+            reload(setrun)
+            rundata = setrun.setrun()
+            regions = rundata.regiondata.regions
+            gauges = rundata.gaugedata.gauges
+        except:
+            print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created"
+            regions = None
+            gauges = None
 
-        # Add links to regions.kml, gauges.kml etc
-        if plotdata.gauges_fignos is not None:
-            try:
-                cwd = os.getcwd()
-                os.chdir("../")
-                print "===> Calling setrun (needed to create gauge.kml)"
-                import setrun
-                reload(setrun)
+        os.chdir(cwd)
 
-                # call this here rather than from kmltools, because KML tools will crash if
-                # run data fails.  Here, the worst that can happen is that the gauge file
-                # doesn't have the right name.
-                rundata = setrun.setrun()
-                from clawpack.geoclaw import kmltools
+        if (regions is not None) or (gauges is not None):
+            from clawpack.geoclaw import kmltools
 
-                # Create gauges.kml in <plotdir>.  This will be used
-                # by local KMZ files
-                os.chdir(cwd)
+            if gauges is not None:
+                # Create gauges.kml
                 kmltools.gauges2kml(rundata=rundata,
                                     fname='gauges.kml',
                                     verbose=True,
@@ -832,10 +835,14 @@ def plotclaw2kml(plotdata):
                                         verbose=True,
                                         plotdata=plotdata,
                                         kml_url=plotfigure.kml_url)
+            if regions is not None:
+                kmltools.regions2kml(rundata=rundata,
+                                     fname='regions.kml',
+                                     verbose=True)
 
-            except:
-                print "===> Cannot run setrun.py;  gauges.kml file will not be created"
-                pass
+        else:
+            # no regions or gauges KML files are created.
+            pass
 
 
         # -------------- Create resource subdirectories -----------------
@@ -877,6 +884,29 @@ def plotclaw2kml(plotdata):
             for k in gauge_pngfile.keys():
                 if os.path.isfile(gauge_pngfile[k]):
                     shutil.move(gauge_pngfile[k],img_dir)
+
+
+        # ------------------ add region KML files -----------------
+        region_kml_file = "regions.kml"
+        doc.Document.append(
+            KML.NetworkLink(
+                KML.name("Regions"),
+                KML.visibility(1),
+                KML.Link(KML.href(os.path.join(kml_dir,
+                                               region_kml_file)))))
+
+        if plotfigure.kml_url is not None:
+            doc_remote.Document.append(
+                KML.NetworkLink(
+                    KML.name("Regions"),
+                    KML.visibility(1),
+                    KML.Link(KML.href(os.path.join(plotfigure.kml_url,
+                                                   kml_dir,
+                                                   region_kml_file)))))
+
+        if os.path.isfile(region_kml_file):
+                shutil.move(region_kml_file,kml_dir)
+
 
         # -------------- add colorbar image file -----------------
         # Build the colorbar.
