@@ -594,6 +594,7 @@ def plotclaw2kml(plotdata):
 
     creationtime = current_time()
 
+    # ------------------- Loop over frames ----------------------
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -672,6 +673,10 @@ def plotclaw2kml(plotdata):
                 tzstr = time.strftime("-%H:%M",tz)
 
         # ------------------- Loop over frames ----------------------
+        # This will get created for each figure, but I need it
+        # for createing the level boxes around each patch
+        TS = [None for i in range(0,numframes)]
+        TSS = [None for i in range(0,numframes)]
         for i in range(0,numframes):
             frameno = framenos[i]
 
@@ -692,6 +697,15 @@ def plotclaw2kml(plotdata):
             timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
+
+            # To be used below
+            TS[i] = KML.TimeSpan(
+                KML.begin(timestrbegin),
+                KML.end(timestrend))
+
+            TSS[i] = KML.TimeSpan(
+                KML.begin(timestrbegin),
+                KML.end(timestrend))
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
@@ -787,6 +801,8 @@ def plotclaw2kml(plotdata):
 
             # add Network link to high level doc.kml file.  This will referenece either
             # tiled files or non-tiled files.
+            import pdb
+            pdb.set_trace()
             lstr = os.path.join(fname_str,'doc.kml')
             for n in range(0,len(doc_list)):
                 if n == 1:
@@ -794,9 +810,7 @@ def plotclaw2kml(plotdata):
                 doc_list[n].Document.Folder.append(
                     KML.NetworkLink(
                         KML.name(fname_str),
-                        KML.TimeSpan(
-                            KML.begin(timestrbegin),
-                            KML.end(timestrend)),
+                        TS[i],
                         KML.Link(KML.href(lstr))))
 
         # ----------------- Done with frame loop --------------------
@@ -908,6 +922,79 @@ def plotclaw2kml(plotdata):
 
         if os.path.isfile(region_kml_file):
                 shutil.move(region_kml_file,kml_dir)
+
+        # --------------- Create polygons for AMR patch borders --------------
+        # This should be moved outside of the figure loop
+        #plotdata.set_outdirs()  # set _outdirs attribute to be list of
+        # all outdirs for all items
+
+        #framesolns = []
+        ## loop over all outdirs:
+        #if len(plotdata._outdirs) == 0:
+        #    plotdata._outdirs = [plotdata.outdir]
+        #
+        #for outdir in plotdata._outdirs:
+        #    framesolns.append(plotdata.getframe(frameno, outdir, refresh=refresh))
+
+        doclevels = KML.kml(KML.Document())
+        level_dir = "levels"
+        shutil.rmtree(level_dir,True)
+        os.mkdir(level_dir)
+
+        # Create high level 'levels.kml' file
+        maxlevels = 10
+        level_folders = [];
+        level_files = []
+        level_docs = []
+        for i in range(0,maxlevels):
+            level_file_name = "level_" + str(i+1).rjust(2,'0')
+            level_files.append(level_file_name)
+
+            # Directory for storing levels for each time step
+            shutil.rmtree(os.path.join(level_dir,level_files[i]),True)
+            os.mkdir(os.path.join(level_dir,level_files[i]))
+
+            # KML Document for each level
+            level_docs.append(KML.kml(KML.Document()))
+
+            # Folders in top level file 'levels.kml'
+            f = KML.Folder(KML.name("Level " + str(i)))
+            f.append(KML.Link(
+                KML.href(os.path.join(level_dir,level_file_name))))
+            doclevels.Document.append(f)
+
+        kml_levels = open("levels.kml",'w')
+        kml_levels.write(etree.tostring(etree.ElementTree(doclevels),pretty_print=True))
+        kml_levels.close()
+
+        # Create individual level files in subdirectories
+
+        for i in range(0,numframes):
+            frameno = framenos[i]
+            for j in range(0,maxlevels):
+                level_file_name = level_files[j] + "_" + str(i).rjust(4,'0') + ".kml"
+                level_docs[j].Document.append(KML.NetworkLink(
+                    KML.name("Frame %s" % str(frameno).rjust(4,'0')),
+                    TSS[i],
+                    KML.Link(
+                        KML.href(os.path.join(level_files[j],level_file_name)))))
+
+        for j in range(0,maxlevels):
+            kml_level_file = open(os.path.join(level_dir,level_files[j]+".kml"),'w')
+            kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[j]),pretty_print=True))
+            kml_level_file.close()
+
+#        for stateno,state in enumerate(framesoln.states):
+#            patch = state.patch
+#            xlower = patch.dimensions[0].lower
+#            xupper = patch.dimensions[0].upper
+#            ylower = patch.dimensions[1].lower
+#            yupper = patch.dimensions[1].upper
+
+
+
+
+
 
 
         # -------------- add colorbar image file -----------------
