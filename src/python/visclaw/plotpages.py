@@ -561,6 +561,7 @@ def plotclaw2kml(plotdata):
 
     from lxml import etree
     from pykml.factory import KML_ElementMaker as KML
+    from pykml.factory import GX_ElementMaker as GX
     import zipfile
     import shutil
 
@@ -591,10 +592,64 @@ def plotclaw2kml(plotdata):
 
     numframes = len(framenos)
     numfigs = len(fignos)
-
     creationtime = current_time()
 
-    # ------------------- Loop over frames ----------------------
+    # Get event time in seconds since Epoch (Jan. 1, 1970).
+    # ------------------- get time span ----------------------
+    for figname in plotdata._fignames:
+        plotfigure = plotdata.plotfigure_dict[figname]
+        if not plotfigure.use_for_kml:
+            continue
+
+        # Assume that the first figure we find has the correct info we need here.
+
+        # to adjust time from UTC to time in event locale.
+        if (plotfigure.kml_starttime == None):
+            starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
+            tz_offset = 0 # time.timezone/(60.*60.)
+        else:
+            event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
+            event_time.extend([0,0,0])                 # Extend to 9 tuple.
+            starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
+            tz_offset = plotfigure.kml_tz_offset
+
+        if (tz_offset == None):
+            tzstr = "Z"  # no offset; could also just set to "+00:00"
+        else:
+            # Google Earth will show time slider time in local time, where
+            # local + offset = UTC.
+            tz_offset = tz_offset*60*60  # Offset in seconds
+            tz = time.gmtime(abs(tz_offset))
+            if (tz_offset > 0):
+                tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
+            else:
+                tzstr = time.strftime("-%H:%M",tz)
+        break
+
+    TS = []
+    for i in range(0,numframes):
+        frameno = framenos[i]
+        gbegin = time.gmtime(starttime + frametimes[frameno])
+        timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
+        if i < numframes-1:
+            # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
+            gend = time.gmtime(starttime + frametimes[framenos[i+1]])
+        else:
+            if numframes == 1:
+                gend = gbegin
+            else:
+                # Add extra simlulation time so the last file shows up in GE
+                dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
+                gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
+
+        timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
+
+        # To be used below
+        TS.append(KML.TimeSpan(
+            KML.begin(timestrbegin),
+            KML.end(timestrend)))
+
+    # ------------------- Loop over figures ----------------------
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -629,8 +684,9 @@ def plotclaw2kml(plotdata):
             d.Document.append(KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
                            KML.latitude((ur[1]+lr[1])/2),
                            KML.range(15000000)))
+            d.Document.append(KML.open(1))
             d.Document.append(
-                KML.Folder(KML.name('PColor Layer')))
+                KML.Folder(KML.name(plotfigure.name)))
 
         # Open zip file
         zip = zipfile.ZipFile(plotdata.kml_index_fname + str(figno) + ".kmz",'w')
@@ -649,63 +705,17 @@ def plotclaw2kml(plotdata):
             d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
             pass
 
-        # Get event time in seconds since Epoch (Jan. 1, 1970).  Use offset
-        # to adjust time from UTC to time in event locale.
-        if (plotfigure.kml_starttime == None):
-            starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
-            tz_offset = 0 # time.timezone/(60.*60.)
-        else:
-            event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
-            event_time.extend([0,0,0])                 # Extend to 9 tuple.
-            starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
-            tz_offset = plotfigure.kml_tz_offset
-
-        if (tz_offset == None):
-            tzstr = "Z"  # no offset; could also just set to "+00:00"
-        else:
-            # Google Earth will show time slider time in local time, where
-            # local + offset = UTC.
-            tz_offset = tz_offset*60*60  # Offset in seconds
-            tz = time.gmtime(abs(tz_offset))
-            if (tz_offset > 0):
-                tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
-            else:
-                tzstr = time.strftime("-%H:%M",tz)
 
         # ------------------- Loop over frames ----------------------
         # This will get created for each figure, but I need it
         # for createing the level boxes around each patch
-        TS = [None for i in range(0,numframes)]
-        TSS = [None for i in range(0,numframes)]
+
         for i in range(0,numframes):
             frameno = framenos[i]
 
-            # ------------------- get time span ----------------------
-            gbegin = time.gmtime(starttime + frametimes[frameno])
-            timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
-            if i < numframes-1:
-                # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
-                gend = time.gmtime(starttime + frametimes[framenos[i+1]])
-            else:
-                if numframes == 1:
-                    gend = gbegin
-                else:
-                    # Add extra simlulation time so the last file shows up in GE
-                    dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
-                    gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
-
-            timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
             fname = 'frame' + str(frameno).rjust(4, '0')
             fname_str = fname + 'fig%s' % figno
 
-            # To be used below
-            TS[i] = KML.TimeSpan(
-                KML.begin(timestrbegin),
-                KML.end(timestrend))
-
-            TSS[i] = KML.TimeSpan(
-                KML.begin(timestrbegin),
-                KML.end(timestrend))
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
@@ -718,13 +728,6 @@ def plotclaw2kml(plotdata):
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
 
-                # The actual file to be written <framename>/doc.kml
-                docfile = os.path.join(fname_str,'doc.kml')
-                docfile_notile = open(docfile,'w')
-
-                # Handy (see above)
-                docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
                 fstr = "%s.png" % fname_str
                 doc_notile.Document.append(
                     KML.GroundOverlay(
@@ -735,6 +738,12 @@ def plotclaw2kml(plotdata):
                             KML.south(lr[1]),
                             KML.east(ur[0]),
                             KML.west(ul[0]))))
+
+                # The actual file to be written <framename>/doc.kml
+                docfile = os.path.join(fname_str,'doc.kml')
+                docfile_notile = open(docfile,'w')
+                # Handy (see above)
+                docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
                 docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),pretty_print=True))
                 docfile_notile.close()
@@ -801,8 +810,7 @@ def plotclaw2kml(plotdata):
 
             # add Network link to high level doc.kml file.  This will referenece either
             # tiled files or non-tiled files.
-            import pdb
-            pdb.set_trace()
+            from copy import deepcopy
             lstr = os.path.join(fname_str,'doc.kml')
             for n in range(0,len(doc_list)):
                 if n == 1:
@@ -810,7 +818,7 @@ def plotclaw2kml(plotdata):
                 doc_list[n].Document.Folder.append(
                     KML.NetworkLink(
                         KML.name(fname_str),
-                        TS[i],
+                        deepcopy(TS[i]),
                         KML.Link(KML.href(lstr))))
 
         # ----------------- Done with frame loop --------------------
@@ -907,7 +915,7 @@ def plotclaw2kml(plotdata):
         doc.Document.append(
             KML.NetworkLink(
                 KML.name("Regions"),
-                KML.visibility(1),
+                KML.visibility(0),
                 KML.Link(KML.href(os.path.join(kml_dir,
                                                region_kml_file)))))
 
@@ -925,76 +933,173 @@ def plotclaw2kml(plotdata):
 
         # --------------- Create polygons for AMR patch borders --------------
         # This should be moved outside of the figure loop
-        #plotdata.set_outdirs()  # set _outdirs attribute to be list of
+        plotdata.set_outdirs()  # set _outdirs attribute to be list of
         # all outdirs for all items
-
-        #framesolns = []
-        ## loop over all outdirs:
-        #if len(plotdata._outdirs) == 0:
-        #    plotdata._outdirs = [plotdata.outdir]
-        #
-        #for outdir in plotdata._outdirs:
-        #    framesolns.append(plotdata.getframe(frameno, outdir, refresh=refresh))
 
         doclevels = KML.kml(KML.Document())
         level_dir = "levels"
         shutil.rmtree(level_dir,True)
-        os.mkdir(level_dir)
+        os.mkdir(os.path.join(kml_dir,level_dir))
 
         # Create high level 'levels.kml' file
         maxlevels = 10
         level_folders = [];
         level_files = []
         level_docs = []
+        styles = []
+
+
+        # Level colors, in (alpha, blue, green, red)
+        black = ["FF000000"]
+        white = ["FFFFFFFF"]
+        ge_theme = ["FFCEC0C4", "FF476653", "FF9C5E4D", "#FF536F92",
+                    "#FF9CC2CC", "FF935B47","FF000000"]
+        colorcube = ["FF0000FF", "FF00FF00","FFFFFFFF","FF000000","FFFFFF00",
+                  "FFFF00FF","FF00FFFF","FFFF0000"]
+        colors = black
+
         for i in range(0,maxlevels):
             level_file_name = "level_" + str(i+1).rjust(2,'0')
             level_files.append(level_file_name)
 
-            # Directory for storing levels for each time step
-            shutil.rmtree(os.path.join(level_dir,level_files[i]),True)
-            os.mkdir(os.path.join(level_dir,level_files[i]))
-
             # KML Document for each level
             level_docs.append(KML.kml(KML.Document()))
 
-            # Folders in top level file 'levels.kml'
-            f = KML.Folder(KML.name("Level " + str(i)))
-            f.append(KML.Link(
-                KML.href(os.path.join(level_dir,level_file_name))))
-            doclevels.Document.append(f)
+            # Styles for levels
+            styles.append(KML.Style(
+                KML.LineStyle(
+                    KML.color(colors[i % len(colors)]),
+                    KML.width(2)),
+                KML.PolyStyle(KML.color("00000000")),
+                id="patchborder"))
 
-        kml_levels = open("levels.kml",'w')
-        kml_levels.write(etree.tostring(etree.ElementTree(doclevels),pretty_print=True))
-        kml_levels.close()
 
         # Create individual level files in subdirectories
 
-        for i in range(0,numframes):
-            frameno = framenos[i]
-            for j in range(0,maxlevels):
-                level_file_name = level_files[j] + "_" + str(i).rjust(4,'0') + ".kml"
-                level_docs[j].Document.append(KML.NetworkLink(
+        from copy import deepcopy
+        frame_docs = [[0 for j in range(numframes)] for i in range(maxlevels)]
+        for j in range(0,numframes):
+            frameno = framenos[j]
+            for i in range(0,maxlevels):
+                frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
+                N = KML.NetworkLink(
                     KML.name("Frame %s" % str(frameno).rjust(4,'0')),
-                    TSS[i],
+                    deepcopy(TS[j]),
                     KML.Link(
-                        KML.href(os.path.join(level_files[j],level_file_name)))))
+                        KML.href(os.path.join(level_files[i],frame_file_name))))
+                level_docs[i].Document.append(deepcopy(N))
 
-        for j in range(0,maxlevels):
-            kml_level_file = open(os.path.join(level_dir,level_files[j]+".kml"),'w')
-            kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[j]),pretty_print=True))
+
+                # Create files in each subdirectory
+                frame_docs[i][j] = KML.kml(KML.Document())
+                frame_docs[i][j].Document.append(deepcopy(styles[i]))
+
+        maxlevel_real = 0
+        for j in range(0,numframes):
+            frameno = framenos[j]
+
+            framesolns = []
+            # loop over all outdirs:
+            if len(plotdata._outdirs) == 0:
+                plotdata._outdirs = [plotdata.outdir]
+
+            for outdir in plotdata._outdirs:
+                framesolns.append(plotdata.getframe(frameno, outdir))
+
+            if type(framesolns) is not list:
+                framesolns = [framesolns]
+
+            for k, framesoln in enumerate(framesolns):  # patches?
+                for stateno,state in enumerate(framesoln.states):
+                    patch = state.patch
+                    xlower = patch.dimensions[0].lower
+                    xupper = patch.dimensions[0].upper
+                    ylower = patch.dimensions[1].lower
+                    yupper = patch.dimensions[1].upper
+                    level = patch.level
+
+                    # maxlevel_real should start at 0 so it can be used for indexing
+                    maxlevel_real = max(level,maxlevel_real)
+
+                    mapping = {}
+                    mapping["x1"] = xlower
+                    mapping["y1"] = ylower
+                    mapping["x2"] = xupper
+                    mapping["y2"] = yupper
+                    mapping["elev"] = 5000
+
+                    border_text = """
+                    {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                    {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                    {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                    {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                    {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                    """.format(**mapping).replace(' ','')
+
+                    r = KML.Polygon(
+                        GX.drawOrder(maxlevels-level),
+                        KML.tessellate(1),
+                        KML.altitudeMode("ClampToGround"),
+                        KML.outerBoundaryIs(
+                            KML.LinearRing(
+                                KML.coordinates(border_text))))
+
+
+                    p = KML.Placemark(
+                        KML.name("Grid %d" % stateno),
+                        KML.visibility(1),
+                        KML.styleUrl(chr(35) + "patchborder"))
+
+                    p.append(deepcopy(r))
+
+                    frame_docs[level-1][j].Document.append(deepcopy(p))
+
+        if maxlevel_real > maxlevels:
+            raise IOError("*** plot2kml : (plotpages.py) Maximum number of levels exceeded;  increase maxlevels")
+
+        # Create directories for each level.
+        for i in range(0,maxlevel_real):
+            # Directory for storing levels for each time step
+            shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
+            os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
+
+
+        # Print out individual frame files for each element
+        for j in range(0,numframes):
+            for i in range(0,maxlevel_real):
+                level_file_name = level_files[i] + "_" + str(j).rjust(4,'0') + ".kml"
+                kml_frame_file = open(os.path.join(kml_dir,level_dir,level_files[i],level_file_name),'w')
+                kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                kml_frame_file.write(etree.tostring(etree.ElementTree(frame_docs[i][j]),pretty_print=True))
+                kml_frame_file.close()
+
+        # Print out level files containing time stamps and references to frame files
+        for i in range(0,maxlevel_real):
+            kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
+            kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[i]),pretty_print=True))
             kml_level_file.close()
 
-#        for stateno,state in enumerate(framesoln.states):
-#            patch = state.patch
-#            xlower = patch.dimensions[0].lower
-#            xupper = patch.dimensions[0].upper
-#            ylower = patch.dimensions[1].lower
-#            yupper = patch.dimensions[1].upper
+        # Folders in top level file 'levels.kml'
+        for i in range(0,maxlevel_real):
+            level_file_name = "level_" + str(i+1).rjust(2,'0')
+            f = KML.Folder(KML.name("Level " + str(i+1)))
+            f.append(KML.NetworkLink(
+                KML.Link(
+                KML.href(os.path.join(level_dir,level_file_name + ".kml")))))
+            doclevels.Document.append(f)
 
+        kml_levels = open(os.path.join(kml_dir,"levels.kml"),'w')
+        kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        kml_levels.write(etree.tostring(etree.ElementTree(doclevels),pretty_print=True))
+        kml_levels.close()
 
-
-
-
+        # Add to top level KML file
+        doc.Document.append(
+            KML.NetworkLink(
+                KML.name("Levels"),
+                KML.visibility(1),
+                KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
 
 
         # -------------- add colorbar image file -----------------
