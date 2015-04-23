@@ -552,6 +552,16 @@ def plotclaw2kml(plotdata):
 #======================================================================
     """
     Take a list of figure files and produce kml file to display them.
+
+    # Files that get created :
+
+      _GoogleEarthfig?.kmz : Zipped file containing all files, including doc.kml
+      _GoogleEarthfig?.kml : Network links to remote images
+                gauges.kml : Gauge Placemarks
+               regions.kml : Region polygons
+                levels.kml : Patch border polygons
+
+
     """
 
     print '\n-----------------------------------\n'
@@ -574,8 +584,8 @@ def plotclaw2kml(plotdata):
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
         gauge_pngfile = plotdata._gauge_pngfile
-        gauge_htmlfile = plotdata._gauge_htmlfile
-        gauge_allfigsfile = plotdata._gauge_allfigsfile
+        #gauge_htmlfile = plotdata._gauge_htmlfile
+        #gauge_allfigsfile = plotdata._gauge_allfigsfile
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
@@ -594,8 +604,15 @@ def plotclaw2kml(plotdata):
     numfigs = len(fignos)
     creationtime = current_time()
 
-    # Get event time in seconds since Epoch (Jan. 1, 1970).
     # ------------------- get time span ----------------------
+
+    # <TimeSpan> tags, needed for both figure files and
+    # level files ("levels.kml")
+
+
+
+
+    # Run through figures to get plotfigure.kml_starttime
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if not plotfigure.use_for_kml:
@@ -649,7 +666,41 @@ def plotclaw2kml(plotdata):
             KML.begin(timestrbegin),
             KML.end(timestrend)))
 
-    # ------------------- Loop over figures ----------------------
+
+    # Top level doc.kml file
+    doc = KML.kml(
+        KML.Document(
+            KML.name(plotdata.kml_name),
+            KML.open(1)))  # this will eventually become doc.kml
+
+    doc_remote = KML.kml(
+        KML.Document(
+            KML.name("GeoClaw"),
+            KML.open(1)))  # this will eventually become doc.kml
+
+    if (plotdata.kml_url != None):
+        doc_list = [doc, doc_remote]
+    else:
+        doc_list = [doc]
+
+    # Open main zip file
+    zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w')
+
+    # Top level KML file
+    docfile = open("doc.kml",'w')
+    if (plotdata.kml_url != None):
+        # contains remote links, if a url is specified.
+        docfile_remote = open(plotdata.kml_index_fname + ".kml",'w')
+        docfile_list = [docfile, docfile_remote]
+    else:
+        docfile_list = [docfile]
+
+    for d in docfile_list:
+        # This is handy, if only so that editors (Emacs?) will
+        # recognize how to do syntax highlighting.
+        d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        pass
+
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -660,51 +711,62 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
-        # Files that get created :
-        #
-        #                      doc.kml : contains (local) links to images or image files;
-        #         _GoogleEarthfig?.kmz : zipfiles which stores the doc.kml file, and images
-        #         _GoogleEarthfig?.kml : kml file which references remote links to images,
-        #                   gauges.kml : If gauges are begin used
-        #                  regions.kml : If regions are begin used
+        if plotfigure.kml_use_for_initial_view:
+            ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+            ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+            lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-        doc = KML.kml(KML.Document())  # this will eventually become doc.kml
+            for d in doc_list:
+                d.Document.append(
+                    KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
+                               KML.latitude((ur[1]+lr[1])/2),
+                               KML.range(15000000)))
+            break
 
-        if (plotfigure.kml_url != None):
-            doc_remote = KML.kml(KML.Document())    # will become _GoogleEarthfig?.kml
-            doc_list = [doc, doc_remote]
+
+
+    # ------------------- Loop over figures ----------------------
+
+    fig_folder = []
+    fig_folder.append(KML.Folder(
+        KML.name("Figures"),
+        KML.open(1)))
+
+    fig_folder.append(KML.Folder(
+        KML.name("Figures"),
+        KML.open(1)))
+
+
+    # set all other figures to off.
+    fig_vis = 1
+
+    for figname in plotdata._fignames:
+        plotfigure = plotdata.plotfigure_dict[figname]
+        figno = plotfigure.figno
+
+        if not figno in fignos:
+            continue
+
+        if not plotfigure.use_for_kml:
+            continue
+
+        fig_dir = "fig" + str(figno)
+
+        shutil.rmtree(fig_dir,True)
+        os.mkdir(fig_dir)
+
+        fig_doc = KML.kml(KML.Document(
+            KML.name(plotfigure.name),
+            KML.open(0)))
+
+        fig_doc_url = KML.kml(KML.Document(
+            KML.name(plotfigure.name),
+            KML.open(0)))
+
+        if plotdata.kml_url is not None:
+            fig_doc_list = [fig_doc, fig_doc_url]
         else:
-            doc_list = [doc]
-
-        ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
-        ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
-        lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
-
-        for d in doc_list:
-            d.Document.append(KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
-                           KML.latitude((ur[1]+lr[1])/2),
-                           KML.range(15000000)))
-            d.Document.append(KML.open(1))
-            d.Document.append(
-                KML.Folder(KML.name(plotfigure.name)))
-
-        # Open zip file
-        zip = zipfile.ZipFile(plotdata.kml_index_fname + str(figno) + ".kmz",'w')
-
-        docfile = open("doc.kml",'w')
-        if (plotfigure.kml_url != None):
-            # contains remote links, if a url is specified.
-            docfile_remote = open(plotdata.kml_index_fname + str(figno) + ".kml",'w')
-            docfile_list = [docfile, docfile_remote]
-        else:
-            docfile_list = [docfile]
-
-        for d in docfile_list:
-            # This is handy, if only so that editors (Emacs?) will
-            # recognize how to do syntax highlighting.
-            d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            pass
-
+            fig_doc_list = [fig_doc]
 
         # ------------------- Loop over frames ----------------------
         # This will get created for each figure, but I need it
@@ -721,9 +783,12 @@ def plotclaw2kml(plotdata):
             if (not plotfigure.kml_tile_images):
                 print "===> Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
 
+                # Easier to just move into this directory to construct everything
+                os.chdir(fig_dir)
+
                 shutil.rmtree(fname_str,True)  # remove directory and ignore errors
                 os.mkdir(fname_str)
-                shutil.copy("%s.png"%fname_str,fname_str)
+                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
@@ -731,7 +796,7 @@ def plotclaw2kml(plotdata):
                 fstr = "%s.png" % fname_str
                 doc_notile.Document.append(
                     KML.GroundOverlay(
-                        KML.name(fname_str),
+                        KML.name(os.path.join(fname_str)),
                         KML.Icon(KML.href(fstr)),
                         KML.LatLonBox(
                             KML.north(ur[1]),
@@ -742,27 +807,22 @@ def plotclaw2kml(plotdata):
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
                 docfile_notile = open(docfile,'w')
-                # Handy (see above)
                 docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-                docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),pretty_print=True))
+                docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),
+                                                    pretty_print=True))
                 docfile_notile.close()
 
-                # Add the <fname>/ directory to zipped file
-                # <dir>/doc.kml and <dir>/<fname_str>.png
-                for dirname, subdirs, files in os.walk(fname_str):
-                    zip.write(dirname)
-                    for filename in files:
-                        zip.write(os.path.join(dirname, filename))
-
-                # remove directory created
-                shutil.rmtree(fname_str)
+                os.chdir("..")
 
             else:
                 print '\n'
                 print "===> Tiling %s.png and adding reference to .kmz file" % (fname_str)
 
-                im = plt.imread("%s.png"% fname_str)
+                os.chdir(fig_dir)
+                pngfile = os.path.join("..","%s.png"% fname_str)
+                shutil.copy(pngfile,".")
+                im = plt.imread("%s.png" % fname_str)
                 sx = im.shape[1]   # reversed?
                 sy = im.shape[0]
 
@@ -792,30 +852,24 @@ def plotclaw2kml(plotdata):
                     print "===> gdal : something went wrong!\n"
                     sys.exit(1)
 
-                # Add the <fname>.vrt file to zipped file
-                zip.write("%s.vrt" % (fname_str))
+                # Change back to top level directory before adding zipped files
+                os.chdir("..")
 
-                # Add the <fname>/ directory to zipped file
-                for dirname, subdirs, files in os.walk(fname_str):
-                    zip.write(dirname)
-                    for filename in files:
-                        zip.write(os.path.join(dirname, filename))
+                # Add the <fname>.vrt file to zipped file
+                zip.write(os.path.join(fig_dir,"%s.vrt" % fname_str))
+                os.remove(os.path.join(fig_dir,"%s.png" % fname_str))
 
                 # Clean up files
-                os.remove("%s_tmp.vrt" % (fname_str))
-                os.remove("%s.vrt" % (fname_str))
+                os.remove(os.path.join(fig_dir,"%s_tmp.vrt" % fname_str))
+                os.remove(os.path.join(fig_dir,"%s.vrt" % fname_str))
 
-                # remove directory created
-                shutil.rmtree(fname_str)
 
             # add Network link to high level doc.kml file.  This will referenece either
             # tiled files or non-tiled files.
             from copy import deepcopy
             lstr = os.path.join(fname_str,'doc.kml')
-            for n in range(0,len(doc_list)):
-                if n == 1:
-                    lstr = os.path.join(plotfigure.kml_url,lstr)
-                doc_list[n].Document.Folder.append(
+            for n, d in enumerate(fig_doc_list):
+                d.Document.append(
                     KML.NetworkLink(
                         KML.name(fname_str),
                         deepcopy(TS[i]),
@@ -823,337 +877,386 @@ def plotclaw2kml(plotdata):
 
         # ----------------- Done with frame loop --------------------
 
-        # Build additional KML files
-        cwd = os.getcwd()
-        os.chdir("../")
-        try:
-            print "===> Calling setrun (needed to create gauges.kml and regions.kml)"
-            import setrun
-            reload(setrun)
-            rundata = setrun.setrun()
-            regions = rundata.regiondata.regions
-            gauges = rundata.gaugedata.gauges
-        except:
-            print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created"
-            regions = None
-            gauges = None
+        fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
+        fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        fig_file.write(etree.tostring(etree.ElementTree(fig_doc),pretty_print=True))
+        fig_file.close()
 
-        os.chdir(cwd)
+        for n,d in enumerate(doc_list):
+            if n == 1:
+                lstr = os.path.join(plotdata.kml_url,os.path.join(fig_dir,"doc.kml"))
+            else:
+                lstr = os.path.join(fig_dir,"doc.kml")
 
-        if (regions is not None) or (gauges is not None):
-            from clawpack.geoclaw import kmltools
+            fig_folder[n].append(
+                KML.NetworkLink(
+                    KML.name(figname),
+                    KML.visibility(fig_vis),
+                    KML.Link(
+                        KML.href(lstr))))
 
-            if gauges is not None:
-                # Create gauges.kml
+        fig_vis = 0
+
+        # Clean up everything in the figure directory
+        for dirname, subdirs, files in os.walk(fig_dir):
+            zip.write(dirname)
+            for filename in files:
+                zip.write(os.path.join(dirname, filename))
+
+        zip.write(fig_dir)
+        shutil.rmtree(fig_dir)
+
+    # ---------------------- Done with figure loop ------------------
+
+    for n,d in enumerate(doc_list):
+        d.Document.append(deepcopy(fig_folder[n]))
+
+
+    # Build additional KML files
+    cwd = os.getcwd()
+    os.chdir("../")
+    try:
+        print "===> Calling setrun (needed to create gauges.kml and regions.kml)"
+        import setrun
+        reload(setrun)
+        rundata = setrun.setrun()
+        regions = rundata.regiondata.regions
+        gauges = rundata.gaugedata.gauges
+    except:
+        print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created"
+        regions = None
+        gauges = None
+
+    os.chdir(cwd)
+
+    if (regions is not None) or (gauges is not None):
+        from clawpack.geoclaw import kmltools
+
+        if gauges is not None:
+            # Create gauges.kml
+            kmltools.gauges2kml(rundata=rundata,
+                                fname='gauges.kml',
+                                verbose=True,
+                                plotdata=plotdata)
+
+            # Need a second file for the KML files with an absolute
+            # path to gauge image file.
+            if plotdata.kml_url is not None:
                 kmltools.gauges2kml(rundata=rundata,
-                                    fname='gauges.kml',
+                                    fname='gauges_url.kml',
                                     verbose=True,
-                                    plotdata=plotdata)
+                                    plotdata=plotdata,
+                                    kml_url=plotdata.kml_url)
+        if regions is not None:
+            # Create regions.kml
+            kmltools.regions2kml(rundata=rundata,
+                                 fname='regions.kml',
+                                 verbose=True)
 
-                # Need a second file for the KML files with an absolute
-                # path to gauge image file.
-                if plotfigure.kml_url is not None:
-                    kmltools.gauges2kml(rundata=rundata,
-                                        fname='gauges_url.kml',
-                                        verbose=True,
-                                        plotdata=plotdata,
-                                        kml_url=plotfigure.kml_url)
-            if regions is not None:
-                # Create regions.kml
-                kmltools.regions2kml(rundata=rundata,
-                                     fname='regions.kml',
-                                     verbose=True)
-
-        else:
-            # no regions or gauges KML files are created.
-            pass
+    else:
+        # no regions or gauges KML files are created.
+        pass
 
 
-        # -------------- Create resource subdirectories -----------------
-        kml_dir = 'kml'
-        shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
-        os.mkdir(kml_dir)
+    # -------------- Create resource subdirectories -----------------
+    kml_dir = 'kml'
+    shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
+    os.mkdir(kml_dir)
 
-        img_dir = 'images'
-        shutil.rmtree(img_dir,True)  # remove directory and ignore errors
-        os.mkdir(img_dir)
+    img_dir = 'images'
+    shutil.rmtree(img_dir,True)  # remove directory and ignore errors
+    os.mkdir(img_dir)
 
-        # -------------- add gauge image and KML files -----------------
-        gauge_kml_file = "gauges.kml"
-        doc.Document.append(
+    # -------------- add gauge image and KML files -----------------
+    gauge_kml_file = "gauges.kml"
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Gauges"),
+            KML.visibility(1),
+            KML.Link(KML.href(os.path.join(kml_dir,
+                                           gauge_kml_file)))))
+
+    if os.path.isfile(gauge_kml_file):
+            shutil.move(gauge_kml_file,kml_dir)
+
+    gauge_kml_file = 'gauges_url.kml'
+    if plotdata.kml_url is not None:
+        doc_remote.Document.append(
             KML.NetworkLink(
                 KML.name("Gauges"),
                 KML.visibility(1),
-                KML.Link(KML.href(os.path.join(kml_dir,
+                KML.Link(KML.href(os.path.join(plotdata.kml_url,
+                                               kml_dir,
                                                gauge_kml_file)))))
 
-        if os.path.isfile(gauge_kml_file):
-                shutil.move(gauge_kml_file,kml_dir)
+    if os.path.isfile(gauge_kml_file):
+        shutil.move(gauge_kml_file,kml_dir)
 
-        gauge_kml_file = 'gauges_url.kml'
-        if plotfigure.kml_url is not None:
-            doc_remote.Document.append(
-                KML.NetworkLink(
-                    KML.name("Gauges"),
-                    KML.visibility(1),
-                    KML.Link(KML.href(os.path.join(plotfigure.kml_url,
-                                                   kml_dir,
-                                                   gauge_kml_file)))))
-
-        if os.path.isfile(gauge_kml_file):
-            shutil.move(gauge_kml_file,kml_dir)
-
-        # Add any gauge PNG files to images directory.
-        if plotdata.gauges_fignos is not None:
-            for k in gauge_pngfile.keys():
-                if os.path.isfile(gauge_pngfile[k]):
-                    shutil.copy(gauge_pngfile[k],img_dir)
+    # Add any gauge PNG files to images directory.
+    if plotdata.gauges_fignos is not None:
+        for k in gauge_pngfile.keys():
+            if os.path.isfile(gauge_pngfile[k]):
+                shutil.copy(gauge_pngfile[k],img_dir)
 
 
-        # ------------------ add region KML files -----------------
-        region_kml_file = "regions.kml"
-        doc.Document.append(
+    # ------------------ add region KML files -----------------
+    region_kml_file = "regions.kml"
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Regions"),
+            KML.visibility(0),
+            KML.Link(KML.href(os.path.join(kml_dir,
+                                           region_kml_file)))))
+
+    if plotdata.kml_url is not None:
+        doc_remote.Document.append(
             KML.NetworkLink(
                 KML.name("Regions"),
-                KML.visibility(0),
-                KML.Link(KML.href(os.path.join(kml_dir,
+                KML.visibility(1),
+                KML.Link(KML.href(os.path.join(plotdata.kml_url,
+                                               kml_dir,
                                                region_kml_file)))))
 
-        if plotfigure.kml_url is not None:
-            doc_remote.Document.append(
-                KML.NetworkLink(
-                    KML.name("Regions"),
-                    KML.visibility(1),
-                    KML.Link(KML.href(os.path.join(plotfigure.kml_url,
-                                                   kml_dir,
-                                                   region_kml_file)))))
+    if os.path.isfile(region_kml_file):
+            shutil.move(region_kml_file,kml_dir)
 
-        if os.path.isfile(region_kml_file):
-                shutil.move(region_kml_file,kml_dir)
+    # --------------- Create polygons for AMR patch borders --------------
+    # This should be moved outside of the figure loop
+    plotdata.set_outdirs()  # set _outdirs attribute to be list of
+    # all outdirs for all items
 
-        # --------------- Create polygons for AMR patch borders --------------
-        # This should be moved outside of the figure loop
-        plotdata.set_outdirs()  # set _outdirs attribute to be list of
-        # all outdirs for all items
+    doclevels = KML.kml(KML.Document())
+    level_dir = "levels"
+    shutil.rmtree(level_dir,True)
+    os.mkdir(os.path.join(kml_dir,level_dir))
 
-        doclevels = KML.kml(KML.Document())
-        level_dir = "levels"
-        shutil.rmtree(level_dir,True)
-        os.mkdir(os.path.join(kml_dir,level_dir))
-
-        # Create high level 'levels.kml' file
-        maxlevels = 10
-        level_folders = [];
-        level_files = []
-        level_docs = []
-        styles = []
+    # Create high level 'levels.kml' file
+    maxlevels = 10
+    level_folders = [];
+    level_files = []
+    level_docs = []
+    styles = []
 
 
-        # Level colors, in (alpha, blue, green, red)
-        black = ["FF000000"]
-        white = ["FFFFFFFF"]
-        ge_theme = ["FFCEC0C4", "FF476653", "FF9C5E4D", "#FF536F92",
-                    "#FF9CC2CC", "FF935B47","FF000000"]
-        colorcube = ["FF0000FF", "FF00FF00","FFFFFFFF","FF000000","FFFFFF00",
-                  "FFFF00FF","FF00FFFF","FFFF0000"]
-        colors = black
+    # Level colors, in (alpha, blue, green, red)
+    black = ["FF000000"]
+    white = ["FFFFFFFF"]
+    ge_theme = ["FFCEC0C4", "FF476653", "FF9C5E4D", "#FF536F92",
+                "#FF9CC2CC", "FF935B47","FF000000"]
+    colorcube = ["FF0000FF", "FF00FF00","FFFFFFFF","FF000000","FFFFFF00",
+              "FFFF00FF","FF00FFFF","FFFF0000"]
+    colors = black
 
+    for i in range(0,maxlevels):
+        level_file_name = "level_" + str(i+1).rjust(2,'0')
+        level_files.append(level_file_name)
+
+        # KML Document for each level
+        d = KML.kml(KML.Document())
+
+        level_docs.append(deepcopy(d))
+
+        # Styles for levels
+        styles.append(KML.Style(
+            KML.LineStyle(
+                KML.color(colors[i % len(colors)]),
+                KML.width(2)),
+            KML.PolyStyle(KML.color("00000000")),
+            id="patchborder"))
+
+
+    # Create individual level files in subdirectories
+
+    from copy import deepcopy
+    frame_docs = [[0 for j in range(numframes)] for i in range(maxlevels)]
+    for j in range(0,numframes):
+        frameno = framenos[j]
         for i in range(0,maxlevels):
-            level_file_name = "level_" + str(i+1).rjust(2,'0')
-            level_files.append(level_file_name)
+            frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
+            if i == 0:
+                vis = 0
+            else:
+                vis = 1
 
-            # KML Document for each level
-            level_docs.append(KML.kml(KML.Document()))
-
-            # Styles for levels
-            styles.append(KML.Style(
-                KML.LineStyle(
-                    KML.color(colors[i % len(colors)]),
-                    KML.width(2)),
-                KML.PolyStyle(KML.color("00000000")),
-                id="patchborder"))
-
-
-        # Create individual level files in subdirectories
-
-        from copy import deepcopy
-        frame_docs = [[0 for j in range(numframes)] for i in range(maxlevels)]
-        for j in range(0,numframes):
-            frameno = framenos[j]
-            for i in range(0,maxlevels):
-                frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
-                N = KML.NetworkLink(
-                    KML.name("Frame %s" % str(frameno).rjust(4,'0')),
-                    deepcopy(TS[j]),
-                    KML.Link(
-                        KML.href(os.path.join(level_files[i],frame_file_name))))
-                level_docs[i].Document.append(deepcopy(N))
-
-
-                # Create files in each subdirectory
-                frame_docs[i][j] = KML.kml(KML.Document())
-                frame_docs[i][j].Document.append(deepcopy(styles[i]))
-
-        maxlevel_real = 0
-        for j in range(0,numframes):
-            frameno = framenos[j]
-
-            framesolns = []
-            # loop over all outdirs:
-            if len(plotdata._outdirs) == 0:
-                plotdata._outdirs = [plotdata.outdir]
-
-            for outdir in plotdata._outdirs:
-                framesolns.append(plotdata.getframe(frameno, outdir))
-
-            if type(framesolns) is not list:
-                framesolns = [framesolns]
-
-            for k, framesoln in enumerate(framesolns):  # patches?
-                for stateno,state in enumerate(framesoln.states):
-                    patch = state.patch
-                    xlower = patch.dimensions[0].lower
-                    xupper = patch.dimensions[0].upper
-                    ylower = patch.dimensions[1].lower
-                    yupper = patch.dimensions[1].upper
-                    level = patch.level
-
-                    # maxlevel_real should start at 0 so it can be used for indexing
-                    maxlevel_real = max(level,maxlevel_real)
-
-                    mapping = {}
-                    mapping["x1"] = xlower
-                    mapping["y1"] = ylower
-                    mapping["x2"] = xupper
-                    mapping["y2"] = yupper
-                    mapping["elev"] = 5000
-
-                    border_text = """
-                    {x1:10.4f},{y1:10.4f},{elev:10.4f}
-                    {x2:10.4f},{y1:10.4f},{elev:10.4f}
-                    {x2:10.4f},{y2:10.4f},{elev:10.4f}
-                    {x1:10.4f},{y2:10.4f},{elev:10.4f}
-                    {x1:10.4f},{y1:10.4f},{elev:10.4f}
-                    """.format(**mapping).replace(' ','')
-
-                    r = KML.Polygon(
-                        GX.drawOrder(maxlevels-level),
-                        KML.tessellate(1),
-                        KML.altitudeMode("ClampToGround"),
-                        KML.outerBoundaryIs(
-                            KML.LinearRing(
-                                KML.coordinates(border_text))))
-
-
-                    p = KML.Placemark(
-                        KML.name("Grid %d" % stateno),
-                        KML.visibility(1),
-                        KML.styleUrl(chr(35) + "patchborder"))
-
-                    p.append(deepcopy(r))
-
-                    frame_docs[level-1][j].Document.append(deepcopy(p))
-
-        if maxlevel_real > maxlevels:
-            raise IOError("*** plot2kml : (plotpages.py) Maximum number of levels exceeded;  increase maxlevels")
-
-        # Create directories for each level.
-        for i in range(0,maxlevel_real):
-            # Directory for storing levels for each time step
-            shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
-            os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
-
-
-        # Print out individual frame files for each element
-        for j in range(0,numframes):
-            for i in range(0,maxlevel_real):
-                level_file_name = level_files[i] + "_" + str(j).rjust(4,'0') + ".kml"
-                kml_frame_file = open(os.path.join(kml_dir,level_dir,level_files[i],level_file_name),'w')
-                kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                kml_frame_file.write(etree.tostring(etree.ElementTree(frame_docs[i][j]),pretty_print=True))
-                kml_frame_file.close()
-
-        # Print out level files containing time stamps and references to frame files
-        for i in range(0,maxlevel_real):
-            kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
-            kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[i]),pretty_print=True))
-            kml_level_file.close()
-
-        # Folders in top level file 'levels.kml'
-        for i in range(0,maxlevel_real):
-            level_file_name = "level_" + str(i+1).rjust(2,'0')
-            f = KML.Folder(KML.name("Level " + str(i+1)))
-            f.append(KML.NetworkLink(
+            N = KML.NetworkLink(
+                KML.name("Frame %s" % str(frameno).rjust(4,'0')),
+                KML.visibility(vis),
+                deepcopy(TS[j]),
                 KML.Link(
+                    KML.href(os.path.join(level_files[i],frame_file_name))))
+            level_docs[i].Document.append(deepcopy(N))
+
+
+            # Create files in each subdirectory
+            frame_docs[i][j] = KML.kml(KML.Document())
+            frame_docs[i][j].Document.append(deepcopy(styles[i]))
+
+    maxlevel_real = 0
+    for j in range(0,numframes):
+        frameno = framenos[j]
+
+        framesolns = []
+        # loop over all outdirs:
+        if len(plotdata._outdirs) == 0:
+            plotdata._outdirs = [plotdata.outdir]
+
+        for outdir in plotdata._outdirs:
+            framesolns.append(plotdata.getframe(frameno, outdir))
+
+        if type(framesolns) is not list:
+            framesolns = [framesolns]
+
+        for k, framesoln in enumerate(framesolns):  # patches?
+            for stateno,state in enumerate(framesoln.states):
+                patch = state.patch
+                xlower = patch.dimensions[0].lower
+                xupper = patch.dimensions[0].upper
+                ylower = patch.dimensions[1].lower
+                yupper = patch.dimensions[1].upper
+                level = patch.level
+
+                # maxlevel_real should start at 0 so it can be used for indexing
+                maxlevel_real = max(level,maxlevel_real)
+
+                mapping = {}
+                mapping["x1"] = xlower
+                mapping["y1"] = ylower
+                mapping["x2"] = xupper
+                mapping["y2"] = yupper
+                mapping["elev"] = 0
+
+                border_text = """
+                {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                """.format(**mapping).replace(' ','')
+
+                r = KML.Polygon(
+                    GX.drawOrder(maxlevels-level),
+                    KML.tessellate(1),
+                    KML.altitudeMode("ClampToGround"),
+                    KML.outerBoundaryIs(
+                        KML.LinearRing(
+                            KML.coordinates(border_text))))
+
+
+                p = KML.Placemark(
+                    KML.name("Grid %d" % stateno),
+                    KML.visibility(1),
+                    KML.styleUrl(chr(35) + "patchborder"))
+
+                p.append(deepcopy(r))
+
+                frame_docs[level-1][j].Document.append(deepcopy(p))
+
+    if maxlevel_real > maxlevels:
+        raise IOError("*** plot2kml : (plotpages.py) Maximum number of "
+                      "levels exceeded;  increase maxlevels")
+
+    # Create directories for each level.
+    for i in range(0,maxlevel_real):
+        # Directory for storing levels for each time step
+        shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
+        os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
+
+
+    # Print out individual frame files for each element
+    for j in range(0,numframes):
+        for i in range(0,maxlevel_real):
+            level_file_name = level_files[i] + "_" + str(j).rjust(4,'0') + ".kml"
+            kml_frame_file = open(os.path.join(kml_dir,level_dir,
+                                               level_files[i],level_file_name),'w')
+            kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            kml_frame_file.write(etree.tostring(etree.ElementTree(frame_docs[i][j]),
+                                                pretty_print=True))
+            kml_frame_file.close()
+
+    # Print out level files containing time stamps and references to frame files
+    for i in range(0,maxlevel_real):
+        kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
+        kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[i]),
+                                            pretty_print=True))
+        kml_level_file.close()
+
+    # Folders in top level file 'levels.kml'
+    for i in range(0,maxlevel_real):
+        level_file_name = "level_" + str(i+1).rjust(2,'0')
+        f = KML.Folder(KML.name("Level " + str(i+1)))
+        f.append(KML.NetworkLink(
+            KML.name("Frames"),
+            KML.Link(
                 KML.href(os.path.join(level_dir,level_file_name + ".kml")))))
-            doclevels.Document.append(f)
 
-        kml_levels = open(os.path.join(kml_dir,"levels.kml"),'w')
-        kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        kml_levels.write(etree.tostring(etree.ElementTree(doclevels),pretty_print=True))
-        kml_levels.close()
+        doclevels.Document.append(f)
 
-        # Add to top level KML file
-        doc.Document.append(
-            KML.NetworkLink(
-                KML.name("Levels"),
-                KML.visibility(1),
-                KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
+    kml_levels = open(os.path.join(kml_dir,"levels.kml"),'w')
+    kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    kml_levels.write(etree.tostring(etree.ElementTree(doclevels),
+                                    pretty_print=True))
+    kml_levels.close()
+
+    # Add to top level KML file
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Levels"),
+            KML.visibility(1),
+            KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
 
 
-        # -------------- add colorbar image file -----------------
-        # Build the colorbar.
-        if plotfigure.kml_colorbar is not None:
-            cb_filename = "colorbarfig%s.png" % figno
-            try:
-                plotfigure.kml_colorbar(cb_filename)
-                shutil.move(cb_filename,img_dir)
-            except:
-                print "Warning : Something went wrong when creating colorbar"
+    # -------------- add colorbar image file -----------------
+    # Build the colorbar.
+    if plotfigure.kml_colorbar is not None:
+        cb_filename = "colorbarfig%s.png" % figno
+        try:
+            plotfigure.kml_colorbar(cb_filename)
+            shutil.move(cb_filename,img_dir)
+        except:
+            print "Warning : Something went wrong when creating colorbar"
 
-            # add link to KML file, even if colorbar didn't get created.
-            cb_str = os.path.join(img_dir,cb_filename)
+        # add link to KML file, even if colorbar didn't get created.
+        cb_str = os.path.join(img_dir,cb_filename)
+        colorbar = KML.ScreenOverlay(
+        KML.name("Colorbar"),
+            KML.Icon(KML.href(cb_str)),
+            KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+            KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+
+        doc.Document.append(colorbar)
+
+        if plotdata.kml_url is not None:
+            cb_str = os.path.join(plotdata.kml_url,img_dir,cb_filename)
             colorbar = KML.ScreenOverlay(
-            KML.name("Colorbar"),
+                KML.name("Colorbar"),
                 KML.Icon(KML.href(cb_str)),
                 KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
                 KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
 
-            doc.Document.append(colorbar)
+            doc_remote.Document.append(colorbar)
 
-            if plotfigure.kml_url is not None:
-                cb_str = os.path.join(plotfigure.kml_url,img_dir,cb_filename)
-                colorbar = KML.ScreenOverlay(
-                    KML.name("Colorbar"),
-                    KML.Icon(KML.href(cb_str)),
-                    KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
-                    KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+    # ----------- zip additional directories and clean up ------------
+    dir_list = [kml_dir, img_dir]
+    for d in dir_list:
+        for dirname, subdirs, files in os.walk(d):
+            zip.write(dirname)
+            for filename in files:
+                zip.write(os.path.join(dirname, filename))
 
-                doc_remote.Document.append(colorbar)
+        shutil.rmtree(d)
 
-        # ----------- zip additional directories and clean up ------------
-        dir_list = [kml_dir, img_dir]
-        for d in dir_list:
-            for dirname, subdirs, files in os.walk(d):
-                zip.write(dirname)
-                for filename in files:
-                    zip.write(os.path.join(dirname, filename))
+    # ----------- Write doc.kml file --------------------
+    for n in range(0,len(docfile_list)):
+        docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),
+                                             pretty_print=True))
+        docfile_list[n].close()
 
-            shutil.rmtree(d)
+    # Store this in the zip file and remove it.
+    zip.write("doc.kml")   # Root KML file
+    os.remove("doc.kml")
 
-        # ----------- Write doc.kml file --------------------
-        for n in range(0,len(docfile_list)):
-            docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),pretty_print=True))
-            docfile_list[n].close()
-
-        # Store this in the zip file and remove it.
-        zip.write("doc.kml")   # Root KML file
-        os.remove("doc.kml")
-
-        zip.close()
-
-    # end figure loop
+    zip.close()
 
     os.chdir(startdir)
 

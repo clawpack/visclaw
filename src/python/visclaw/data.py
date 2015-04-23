@@ -90,6 +90,8 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('kml',True)                # make kml plots and a kml file for figures
         self.add_attribute('kml_index_fname','_GoogleEarth')   # name of html index file
+        self.add_attribute('kml_url',None)
+        self.add_attribute('kml_name',"GeoClaw")
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
@@ -629,8 +631,8 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_starttime',None);
         self.add_attribute('kml_tz_offset',None)   # Time zone offset to UTC
         self.add_attribute('kml_tile_images',False)
-        self.add_attribute('kml_url',None)  # location of published files - unzip .kmz file here
         self.add_attribute('kml_colorbar',None)
+        self.add_attribute('kml_use_for_initial_view',False)
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
