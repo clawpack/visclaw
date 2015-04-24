@@ -914,6 +914,86 @@ def plotclaw2kml(plotdata):
     os.mkdir(img_dir)
 
     # ------------- Creating gauges.kml file -------------------------
+
+#    doc_gauges = KML.kml(KML.Document())
+#    basehref = "<base href=\"%s\">" % os.path.join('..','..','images','')  # need trailing "\"
+#
+#    name_style = "<center><b><font style=\"font-size:12pt\">$[name]</font></b></center>"
+#    desc_style = "$[description]" # Don't put CDATA here
+#    doc_gauges.Document.append(KML.Style(
+#        KML.BalloonStyle(KML.text("<![CDATA[%s%s%s]]>" %(basehref,name_style,desc_style))),
+#        id="gauge_style"))
+#
+#
+#    # Read data files here ...
+#    gauges = rundata.gaugedata.gauges
+#    if len(gauges)==0 and verbose:
+#        print "No gauges found in setrun.py"
+#
+#    if plotdata is not None:
+#        gauge_pngfile = plotdata._gauge_pngfile
+#
+#
+#    for rnum,gauge in enumerate(gauges):
+#        t1,t2 = gauge[3:5]
+#        x1,y1 = gauge[1:3]
+#        gaugeno = gauge[0]
+#        if verbose:
+#            print "Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
+#                    + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+#        mapping = {}
+#        mapping['gaugeno'] = gaugeno
+#        mapping['t1'] = t1
+#        mapping['t2'] = t2
+#        mapping['x1'] = x1
+#        mapping['y1'] = y1
+#        mapping['elev'] = elev
+#        mapping['name'] = 'Gauge %i' % rnum
+#        snippet = "t1 = %g, t2 = %g\n" % (t1,t2) +\
+#                      "x1 = %g, y1 = %g\n" % (x1,y1)
+#        mapping['snippet'] = snippet
+#
+#        if plotdata is not None:
+#            # try to figure out the plot number associated with this gauge
+#            mapping['figname'] = None
+#            for k in gauge_pngfile.keys():
+#                if k[0] == gaugeno:
+#                    mapping['figname'] = gauge_pngfile[k]
+#        else:
+#            fignum = 300    # Just a guess
+#            mapping['figname'] = "gauge" + str(gaugeno).rjust(4,'0') + "fig%d" % fignum
+#
+#        event_time = plotdata.kml_starttime
+#        tz = plotdata.kml_tz_offset
+#        sbegin, send = kml_timespan(mapping["t1"],mapping["t2"],event_time,tz)
+#        TS = KML.TimeSpan(
+#            KML.begin(sbegin),
+#            KML.end(send))
+#        c = TS.getchildren()
+#        #"From (UTC) : %s\n" % sbegin + \     # The start time/end time = (0,1+10)
+#        #"To   (UTC) : %s\n" % send + \
+#        #"\n" \
+#
+#        desc = "Time     : t1 = %g, t2 = %g\n" % (t1,t2) +\
+#               "Location : x1 = %g, y1 = %g\n" % (x1,y1)
+#
+#        mapping['desc'] = desc
+#
+#        placemark = kml_gauge(mapping)
+#        kml_doc.Document.append(placemark)
+#
+#    #kml_text = kml_text + kml_footer()
+#    kml_file = open(fname,'w')
+#    kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+#
+#    #kml_file.write(kml_text)
+#    kml_text = etree.tostring(etree.ElementTree(kml_doc),pretty_print=True)
+#    kml_text = kml_text.replace("&gt;",">")
+#    kml_text = kml_text.replace("&lt;","<")
+#    kml_file.write(kml_text)
+#
+#    kml_file.close()
+
     cwd = os.getcwd()
     os.chdir("../")
     try:
@@ -965,121 +1045,103 @@ def plotclaw2kml(plotdata):
     # ------------------ add region KML files -----------------
     # Create regions
     print " "
-    print "===> Reading in regions.data file and creating KML data"
+    try:
+        f = open(os.path.join("..","regions.data"),'r')
+    except:
+        print "===> No regions.data file found.  The file regions.kml will not be created."
+    else:
+        print "===> Reading in regions.data file and creating regions.kml"
+        # Read first 7 lines (assume standard format)
+        for i in range(0,7):
+            f.readline()
 
-    f = open(os.path.join("..","regions.data"),'r')
+        # now read the data lines
+        regions_str = []
+        for r in f.readlines():
+            regions_str.append(r.strip())
 
-    # Read first 7 lines (assume standard format)
-    for i in range(0,7):
-        f.readline()
+        regions = []
+        for rs in regions_str:
+            regions.append(np.fromstring(rs,sep=' '))
 
-    # now read the data lines
-    regions_str = []
-    for r in f.readlines():
-        regions_str.append(r.strip())
+        # Top level regions.kml file
+        doc_regions = KML.kml(KML.Document())
 
-    regions = []
-    for rs in regions_str:
-        regions.append(np.fromstring(rs,sep=' '))
+        # collect all the placemarks in a folder and append later
+        placemark_folder = []
 
-    # Top level regions.kml file
-    doc_regions = KML.kml(KML.Document())
+        # We don't have the dimensions of the full domain
+        print "(not creating a region for the computational domain)"
 
-    # collect all the placemarks in a folder and append later
-    placemark_folder = []
+        for rnum,region in enumerate(regions):
+            minlevel,maxlevel = region[0:2]
+            t1,t2 = region[2:4]
+            x1,x2,y1,y2 = region[4:]
 
+            print "Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
+                % (rnum,x1,x2,y1,y2)
+            print "           minlevel = %i,  maxlevel = %i" \
+                % (minlevel,maxlevel) \
+                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+            #print "Region %2d: " % (rnum,regions_str[rnum])
 
+            elev = 0
+            mapping = {}
+            mapping['minlevel'] = minlevel
+            mapping['maxlevel'] = maxlevel
+            mapping['t1'] = t1
+            mapping['t2'] = t2
+            mapping['x1'] = x1
+            mapping['x2'] = x2
+            mapping['y1'] = y1
+            mapping['y2'] = y2
+            mapping['elev'] = elev
+            mapping['rnum'] = rnum
+            mapping['name'] = 'Region %i' % rnum
+            description = \
+                          "Levels   : minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
+                          "Time     : t1 = %g, t2 = %g\n" % (t1,t2) + \
+                          "Location : x1 = %g, x2 = %g\n" % (x1,x2) + \
+                          "           y1 = %g, y2 = %g\n" % (y1,y2)
+            snippet = \
+                      "minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
+                      "t1 = %g, t2 = %g\n" % (t1,t2) + \
+                      "x1 = %g, x2 = %g\n" % (x1,x2) + \
+                      "y1 = %g, y2 = %g\n" % (y1,y2)
+            mapping['desc'] = description
+            mapping['snippet'] = snippet
+            mapping['color'] = "FFFFFF"  # white
 
-    print "(not creating a region for the computational domain)"
-    # We don't have the computational domain here ...
-    #elev = 0.
-    #mapping = {}
-    #mapping['x1'] = ulinit[0]
-    #mapping['x2'] = urinit[0]
-    #mapping['y1'] = lrinit[1]
-    #mapping['y2'] = urinit[1]
-    #mapping['elev'] = elev
-    #mapping['rnum'] = None
-    #mapping['name'] = 'Computational Domain'
-    ##mapping['desc'] = description
-    #mapping['desc'] = ""
-    #mapping['color'] = "0000FF"  # red
-    #
-    #path_style,placemark = kmltools.kml_region(mapping)
-    #
-    #doc_regions.Document.append(path_style)
-    #placemark_folder.append(placemark)
+            # Inlude a time span so that regions show up in correct interval
+            path_style,placemark = kmltools.kml_region(mapping,
+                                                       plotdata.kml_starttime,
+                                                       plotdata.kml_tz_offset)
+            doc_regions.Document.append(path_style)
+            placemark_folder.append(placemark)
 
+        for p in placemark_folder:
+            doc_regions.Document.append(p)
 
-    for rnum,region in enumerate(regions):
-        minlevel,maxlevel = region[0:2]
-        t1,t2 = region[2:4]
-        x1,x2,y1,y2 = region[4:]
+        region_kml_file = "regions.kml"
+        doc.Document.append(
+            KML.NetworkLink(
+                KML.name("Regions"),
+                KML.visibility(0),
+                KML.Link(KML.href(os.path.join(kml_dir,
+                                               region_kml_file)))))
 
-        print "Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
-            % (rnum,x1,x2,y1,y2)
-        print "           minlevel = %i,  maxlevel = %i" \
-            % (minlevel,maxlevel) \
-            + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
-        #print "Region %2d: " % (rnum,regions_str[rnum])
+        kml_file = open(region_kml_file,'w')
+        kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        elev = 0
-        mapping = {}
-        mapping['minlevel'] = minlevel
-        mapping['maxlevel'] = maxlevel
-        mapping['t1'] = t1
-        mapping['t2'] = t2
-        mapping['x1'] = x1
-        mapping['x2'] = x2
-        mapping['y1'] = y1
-        mapping['y2'] = y2
-        mapping['elev'] = elev
-        mapping['rnum'] = rnum
-        mapping['name'] = 'Region %i' % rnum
-        description = \
-                      "Levels   : minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
-                      "Time     : t1 = %g, t2 = %g\n" % (t1,t2) + \
-                      "Location : x1 = %g, x2 = %g\n" % (x1,x2) + \
-                      "           y1 = %g, y2 = %g\n" % (y1,y2)
-        snippet = \
-                  "minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
-                  "t1 = %g, t2 = %g\n" % (t1,t2) + \
-                  "x1 = %g, x2 = %g\n" % (x1,x2) + \
-                  "y1 = %g, y2 = %g\n" % (y1,y2)
-        mapping['desc'] = description
-        mapping['snippet'] = snippet
-        mapping['color'] = "FFFFFF"  # white
+        kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
+        kml_text = kml_text.replace("&gt;",">")
+        kml_text = kml_text.replace("&lt;","<")
+        kml_file.write(kml_text)
 
-        # Inlude a time span so that regions show up in correct interval
-        path_style,placemark = kmltools.kml_region(mapping,
-                                                   plotdata.kml_starttime,
-                                                   plotdata.kml_tz_offset)
-        doc_regions.Document.append(path_style)
-        placemark_folder.append(placemark)
+        kml_file.close()
 
-    for p in placemark_folder:
-        doc_regions.Document.append(p)
-
-    region_kml_file = "regions.kml"
-    doc.Document.append(
-        KML.NetworkLink(
-            KML.name("Regions"),
-            KML.visibility(0),
-            KML.Link(KML.href(os.path.join(kml_dir,
-                                           region_kml_file)))))
-
-    kml_file = open(region_kml_file,'w')
-    kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
-    kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
-    kml_text = kml_text.replace("&gt;",">")
-    kml_text = kml_text.replace("&lt;","<")
-    kml_file.write(kml_text)
-
-    kml_file.close()
-
-    if os.path.isfile(region_kml_file):
-            shutil.move(region_kml_file,kml_dir)
+        if os.path.isfile(region_kml_file):
+                shutil.move(region_kml_file,kml_dir)
 
     # --------------- Create polygons for AMR patch borders --------------
     print " "
