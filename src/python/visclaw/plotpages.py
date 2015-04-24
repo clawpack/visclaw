@@ -564,8 +564,8 @@ def plotclaw2kml(plotdata):
 
     """
 
-    print '\n-----------------------------------\n'
-    print '\nCreating .kmz file ...'
+    print " "
+    print "===> Creating %s.kmz file\n" % plotdata.kml_index_fname
 
     startdir = os.getcwd()
 
@@ -574,11 +574,12 @@ def plotclaw2kml(plotdata):
     from pykml.factory import GX_ElementMaker as GX
     import zipfile
     import shutil
+    from copy import deepcopy
 
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting plotclaw2kml"
+        print "===> Error, aborting plotclaw2kml (cannot create plot directory"
         raise
 
     if plotdata.gauges_fignos is not None:
@@ -610,38 +611,27 @@ def plotclaw2kml(plotdata):
     # level files ("levels.kml")
 
 
+    # to adjust time from UTC to time in event locale.
+    if (plotdata.kml_starttime == None):
+        starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
+        tz_offset = 0 # time.timezone/(60.*60.)
+    else:
+        event_time = plotdata.kml_starttime      # 6 entries of a 9-tuple
+        event_time.extend([0,0,0])                 # Extend to 9 tuple.
+        starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
+        tz_offset = plotdata.kml_tz_offset
 
-
-    # Run through figures to get plotfigure.kml_starttime
-    for figname in plotdata._fignames:
-        plotfigure = plotdata.plotfigure_dict[figname]
-        if not plotfigure.use_for_kml:
-            continue
-
-        # Assume that the first figure we find has the correct info we need here.
-
-        # to adjust time from UTC to time in event locale.
-        if (plotfigure.kml_starttime == None):
-            starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
-            tz_offset = 0 # time.timezone/(60.*60.)
+    if (tz_offset == None):
+        tzstr = "Z"  # no offset; could also just set to "+00:00"
+    else:
+        # Google Earth will show time slider time in local time, where
+        # local + offset = UTC.
+        tz_offset = tz_offset*60*60  # Offset in seconds
+        tz = time.gmtime(abs(tz_offset))
+        if (tz_offset > 0):
+            tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
         else:
-            event_time = plotfigure.kml_starttime      # 6 entries of a 9-tuple
-            event_time.extend([0,0,0])                 # Extend to 9 tuple.
-            starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
-            tz_offset = plotfigure.kml_tz_offset
-
-        if (tz_offset == None):
-            tzstr = "Z"  # no offset; could also just set to "+00:00"
-        else:
-            # Google Earth will show time slider time in local time, where
-            # local + offset = UTC.
-            tz_offset = tz_offset*60*60  # Offset in seconds
-            tz = time.gmtime(abs(tz_offset))
-            if (tz_offset > 0):
-                tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
-            else:
-                tzstr = time.strftime("-%H:%M",tz)
-        break
+            tzstr = time.strftime("-%H:%M",tz)
 
     TS = []
     for i in range(0,numframes):
@@ -671,37 +661,14 @@ def plotclaw2kml(plotdata):
     doc = KML.kml(
         KML.Document(
             KML.name(plotdata.kml_name),
-            KML.open(1)))  # this will eventually become doc.kml
-
-    doc_remote = KML.kml(
-        KML.Document(
-            KML.name("GeoClaw"),
-            KML.open(1)))  # this will eventually become doc.kml
-
-    if (plotdata.kml_url != None):
-        doc_list = [doc, doc_remote]
-    else:
-        doc_list = [doc]
+            KML.open(1)))
 
     # Open main zip file
     zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w')
 
-    # Top level KML file
-    docfile = open("doc.kml",'w')
-    if (plotdata.kml_url != None):
-        # contains remote links, if a url is specified.
-        docfile_remote = open(plotdata.kml_index_fname + ".kml",'w')
-        docfile_list = [docfile, docfile_remote]
-    else:
-        docfile_list = [docfile]
-
-    for d in docfile_list:
-        # This is handy, if only so that editors (Emacs?) will
-        # recognize how to do syntax highlighting.
-        d.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        pass
-
-    for figname in plotdata._fignames:
+    # --------------------- Set initial view --------------------------
+    user_view = False
+    for i,figname in enumerate(plotdata._fignames):
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
 
@@ -711,31 +678,30 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
-        if plotfigure.kml_use_for_initial_view:
-            ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
-            ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
-            lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
+        # Get a view that is used when GE first loads.
+        if plotfigure.kml_use_for_initial_view or i == 0:
+            ulinit = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+            urinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+            lrinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
-            for d in doc_list:
-                d.Document.append(
-                    KML.LookAt(KML.longitude((ul[0]+ur[0])/2),
-                               KML.latitude((ur[1]+lr[1])/2),
-                               KML.range(15000000)))
+            initial_view = KML.LookAt(
+                KML.longitude((ulinit[0]+urinit[0])/2),
+                KML.latitude((urinit[1]+lrinit[1])/2),
+                KML.range(15000000))
+
+            doc.Document.append(deepcopy(initial_view))
+            user_view = True
             break
 
-
+    if not user_view:
+        print "===> No figure has been set as the initial view.  The first KML "\
+            "figure will be used.\n"
 
     # ------------------- Loop over figures ----------------------
 
-    fig_folder = []
-    fig_folder.append(KML.Folder(
+    fig_folder = KML.Folder(
         KML.name("Figures"),
-        KML.open(1)))
-
-    fig_folder.append(KML.Folder(
-        KML.name("Figures"),
-        KML.open(1)))
-
+        KML.open(1))
 
     # set all other figures to off.
     fig_vis = 1
@@ -755,18 +721,17 @@ def plotclaw2kml(plotdata):
         shutil.rmtree(fig_dir,True)
         os.mkdir(fig_dir)
 
-        fig_doc = KML.kml(KML.Document(
-            KML.name(plotfigure.name),
-            KML.open(0)))
+        doc_fig = KML.kml(
+            KML.Document(
+                KML.name(plotfigure.name),
+                KML.open(0),
+                KML.Folder(
+                    KML.name("Frames"))))
 
-        fig_doc_url = KML.kml(KML.Document(
-            KML.name(plotfigure.name),
-            KML.open(0)))
-
-        if plotdata.kml_url is not None:
-            fig_doc_list = [fig_doc, fig_doc_url]
-        else:
-            fig_doc_list = [fig_doc]
+        # Needed for each figure
+        ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+        ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+        lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
         # ------------------- Loop over frames ----------------------
         # This will get created for each figure, but I need it
@@ -781,14 +746,9 @@ def plotclaw2kml(plotdata):
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
-                print "===> Adding reference to %s.png to .kmz file (no tiling)" % (fname_str)
-
-                # Easier to just move into this directory to construct everything
-                os.chdir(fig_dir)
-
-                shutil.rmtree(fname_str,True)  # remove directory and ignore errors
-                os.mkdir(fname_str)
-                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+                print " "
+                print "===> Adding reference to %s.png to %s.kmz" \
+                    " file (no tiling)\n" % (plotdata.kml_index_fname,fname_str)
 
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
@@ -804,11 +764,17 @@ def plotclaw2kml(plotdata):
                             KML.east(ur[0]),
                             KML.west(ul[0]))))
 
+                # Easier to just move into this directory to construct everything
+                os.chdir(fig_dir)
+
+                shutil.rmtree(fname_str,True)  # remove directory and ignore errors
+                os.mkdir(fname_str)
+                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
-                docfile_notile = open(docfile,'w')
+                docfile_notile = open(os.path.join(fname_str,'doc.kml'),'w')
                 docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
                 docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),
                                                     pretty_print=True))
                 docfile_notile.close()
@@ -816,8 +782,9 @@ def plotclaw2kml(plotdata):
                 os.chdir("..")
 
             else:
-                print '\n'
-                print "===> Tiling %s.png and adding reference to .kmz file" % (fname_str)
+                print " "
+                print "===> Tiling %s.png and adding reference to " \
+                    "%s.kmz file" % (fname_str,plotdata.kml_index_fname)
 
                 os.chdir(fig_dir)
                 pngfile = os.path.join("..","%s.png"% fname_str)
@@ -866,36 +833,58 @@ def plotclaw2kml(plotdata):
 
             # add Network link to high level doc.kml file.  This will referenece either
             # tiled files or non-tiled files.
-            from copy import deepcopy
             lstr = os.path.join(fname_str,'doc.kml')
-            for n, d in enumerate(fig_doc_list):
-                d.Document.append(
-                    KML.NetworkLink(
-                        KML.name(fname_str),
-                        deepcopy(TS[i]),
-                        KML.Link(KML.href(lstr))))
+            doc_fig.Document.Folder.append(
+                KML.NetworkLink(
+                    KML.name(fname_str),
+                    deepcopy(TS[i]),
+                    KML.Link(KML.href(lstr))))
 
         # ----------------- Done with frame loop --------------------
 
-        fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
-        fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        fig_file.write(etree.tostring(etree.ElementTree(fig_doc),pretty_print=True))
-        fig_file.close()
-
-        for n,d in enumerate(doc_list):
-            if n == 1:
-                lstr = os.path.join(plotdata.kml_url,os.path.join(fig_dir,"doc.kml"))
-            else:
-                lstr = os.path.join(fig_dir,"doc.kml")
-
-            fig_folder[n].append(
-                KML.NetworkLink(
-                    KML.name(figname),
-                    KML.visibility(fig_vis),
-                    KML.Link(
-                        KML.href(lstr))))
+        lstr = os.path.join(fig_dir,"doc.kml")
+        fig_folder.append(
+            KML.NetworkLink(
+                KML.name(figname),
+                KML.visibility(fig_vis),
+                KML.Link(
+                    KML.href(lstr))))
 
         fig_vis = 0
+
+
+        # -------------- add colorbar image file -----------------
+        # Build the colorbar.
+        if plotfigure.kml_colorbar is not None:
+            print " "
+            print "===> Building colorbar for Google Earth browser\n"
+            cb_img = "images"
+            cb_dir = os.path.join(fig_dir,cb_img)
+            shutil.rmtree(cb_dir,True)
+            os.mkdir(cb_dir)
+            cb_filename = "colorbarfig%s.png" % figno
+            try:
+                plotfigure.kml_colorbar(cb_filename)
+                shutil.move(cb_filename,cb_dir)
+            except:
+                print "===> Warning : Something went wrong when creating colorbar\n"
+
+            # add link to KML file, even if colorbar didn't get created.
+            cb_str = os.path.join(cb_img,cb_filename)
+            colorbar = KML.ScreenOverlay(
+                KML.name("Colorbar"),
+                KML.Icon(KML.href(cb_str)),
+                KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+                KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+
+            doc_fig.Document.append(colorbar)
+
+        # write out doc.kml file in figure directory
+        fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
+        fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        fig_file.write(etree.tostring(etree.ElementTree(doc_fig),pretty_print=True))
+        fig_file.close()
+
 
         # Clean up everything in the figure directory
         for dirname, subdirs, files in os.walk(fig_dir):
@@ -903,27 +892,37 @@ def plotclaw2kml(plotdata):
             for filename in files:
                 zip.write(os.path.join(dirname, filename))
 
-        zip.write(fig_dir)
+        #zip.write(fig_dir)
         shutil.rmtree(fig_dir)
+
 
     # ---------------------- Done with figure loop ------------------
 
-    for n,d in enumerate(doc_list):
-        d.Document.append(deepcopy(fig_folder[n]))
+    # Add "Figures" folder to doc.kml
+    doc.Document.append(deepcopy(fig_folder))
 
+
+    # ---------- Create top-level resource subdirectories -----------
+    kml_dir = 'kml'
+    shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
+    os.mkdir(kml_dir)
+
+    img_dir = 'images'
+    shutil.rmtree(img_dir,True)  # remove directory and ignore errors
+    os.mkdir(img_dir)
 
     # Build additional KML files
     cwd = os.getcwd()
     os.chdir("../")
     try:
-        print "===> Calling setrun (needed to create gauges.kml and regions.kml)"
+        print "===> Calling setrun (needed to create gauges.kml and regions.kml)\n"
         import setrun
         reload(setrun)
         rundata = setrun.setrun()
         regions = rundata.regiondata.regions
         gauges = rundata.gaugedata.gauges
     except:
-        print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created"
+        print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created\n"
         regions = None
         gauges = None
 
@@ -939,14 +938,6 @@ def plotclaw2kml(plotdata):
                                 verbose=True,
                                 plotdata=plotdata)
 
-            # Need a second file for the KML files with an absolute
-            # path to gauge image file.
-            if plotdata.kml_url is not None:
-                kmltools.gauges2kml(rundata=rundata,
-                                    fname='gauges_url.kml',
-                                    verbose=True,
-                                    plotdata=plotdata,
-                                    kml_url=plotdata.kml_url)
         if regions is not None:
             # Create regions.kml
             kmltools.regions2kml(rundata=rundata,
@@ -957,15 +948,6 @@ def plotclaw2kml(plotdata):
         # no regions or gauges KML files are created.
         pass
 
-
-    # -------------- Create resource subdirectories -----------------
-    kml_dir = 'kml'
-    shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
-    os.mkdir(kml_dir)
-
-    img_dir = 'images'
-    shutil.rmtree(img_dir,True)  # remove directory and ignore errors
-    os.mkdir(img_dir)
 
     # -------------- add gauge image and KML files -----------------
     gauge_kml_file = "gauges.kml"
@@ -978,19 +960,6 @@ def plotclaw2kml(plotdata):
 
     if os.path.isfile(gauge_kml_file):
             shutil.move(gauge_kml_file,kml_dir)
-
-    gauge_kml_file = 'gauges_url.kml'
-    if plotdata.kml_url is not None:
-        doc_remote.Document.append(
-            KML.NetworkLink(
-                KML.name("Gauges"),
-                KML.visibility(1),
-                KML.Link(KML.href(os.path.join(plotdata.kml_url,
-                                               kml_dir,
-                                               gauge_kml_file)))))
-
-    if os.path.isfile(gauge_kml_file):
-        shutil.move(gauge_kml_file,kml_dir)
 
     # Add any gauge PNG files to images directory.
     if plotdata.gauges_fignos is not None:
@@ -1008,35 +977,16 @@ def plotclaw2kml(plotdata):
             KML.Link(KML.href(os.path.join(kml_dir,
                                            region_kml_file)))))
 
-    if plotdata.kml_url is not None:
-        doc_remote.Document.append(
-            KML.NetworkLink(
-                KML.name("Regions"),
-                KML.visibility(1),
-                KML.Link(KML.href(os.path.join(plotdata.kml_url,
-                                               kml_dir,
-                                               region_kml_file)))))
-
     if os.path.isfile(region_kml_file):
             shutil.move(region_kml_file,kml_dir)
 
     # --------------- Create polygons for AMR patch borders --------------
-    # This should be moved outside of the figure loop
     plotdata.set_outdirs()  # set _outdirs attribute to be list of
     # all outdirs for all items
 
-    doclevels = KML.kml(KML.Document())
     level_dir = "levels"
     shutil.rmtree(level_dir,True)
     os.mkdir(os.path.join(kml_dir,level_dir))
-
-    # Create high level 'levels.kml' file
-    maxlevels = 10
-    level_folders = [];
-    level_files = []
-    level_docs = []
-    styles = []
-
 
     # Level colors, in (alpha, blue, green, red)
     black = ["FF000000"]
@@ -1045,36 +995,41 @@ def plotclaw2kml(plotdata):
                 "#FF9CC2CC", "FF935B47","FF000000"]
     colorcube = ["FF0000FF", "FF00FF00","FFFFFFFF","FF000000","FFFFFF00",
               "FFFF00FF","FF00FFFF","FFFF0000"]
-    colors = black
 
+    # Color scheme to use for level patch borders.
+    colors = black
+    width = 2
+
+    # Create high level 'levels.kml' file
+    maxlevels = 10
+    level_files = []
+    doc_levels = []
+    styles = []
     for i in range(0,maxlevels):
         level_file_name = "level_" + str(i+1).rjust(2,'0')
         level_files.append(level_file_name)
 
         # KML Document for each level
-        d = KML.kml(KML.Document())
-
-        level_docs.append(deepcopy(d))
+        doc_levels.append(KML.kml(KML.Document()))
 
         # Styles for levels
         styles.append(KML.Style(
             KML.LineStyle(
                 KML.color(colors[i % len(colors)]),
-                KML.width(2)),
+                KML.width(width)),
             KML.PolyStyle(KML.color("00000000")),
             id="patchborder"))
 
 
     # Create individual level files in subdirectories
 
-    from copy import deepcopy
-    frame_docs = [[0 for j in range(numframes)] for i in range(maxlevels)]
+    doc_frames = [[0 for j in range(numframes)] for i in range(maxlevels)]
     for j in range(0,numframes):
         frameno = framenos[j]
         for i in range(0,maxlevels):
             frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             if i == 0:
-                vis = 0
+                vis = 0  # Don't show first level
             else:
                 vis = 1
 
@@ -1084,12 +1039,12 @@ def plotclaw2kml(plotdata):
                 deepcopy(TS[j]),
                 KML.Link(
                     KML.href(os.path.join(level_files[i],frame_file_name))))
-            level_docs[i].Document.append(deepcopy(N))
+            doc_levels[i].Document.append(deepcopy(N))
 
 
             # Create files in each subdirectory
-            frame_docs[i][j] = KML.kml(KML.Document())
-            frame_docs[i][j].Document.append(deepcopy(styles[i]))
+            doc_frames[i][j] = KML.kml(KML.Document())
+            doc_frames[i][j].Document.append(deepcopy(styles[i]))
 
     maxlevel_real = 0
     for j in range(0,numframes):
@@ -1149,7 +1104,7 @@ def plotclaw2kml(plotdata):
 
                 p.append(deepcopy(r))
 
-                frame_docs[level-1][j].Document.append(deepcopy(p))
+                doc_frames[level-1][j].Document.append(deepcopy(p))
 
     if maxlevel_real > maxlevels:
         raise IOError("*** plot2kml : (plotpages.py) Maximum number of "
@@ -1169,7 +1124,7 @@ def plotclaw2kml(plotdata):
             kml_frame_file = open(os.path.join(kml_dir,level_dir,
                                                level_files[i],level_file_name),'w')
             kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            kml_frame_file.write(etree.tostring(etree.ElementTree(frame_docs[i][j]),
+            kml_frame_file.write(etree.tostring(etree.ElementTree(doc_frames[i][j]),
                                                 pretty_print=True))
             kml_frame_file.close()
 
@@ -1177,11 +1132,12 @@ def plotclaw2kml(plotdata):
     for i in range(0,maxlevel_real):
         kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
         kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        kml_level_file.write(etree.tostring(etree.ElementTree(level_docs[i]),
+        kml_level_file.write(etree.tostring(etree.ElementTree(doc_levels[i]),
                                             pretty_print=True))
         kml_level_file.close()
 
     # Folders in top level file 'levels.kml'
+    doc_levels_top = KML.kml(KML.Document())
     for i in range(0,maxlevel_real):
         level_file_name = "level_" + str(i+1).rjust(2,'0')
         f = KML.Folder(KML.name("Level " + str(i+1)))
@@ -1190,11 +1146,11 @@ def plotclaw2kml(plotdata):
             KML.Link(
                 KML.href(os.path.join(level_dir,level_file_name + ".kml")))))
 
-        doclevels.Document.append(f)
+        doc_levels_top.Document.append(f)
 
     kml_levels = open(os.path.join(kml_dir,"levels.kml"),'w')
     kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-    kml_levels.write(etree.tostring(etree.ElementTree(doclevels),
+    kml_levels.write(etree.tostring(etree.ElementTree(doc_levels_top),
                                     pretty_print=True))
     kml_levels.close()
 
@@ -1205,36 +1161,6 @@ def plotclaw2kml(plotdata):
             KML.visibility(1),
             KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
 
-
-    # -------------- add colorbar image file -----------------
-    # Build the colorbar.
-    if plotfigure.kml_colorbar is not None:
-        cb_filename = "colorbarfig%s.png" % figno
-        try:
-            plotfigure.kml_colorbar(cb_filename)
-            shutil.move(cb_filename,img_dir)
-        except:
-            print "Warning : Something went wrong when creating colorbar"
-
-        # add link to KML file, even if colorbar didn't get created.
-        cb_str = os.path.join(img_dir,cb_filename)
-        colorbar = KML.ScreenOverlay(
-        KML.name("Colorbar"),
-            KML.Icon(KML.href(cb_str)),
-            KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
-            KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
-
-        doc.Document.append(colorbar)
-
-        if plotdata.kml_url is not None:
-            cb_str = os.path.join(plotdata.kml_url,img_dir,cb_filename)
-            colorbar = KML.ScreenOverlay(
-                KML.name("Colorbar"),
-                KML.Icon(KML.href(cb_str)),
-                KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
-                KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
-
-            doc_remote.Document.append(colorbar)
 
     # ----------- zip additional directories and clean up ------------
     dir_list = [kml_dir, img_dir]
@@ -1247,16 +1173,41 @@ def plotclaw2kml(plotdata):
         shutil.rmtree(d)
 
     # ----------- Write doc.kml file --------------------
-    for n in range(0,len(docfile_list)):
-        docfile_list[n].write(etree.tostring(etree.ElementTree(doc_list[n]),
-                                             pretty_print=True))
-        docfile_list[n].close()
+    # Top level KML file
+    docfile = open("doc.kml",'w')
+    docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+    docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+    docfile.close()
 
     # Store this in the zip file and remove it.
     zip.write("doc.kml")   # Root KML file
     os.remove("doc.kml")
 
     zip.close()
+
+    if plotdata.kml_publish is not None:
+        # Create a KML file that can be use to link to a remote server
+        doc = KML.kml(KML.Document(
+            KML.name("GeoClaw"),
+            KML.visibility(1),
+            KML.open(1),
+            deepcopy(initial_view),
+            KML.NetworkLink(
+                KML.name(plotdata.kml_name),
+                KML.visibility(1),
+                KML.open(1),
+                KML.Snippet("Updates every 5 minutes"),
+                KML.Link(
+                    KML.href(os.path.join(plotdata.kml_publish,plotdata.kml_index_fname + ".kmz")),
+                    KML.refreshMode("onInterval"),
+                             KML.refreshInterval(300)))))
+
+        file = open(plotdata.kml_index_fname + ".kml",'w')
+        file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        file.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+        file.close()
+
 
     os.chdir(startdir)
 
