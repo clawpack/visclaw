@@ -565,16 +565,18 @@ def plotclaw2kml(plotdata):
     """
 
     print " "
-    print "===> Creating %s.kmz file\n" % plotdata.kml_index_fname
+    print "===> Creating %s.kmz file" % plotdata.kml_index_fname
 
     startdir = os.getcwd()
 
     from lxml import etree
     from pykml.factory import KML_ElementMaker as KML
     from pykml.factory import GX_ElementMaker as GX
+    from pykml.factory import ATOM_ElementMaker as ATOM
     import zipfile
     import shutil
     from copy import deepcopy
+    from clawpack.geoclaw import kmltools
 
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
@@ -607,60 +609,42 @@ def plotclaw2kml(plotdata):
 
     # ------------------- get time span ----------------------
 
-    # <TimeSpan> tags, needed for both figure files and
-    # level files ("levels.kml")
-
-
-    # to adjust time from UTC to time in event locale.
-    if (plotdata.kml_starttime == None):
-        starttime = time.mktime(time.gmtime()) - time.timezone - time.mktime(time.localtime())
-        tz_offset = 0 # time.timezone/(60.*60.)
-    else:
-        event_time = plotdata.kml_starttime      # 6 entries of a 9-tuple
-        event_time.extend([0,0,0])                 # Extend to 9 tuple.
-        starttime = time.mktime(event_time) - time.timezone  # UTC time, in seconds
-        tz_offset = plotdata.kml_tz_offset
-
-    if (tz_offset == None):
-        tzstr = "Z"  # no offset; could also just set to "+00:00"
-    else:
-        # Google Earth will show time slider time in local time, where
-        # local + offset = UTC.
-        tz_offset = tz_offset*60*60  # Offset in seconds
-        tz = time.gmtime(abs(tz_offset))
-        if (tz_offset > 0):
-            tzstr = time.strftime("+%H:%M",tz)  # Time to UTC
-        else:
-            tzstr = time.strftime("-%H:%M",tz)
-
+    # Collect time spans for use in several places.
     TS = []
-    for i in range(0,numframes):
-        frameno = framenos[i]
-        gbegin = time.gmtime(starttime + frametimes[frameno])
-        timestrbegin = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gbegin),tzstr)
-        if i < numframes-1:
-            # Convert  gend to seconds;  add framenos[i+1}; convert back to tuple
-            gend = time.gmtime(starttime + frametimes[framenos[i+1]])
-        else:
-            if numframes == 1:
-                gend = gbegin
-            else:
-                # Add extra simlulation time so the last file shows up in GE
-                dt = frametimes[framenos[i]] - frametimes[framenos[i-1]]
-                gend = time.gmtime(starttime + frametimes[framenos[i]] + dt/10)
+    event_time = plotdata.kml_starttime
+    tz = plotdata.kml_tz_offset
 
-        timestrend = "%s%s" % (time.strftime("%Y-%m-%dT%H:%M:%S", gend),tzstr)
+    if numframes == 1:
+        frameno = framenos[0]
+        t1 = frametimes[frameno]
+        t2 = t1 + 1  # Add 1 second so slider works
+        sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
 
         # To be used below
         TS.append(KML.TimeSpan(
-            KML.begin(timestrbegin),
-            KML.end(timestrend)))
+            KML.begin(sbegin),
+            KML.end(send)))
+    else:
+        for i in range(0,numframes):
+            frameno = framenos[i]
+            t1 = frametimes[frameno]
+            if i < numframes-1:
+                t2 = frametimes[framenos[i+1]]
+            else:
+                t2 = t1 + 1   # Add 1 second so that the final figure shows up
+
+            sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
+
+            TS.append(KML.TimeSpan(
+                KML.begin(sbegin),
+                KML.end(send)))
 
 
     # Top level doc.kml file
     doc = KML.kml(
         KML.Document(
             KML.name(plotdata.kml_name),
+            ATOM.author("Donna Calhoun"),
             KML.open(1)))
 
     # Open main zip file
@@ -699,6 +683,7 @@ def plotclaw2kml(plotdata):
 
     # ------------------- Loop over figures ----------------------
 
+    basehref = "<base href=\"%s\">" % os.path.join('..','..','images','')  # need trailing "\"
     fig_folder = KML.Folder(
         KML.name("Figures"),
         KML.open(1))
@@ -746,17 +731,19 @@ def plotclaw2kml(plotdata):
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
-                print " "
                 print "===> Adding reference to %s.png to %s.kmz" \
-                    " file (no tiling)\n" % (plotdata.kml_index_fname,fname_str)
+                    " file (no tiling)" % (plotdata.kml_index_fname,fname_str)
 
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
 
+                c = TS[i].getchildren()
+                desc = "t = %g\n" % frametimes[frameno] + c[0]
+
                 fstr = "%s.png" % fname_str
                 doc_notile.Document.append(
                     KML.GroundOverlay(
-                        KML.name(os.path.join(fname_str)),
+                        KML.name(fstr),
                         KML.Icon(KML.href(fstr)),
                         KML.LatLonBox(
                             KML.north(ur[1]),
@@ -833,10 +820,22 @@ def plotclaw2kml(plotdata):
 
             # add Network link to high level doc.kml file.  This will referenece either
             # tiled files or non-tiled files.
+            c = TS[i].getchildren()
+            tstr = "Time : t = %g\n" \
+                   "UTC  : %s\n"\
+                   "File : %s.png" % (frametimes[frameno],c[0],fname_str)
+
+            format_style = "<b><font style=\"font-size:%dpt\"><pre>%s</pre></font></b>"
+            snippet_str = "<![CDATA[%s]]>" % (format_style % (12,tstr))
+
+            desc_str = "<![CDATA[%s]]>" % (format_style % (10,tstr))
+
             lstr = os.path.join(fname_str,'doc.kml')
             doc_fig.Document.Folder.append(
                 KML.NetworkLink(
-                    KML.name(fname_str),
+                    KML.name("Frame %d" % frameno),  # CDATA here formats snippet, not the balloon
+                    KML.Snippet(snippet_str,maxLines="2"),
+                    KML.description(desc_str),
                     deepcopy(TS[i]),
                     KML.Link(KML.href(lstr))))
 
@@ -882,7 +881,10 @@ def plotclaw2kml(plotdata):
         # write out doc.kml file in figure directory
         fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
         fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        fig_file.write(etree.tostring(etree.ElementTree(doc_fig),pretty_print=True))
+        kml_text = etree.tostring(etree.ElementTree(doc_fig),pretty_print=True)
+        kml_text = kml_text.replace("&gt;",">")
+        kml_text = kml_text.replace("&lt;","<")
+        fig_file.write(kml_text)
         fig_file.close()
 
 
@@ -911,24 +913,22 @@ def plotclaw2kml(plotdata):
     shutil.rmtree(img_dir,True)  # remove directory and ignore errors
     os.mkdir(img_dir)
 
-    # Build additional KML files
+    # ------------- Creating gauges.kml file -------------------------
     cwd = os.getcwd()
     os.chdir("../")
     try:
-        print "===> Calling setrun (needed to create gauges.kml and regions.kml)\n"
         import setrun
         reload(setrun)
         rundata = setrun.setrun()
-        regions = rundata.regiondata.regions
         gauges = rundata.gaugedata.gauges
     except:
-        print "===> Cannot run setrun.py; gauges.kml and regions.kml will not be created\n"
-        regions = None
+        print "     Warning : Cannot run setrun.py; gauges.kml will not be created\n"
         gauges = None
 
     os.chdir(cwd)
 
-    if (regions is not None) or (gauges is not None):
+    if gauges is not None:
+        print "===> Creating gauges.kml file"
         from clawpack.geoclaw import kmltools
 
         if gauges is not None:
@@ -938,14 +938,8 @@ def plotclaw2kml(plotdata):
                                 verbose=True,
                                 plotdata=plotdata)
 
-        if regions is not None:
-            # Create regions.kml
-            kmltools.regions2kml(rundata=rundata,
-                                 fname='regions.kml',
-                                 verbose=True)
-
     else:
-        # no regions or gauges KML files are created.
+        # no gauge KML files are created.
         pass
 
 
@@ -969,6 +963,103 @@ def plotclaw2kml(plotdata):
 
 
     # ------------------ add region KML files -----------------
+    # Create regions
+    print " "
+    print "===> Reading in regions.data file and creating KML data"
+
+    f = open(os.path.join("..","regions.data"),'r')
+
+    # Read first 7 lines (assume standard format)
+    for i in range(0,7):
+        f.readline()
+
+    # now read the data lines
+    regions_str = []
+    for r in f.readlines():
+        regions_str.append(r.strip())
+
+    regions = []
+    for rs in regions_str:
+        regions.append(np.fromstring(rs,sep=' '))
+
+    # Top level regions.kml file
+    doc_regions = KML.kml(KML.Document())
+
+    # collect all the placemarks in a folder and append later
+    placemark_folder = []
+
+
+
+    print "(not creating a region for the computational domain)"
+    # We don't have the computational domain here ...
+    #elev = 0.
+    #mapping = {}
+    #mapping['x1'] = ulinit[0]
+    #mapping['x2'] = urinit[0]
+    #mapping['y1'] = lrinit[1]
+    #mapping['y2'] = urinit[1]
+    #mapping['elev'] = elev
+    #mapping['rnum'] = None
+    #mapping['name'] = 'Computational Domain'
+    ##mapping['desc'] = description
+    #mapping['desc'] = ""
+    #mapping['color'] = "0000FF"  # red
+    #
+    #path_style,placemark = kmltools.kml_region(mapping)
+    #
+    #doc_regions.Document.append(path_style)
+    #placemark_folder.append(placemark)
+
+
+    for rnum,region in enumerate(regions):
+        minlevel,maxlevel = region[0:2]
+        t1,t2 = region[2:4]
+        x1,x2,y1,y2 = region[4:]
+
+        print "Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
+            % (rnum,x1,x2,y1,y2)
+        print "           minlevel = %i,  maxlevel = %i" \
+            % (minlevel,maxlevel) \
+            + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+        #print "Region %2d: " % (rnum,regions_str[rnum])
+
+        elev = 0
+        mapping = {}
+        mapping['minlevel'] = minlevel
+        mapping['maxlevel'] = maxlevel
+        mapping['t1'] = t1
+        mapping['t2'] = t2
+        mapping['x1'] = x1
+        mapping['x2'] = x2
+        mapping['y1'] = y1
+        mapping['y2'] = y2
+        mapping['elev'] = elev
+        mapping['rnum'] = rnum
+        mapping['name'] = 'Region %i' % rnum
+        description = \
+                      "Levels   : minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
+                      "Time     : t1 = %g, t2 = %g\n" % (t1,t2) + \
+                      "Location : x1 = %g, x2 = %g\n" % (x1,x2) + \
+                      "           y1 = %g, y2 = %g\n" % (y1,y2)
+        snippet = \
+                  "minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) +\
+                  "t1 = %g, t2 = %g\n" % (t1,t2) + \
+                  "x1 = %g, x2 = %g\n" % (x1,x2) + \
+                  "y1 = %g, y2 = %g\n" % (y1,y2)
+        mapping['desc'] = description
+        mapping['snippet'] = snippet
+        mapping['color'] = "FFFFFF"  # white
+
+        # Inlude a time span so that regions show up in correct interval
+        path_style,placemark = kmltools.kml_region(mapping,
+                                                   plotdata.kml_starttime,
+                                                   plotdata.kml_tz_offset)
+        doc_regions.Document.append(path_style)
+        placemark_folder.append(placemark)
+
+    for p in placemark_folder:
+        doc_regions.Document.append(p)
+
     region_kml_file = "regions.kml"
     doc.Document.append(
         KML.NetworkLink(
@@ -977,10 +1068,23 @@ def plotclaw2kml(plotdata):
             KML.Link(KML.href(os.path.join(kml_dir,
                                            region_kml_file)))))
 
+    kml_file = open(region_kml_file,'w')
+    kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+    kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
+    kml_text = kml_text.replace("&gt;",">")
+    kml_text = kml_text.replace("&lt;","<")
+    kml_file.write(kml_text)
+
+    kml_file.close()
+
     if os.path.isfile(region_kml_file):
             shutil.move(region_kml_file,kml_dir)
 
     # --------------- Create polygons for AMR patch borders --------------
+    print " "
+    print "===> Creating file levels.kml"
+
     plotdata.set_outdirs()  # set _outdirs attribute to be list of
     # all outdirs for all items
 
@@ -1120,7 +1224,8 @@ def plotclaw2kml(plotdata):
     # Print out individual frame files for each element
     for j in range(0,numframes):
         for i in range(0,maxlevel_real):
-            level_file_name = level_files[i] + "_" + str(j).rjust(4,'0') + ".kml"
+            frameno = framenos[j]
+            level_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             kml_frame_file = open(os.path.join(kml_dir,level_dir,
                                                level_files[i],level_file_name),'w')
             kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -1176,7 +1281,6 @@ def plotclaw2kml(plotdata):
     # Top level KML file
     docfile = open("doc.kml",'w')
     docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
     docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
     docfile.close()
 
@@ -1187,6 +1291,8 @@ def plotclaw2kml(plotdata):
     zip.close()
 
     if plotdata.kml_publish is not None:
+        print " "
+        print "===> Writing file %s.kml" % plotdata.kml_index_fname
         # Create a KML file that can be use to link to a remote server
         doc = KML.kml(KML.Document(
             KML.name("GeoClaw"),
@@ -1207,6 +1313,7 @@ def plotclaw2kml(plotdata):
         file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         file.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         file.close()
+        print " "
 
 
     os.chdir(startdir)
