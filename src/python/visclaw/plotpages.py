@@ -684,7 +684,7 @@ def plotclaw2kml(plotdata):
 
     if not user_view:
         print "KML ===> No figure has been set as the initial view.  The first KML "\
-            "figure will be used.  Set plodata.kml_use_for_initial_view.\n"
+            "figure will be used.  Set plotfigure.kml_use_for_initial_view.\n"
 
     # ------------------- Loop over figures ----------------------
 
@@ -833,8 +833,8 @@ def plotclaw2kml(plotdata):
             snippet_str = "<![CDATA[<b><pre>%s</pre></b>]]>" % desc
 
             # Data that shows up in balloon
-            desc_style = "<b><pre><font style=\"font-size:10pt\">%s</font></pre></b>"
-            desc_str = "<![CDATA[%s]]>" % desc_style % desc_style
+            desc_style = "<b><pre><font style=\"font-size:10pt\">%s</font></pre></b>" % desc
+            desc_str = "<![CDATA[%s]]>" % desc_style
 
             lstr = os.path.join(fname_str,'doc.kml')
             doc_fig.Document.Folder.append(
@@ -1099,13 +1099,13 @@ def plotclaw2kml(plotdata):
         snippet_str = \
                   "x1 = %g, x2 = %g\n" % (x1,x2) + \
                   "y1 = %g, y2 = %g\n" % (y1,y2)
-        snippet = "<![CDATA[%s]]>" % snippet_str
+        snippet = "<![CDATA[<b><pre>%s</pre></b>]]>" % snippet_str
 
         # Style for this region
         doc_regions.Document.append(
             KML.Style(
                 KML.PolyStyle(
-                    KML.color("#FF9A5C4D"),
+                    KML.color("#FF9A5C4D"),   # light blue
                     KML.fill(1),
                     KML.outline(0)),
                 KML.BalloonStyle(deepcopy(domain_text)),
@@ -1118,7 +1118,7 @@ def plotclaw2kml(plotdata):
             for x in [x1,x2]:
                 lv.append(x + 360)
         else:
-            lv = [x1,x2]   # Not quite sure why this works ...
+            lv = [x1,x2]   # Not quite sure why this works in the case when x1,x2 cross 180 ...
 
         longitude = lv
 
@@ -1201,6 +1201,9 @@ def plotclaw2kml(plotdata):
         # the 'text' tag will replace Placemark description
         balloon_text = KML.text("<![CDATA[%s]]>" % btext)
 
+        width = 2
+        box_color = "FFFFFFFF"
+
         # Now start creating real regions.
         for rnum,region in enumerate(regions):
             minlevel,maxlevel = region[0:2]
@@ -1231,8 +1234,8 @@ def plotclaw2kml(plotdata):
             doc_regions.Document.append(
                 KML.Style(
                     KML.LineStyle(
-                        KML.color("FFFFFFFF"),
-                        KML.width(1)),
+                        KML.color(box_color),
+                        KML.width(width)),
                     KML.PolyStyle(KML.color("00000000")),
                     KML.BalloonStyle(deepcopy(balloon_text)),
                     id=pathstr))
@@ -1259,7 +1262,7 @@ def plotclaw2kml(plotdata):
                 for x in [x1,x2]:
                     lv.append(x + 360)
             else:
-                lv = [x1,x2]   # Not quite sure why this works ...
+                lv = [x1,x2]   # This seems to be okay, even if [x1,x2] are on either sides of 180...
 
             longitude = lv
 
@@ -1356,7 +1359,7 @@ def plotclaw2kml(plotdata):
 
     # Color scheme to use for level patch borders.
     colors = black
-    width = 1
+    width = 2
 
     # Create high level 'levels.kml' file
     maxlevels = 10
@@ -1547,7 +1550,8 @@ def plotclaw2kml(plotdata):
     if plotdata.kml_publish is not None:
         print " "
         print "KML ===> Writing file %s.kml" % plotdata.kml_index_fname
-        # Create a KML file that can be use to link to a remote server
+        # Create a KML file that can be used to link to a remote server
+        update_time = 5    # minutes
         doc = KML.kml(KML.Document(
             KML.name("GeoClaw"),
             KML.visibility(1),
@@ -1557,11 +1561,11 @@ def plotclaw2kml(plotdata):
                 KML.name(plotdata.kml_name),
                 KML.visibility(1),
                 KML.open(1),
-                KML.Snippet("Updates every 5 minutes"),
+                KML.Snippet("Updates every %d minutes" % update_time),
                 KML.Link(
                     KML.href(os.path.join(plotdata.kml_publish,plotdata.kml_index_fname + ".kmz")),
                     KML.refreshMode("onInterval"),
-                             KML.refreshInterval(300)))))
+                             KML.refreshInterval(update_time*60)))))
 
         file = open(plotdata.kml_index_fname + ".kml",'w')
         file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
