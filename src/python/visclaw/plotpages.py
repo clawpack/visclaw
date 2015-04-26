@@ -565,7 +565,7 @@ def plotclaw2kml(plotdata):
     """
 
     print " "
-    print "===> Creating %s.kmz file" % plotdata.kml_index_fname
+    print "KML ===> Creating %s.kmz file" % plotdata.kml_index_fname
 
     startdir = os.getcwd()
 
@@ -581,7 +581,7 @@ def plotclaw2kml(plotdata):
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "===> Error, aborting plotclaw2kml (cannot create plot directory"
+        print "KML ===> Error, aborting plotclaw2kml (cannot create plot directory"
         raise
 
     if plotdata.gauges_fignos is not None:
@@ -683,7 +683,7 @@ def plotclaw2kml(plotdata):
             break
 
     if not user_view:
-        print "===> No figure has been set as the initial view.  The first KML "\
+        print "KML ===> No figure has been set as the initial view.  The first KML "\
             "figure will be used.  Set plodata.kml_use_for_initial_view.\n"
 
     # ------------------- Loop over figures ----------------------
@@ -736,7 +736,7 @@ def plotclaw2kml(plotdata):
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
-                print "===> Adding reference to %s.png to %s.kmz" \
+                print "KML ===> Adding to %s.png to %s.kmz" \
                     " file (no tiling)" % (plotdata.kml_index_fname,fname_str)
 
                 # The 'etree'
@@ -775,8 +775,7 @@ def plotclaw2kml(plotdata):
 
             else:
                 print " "
-                print "===> Tiling %s.png and adding reference to " \
-                    "%s.kmz file" % (fname_str,plotdata.kml_index_fname)
+                print "KML ===> Tiling %s.png" % fname_str
 
                 os.chdir(fig_dir)
                 pngfile = os.path.join("..","%s.png"% fname_str)
@@ -808,7 +807,7 @@ def plotclaw2kml(plotdata):
                 retval = retval or subprocess.call(arg_list)
 
                 if retval > 0:
-                    print "===> gdal : something went wrong!\n"
+                    print "KML ===> gdal : something went wrong!\n"
                     sys.exit(1)
 
                 # Change back to top level directory before adding zipped files
@@ -863,7 +862,7 @@ def plotclaw2kml(plotdata):
         # Build the colorbar.
         if plotfigure.kml_colorbar is not None:
             print " "
-            print "===> Building colorbar for Google Earth browser\n"
+            print "KML ===> Building colorbar"
             cb_img = "images"
             cb_dir = os.path.join(fig_dir,cb_img)
             shutil.rmtree(cb_dir,True)
@@ -873,7 +872,7 @@ def plotclaw2kml(plotdata):
                 plotfigure.kml_colorbar(cb_filename)
                 shutil.move(cb_filename,cb_dir)
             except:
-                print "===> Warning : Something went wrong when creating colorbar\n"
+                print "KML ===> Warning : Something went wrong when creating colorbar"
 
             # add link to KML file, even if colorbar didn't get created.
             cb_str = os.path.join(cb_img,cb_filename)
@@ -922,10 +921,12 @@ def plotclaw2kml(plotdata):
 
     # ------------------ Creating gauges.kml file -------------------------
     print " "
+    gauge_kml_file = "gauges.kml"
+
     try:
         f = open(os.path.join(plotdata.outdir,"gauges.data"),'r')
     except:
-        print "===> No gauges.data file found.  Gauges will not be loaded into Google Earth"
+        print "KML ===> No gauges.data file found.  Gauges will not be loaded into Google Earth"
     else:
         # Read past comments;  last 'l' is blank line
         l = f.readline()
@@ -1017,7 +1018,7 @@ def plotclaw2kml(plotdata):
 
             doc_gauges.Document.append(placemark)
 
-        kml_file = open("gauges.kml",'w')
+        kml_file = open(gauge_kml_file,'w')
         kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
         kml_text = etree.tostring(etree.ElementTree(doc_gauges),pretty_print=True)
@@ -1028,7 +1029,6 @@ def plotclaw2kml(plotdata):
         kml_file.close()
 
     # -------------- add gauge image and KML files -----------------
-    gauge_kml_file = "gauges.kml"
     doc.Document.append(
         KML.NetworkLink(
             KML.name("Gauges"),
@@ -1046,15 +1046,128 @@ def plotclaw2kml(plotdata):
                 shutil.copy(gauge_pngfile[k],img_dir)
 
 
-    # ------------------ add region KML files -----------------
-    # Create regions
+# ----------------- Add a region for the computational domain ----------
+
+    # Top level regions.kml file
+    doc_regions = KML.kml(KML.Document())
+    region_kml_file = "regions.kml"
+
+    # collect all the placemarks in a folder and append later
+    placemark_folder = []
+
+    # Read claw.data to get computational domain
     print " "
+    print "KML ===> Creating regions"
+    try:
+        f = open(os.path.join(plotdata.outdir,"claw.data"),'r')
+    except:
+        # We don't have the dimensions of the full domain
+        print "     Cannot find claw.data. Region for the computational domain will not be created."
+    else:
+        # Read past comments;  last 'l' is blank line
+        l = f.readline()
+        while (l.startswith('#')):
+            l = f.readline()
+
+        # read line containing number of gauges
+        l = f.readline()
+        # read lower
+        c = f.readline()
+        lower = np.fromstring(c.strip(),sep=' ')
+        c = f.readline()
+        upper = np.fromstring(c.strip(),sep=' ')
+        x1 = lower[0]
+        x2 = upper[0]
+        y1 = lower[1]
+        y2 = upper[1]
+        bcomp_domain = \
+                       "<style media=\"screen\" type=\"text/css\">" \
+                       "pre {font-weight:bold;font-style:12pt}" + \
+                       "span.title {font-weight:bold;font-size:12pt} " + \
+                       "</style>" + \
+                       "<center><span class=\"title\">Computational Domain</span></center>" + \
+                       "<pre>" + \
+                       "Location : x1 = $[x1], x2 = $[x2]\n" + \
+                       "           y1 = $[y1], y2 = $[y2]\n" + \
+                       "</pre>"
+
+        domain_text =  KML.text("<![CDATA[%s]]>" % bcomp_domain)
+
+
+        print "Computational domain : %10.6f  %10.6f  %10.6f  %10.6f" \
+            % (x1,x2,y1,y2)
+        snippet_str = \
+                  "x1 = %g, x2 = %g\n" % (x1,x2) + \
+                  "y1 = %g, y2 = %g\n" % (y1,y2)
+        snippet = "<![CDATA[%s]]>" % snippet_str
+
+        # Style for this region
+        doc_regions.Document.append(
+            KML.Style(
+                KML.PolyStyle(
+                    KML.color("#FF9A5C4D"),
+                    KML.fill(1),
+                    KML.outline(0)),
+                KML.BalloonStyle(deepcopy(domain_text)),
+                id="comp_domain"))
+        lv = []
+        if x1 > 180 and x2 > 180:
+            for x in [x1,x2]:
+                lv.append(x - 360)
+        elif x1 < -180 and x2 < -180:
+            for x in [x1,x2]:
+                lv.append(x + 360)
+        else:
+            lv = [x1,x2]   # Not quite sure why this works ...
+
+        longitude = lv
+
+        # rectangle with 2 corners specified
+        mapping = {}
+        mapping['x1'] = longitude[0]
+        mapping['x2'] = longitude[1]
+        mapping['y1'] = y1
+        mapping['y2'] = y2
+        mapping['elev'] = 0
+
+        # The polygons tend to disappear when zooming.  One fix might be to
+        # add more points to the edges of the polygon
+        coords = """\
+                 {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                 {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                 {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                 {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                 {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                 """.format(**mapping).replace(' ','')
+
+                    # ExtendedData is used in BalloonStyle.text() fields.
+        placemark = KML.Placemark(
+            KML.name("Computational Domain"),
+            KML.visibility(0),
+            KML.Snippet(snippet,maxLines="2"),
+            KML.styleUrl(chr(35) + "comp_domain"),
+            KML.ExtendedData(
+                KML.Data(KML.value("%g"% x1),name="x1"),
+                KML.Data(KML.value("%g"% y1),name="y1"),
+                KML.Data(KML.value("%g"% x2),name="x2"),
+                KML.Data(KML.value("%g"% y2),name="y2")),
+            KML.Polygon(
+                KML.tessellate(1),
+                KML.altitudeMode("clampToGround"),
+                KML.outerBoundaryIs(
+                    KML.LinearRing(
+                        KML.coordinates(coords)))))
+
+        placemark_folder.append(placemark)
+
+    print " "
+    # Create regions remaining regions
     try:
         f = open(os.path.join(plotdata.outdir,"regions.data"),'r')
     except:
-        print "===> No regions.data file found.  The file regions.kml will not be created."
+        print "KML ===> No regions.data file found."
     else:
-        print "===> Reading in regions.data file and creating regions.kml"
+        print "KML ===> Reading in regions.data file and creating user-defined regions"
         # Read past comments;  last 'l' is blank line
         l = f.readline()
         while (l.startswith('#')):
@@ -1087,116 +1200,6 @@ def plotclaw2kml(plotdata):
 
         # the 'text' tag will replace Placemark description
         balloon_text = KML.text("<![CDATA[%s]]>" % btext)
-
-        # collect all the placemarks in a folder and append later
-        placemark_folder = []
-
-        # Top level regions.kml file
-        doc_regions = KML.kml(KML.Document())
-
-        # Read claw.data to get computational domain
-        try:
-            f = open(os.path.join(plotdata.outdir,"claw.data"),'r')
-        except:
-            # We don't have the dimensions of the full domain
-            print "     (not creating a region for the computational domain)"
-        else:
-            # Read past comments;  last 'l' is blank line
-            l = f.readline()
-            while (l.startswith('#')):
-                l = f.readline()
-
-            # read line containing number of gauges
-            l = f.readline()
-            # read lower
-            c = f.readline()
-            lower = np.fromstring(c.strip(),sep=' ')
-            c = f.readline()
-            upper = np.fromstring(c.strip(),sep=' ')
-            x1 = lower[0]
-            x2 = upper[0]
-            y1 = lower[1]
-            y2 = upper[1]
-            bcomp_domain = \
-                           "<style media=\"screen\" type=\"text/css\">" \
-                           "pre {font-weight:bold;font-style:12pt}" + \
-                           "span.title {font-weight:bold;font-size:12pt} " + \
-                           "</style>" + \
-                           "<center><span class=\"title\">Computational Domain</span></center>" + \
-                           "<pre>" + \
-                           "Location : x1 = $[x1], x2 = $[x2]\n" + \
-                           "           y1 = $[y1], y2 = $[y2]\n" + \
-                           "</pre>"
-
-            domain_text =  KML.text("<![CDATA[%s]]>" % bcomp_domain)
-
-
-            print "Computational domain : %10.6f  %10.6f  %10.6f  %10.6f" \
-                % (x1,x2,y1,y2)
-            snippet_str = \
-                      "x1 = %g, x2 = %g\n" % (x1,x2) + \
-                      "y1 = %g, y2 = %g\n" % (y1,y2)
-            snippet = "<![CDATA[%s]]>" % snippet_str
-
-            # Style for this region
-            doc_regions.Document.append(
-                KML.Style(
-                    KML.PolyStyle(
-                        KML.color("#FF9A5C4D"),
-                        KML.fill(1),
-                        KML.outline(0)),
-                    KML.BalloonStyle(deepcopy(domain_text)),
-                    id="comp_domain"))
-            lv = []
-            if x1 > 180 and x2 > 180:
-                for x in [x1,x2]:
-                    lv.append(x - 360)
-            elif x1 < -180 and x2 < -180:
-                for x in [x1,x2]:
-                    lv.append(x + 360)
-            else:
-                lv = [x1,x2]   # Not quite sure why this works ...
-
-            longitude = lv
-
-            # rectangle with 2 corners specified
-            mapping = {}
-            mapping['x1'] = longitude[0]
-            mapping['x2'] = longitude[1]
-            mapping['y1'] = y1
-            mapping['y2'] = y2
-            mapping['elev'] = 0
-
-            # The polygons tend to disappear when zooming.  One fix might be to
-            # add more points to the edges of the polygon
-            coords = """\
-                     {x1:10.4f},{y1:10.4f},{elev:10.4f}
-                     {x2:10.4f},{y1:10.4f},{elev:10.4f}
-                     {x2:10.4f},{y2:10.4f},{elev:10.4f}
-                     {x1:10.4f},{y2:10.4f},{elev:10.4f}
-                     {x1:10.4f},{y1:10.4f},{elev:10.4f}
-                     """.format(**mapping).replace(' ','')
-
-                        # ExtendedData is used in BalloonStyle.text() fields.
-            placemark = KML.Placemark(
-                KML.name("Computational Domain"),
-                KML.visibility(0),
-                KML.Snippet(snippet,maxLines="2"),
-                KML.styleUrl(chr(35) + "comp_domain"),
-                KML.ExtendedData(
-                    KML.Data(KML.value("%g"% x1),name="x1"),
-                    KML.Data(KML.value("%g"% y1),name="y1"),
-                    KML.Data(KML.value("%g"% x2),name="x2"),
-                    KML.Data(KML.value("%g"% y2),name="y2")),
-                KML.Polygon(
-                    KML.tessellate(1),
-                    KML.altitudeMode("clampToGround"),
-                    KML.outerBoundaryIs(
-                        KML.LinearRing(
-                            KML.coordinates(coords)))))
-
-            placemark_folder.append(placemark)
-
 
         # Now start creating real regions.
         for rnum,region in enumerate(regions):
@@ -1306,19 +1309,19 @@ def plotclaw2kml(plotdata):
 
             placemark_folder.append(placemark)
 
-        for p in placemark_folder:
-            doc_regions.Document.append(p)
+    # Do we have any regions (either computational (from claw.data) or from regions.data?
+    for p in placemark_folder:
+        doc_regions.Document.append(p)
 
-        region_kml_file = "regions.kml"
-        kml_file = open(region_kml_file,'w')
-        kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    kml_file = open(region_kml_file,'w')
+    kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
-        kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
-        kml_text = kml_text.replace("&lt;","<")
-        kml_file.write(kml_text)
+    kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
+    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
+    kml_text = kml_text.replace("&lt;","<")
+    kml_file.write(kml_text)
 
-        kml_file.close()
+    kml_file.close()
 
     # -------------------- Add link to regions.kml file to top level doc.kml
     # Note that we do this, even if a regions.kml file wasn't created.
@@ -1334,7 +1337,7 @@ def plotclaw2kml(plotdata):
 
     # --------------- Create polygons for AMR patch borders --------------
     print " "
-    print "===> Creating file levels.kml"
+    print "KML ===> Creating file levels.kml"
 
     plotdata.set_outdirs()  # set _outdirs attribute to be list of
     # all outdirs for all items
@@ -1543,7 +1546,7 @@ def plotclaw2kml(plotdata):
 
     if plotdata.kml_publish is not None:
         print " "
-        print "===> Writing file %s.kml" % plotdata.kml_index_fname
+        print "KML ===> Writing file %s.kml" % plotdata.kml_index_fname
         # Create a KML file that can be use to link to a remote server
         doc = KML.kml(KML.Document(
             KML.name("GeoClaw"),
@@ -1566,7 +1569,10 @@ def plotclaw2kml(plotdata):
         file.close()
         print " "
 
-    print "===> Done creating Google Earth .kmz and .kml files"
+    print "KML ===> Done creating files for Google Earth.  Open " \
+        "%s.kmz in the Google Earth browser" %\
+        plotdata.kml_index_fname
+    print " "
     os.chdir(startdir)
 
 #   end of plotclaw2kml
