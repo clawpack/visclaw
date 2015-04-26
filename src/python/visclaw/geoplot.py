@@ -36,12 +36,13 @@ white_a = [1.0,1.0,1.0,1.0]
 blue_zodiac = [0.05, 0.15, 0.34]   # Matches Google Earth Ocean color.
 astronaut = [0.16, 0.24, 0.45]
 bay_of_many = [0.18, 0.26, 0.50]
+lightblue = [0.31, 0.39, 0.60]    ## #4E6498 (also used in the computational domain
 
 # Colormaps
 TSUNAMI_MAX_AMPLITUDE = 0.6
 googleearth_lightblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
-                                                0.0:bay_of_many,
-                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+                                                 0.0:lightblue,
+                                                 TSUNAMI_MAX_AMPLITUDE:red_a})
 
 googleearth_darkblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
                                                 0.0:blue_zodiac,
