@@ -565,7 +565,7 @@ def plotclaw2kml(plotdata):
     """
 
     print " "
-    print "KML ===> Creating %s.kmz file" % plotdata.kml_index_fname
+    print "KML ===> Creating file %s.kmz" % plotdata.kml_index_fname
 
     startdir = os.getcwd()
 
@@ -672,11 +672,16 @@ def plotclaw2kml(plotdata):
             urinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
             lrinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
+            R = 6371.0   # radius of earth
+            domain_width = R*np.cos(abs(y1+y2)*np.pi/360.0)*(x2-x1)*np.pi/180.0
+            dist_factor = 2  # factor by which height should exceed width
+            initial_height = min([1000*dist_factor*domain_width,9656064.0])   # <= 6000 miles
 
             initial_view = KML.LookAt(
                 KML.longitude((ulinit[0]+urinit[0])/2),
                 KML.latitude((urinit[1]+lrinit[1])/2),
-                KML.range(15000000))
+                KML.tilt(0),
+                KML.range(initial_height))   # in meters?
 
             doc.Document.append(deepcopy(initial_view))
             user_view = True
@@ -801,7 +806,7 @@ def plotclaw2kml(plotdata):
                 arg_list = ["gdal2tiles.py", \
                             "--profile=geodetic", \
                             "--force-kml", \
-                            "--resampling=near", \
+                            "--resampling=cubic", \
                             "%s.vrt" % (fname_str)]
 
                 retval = retval or subprocess.call(arg_list)
@@ -862,7 +867,7 @@ def plotclaw2kml(plotdata):
         # Build the colorbar.
         if plotfigure.kml_colorbar is not None:
             print " "
-            print "KML ===> Building colorbar"
+            print "KML ===> Building colorbar for figure %s" % plotfigure.name
             cb_img = "images"
             cb_dir = os.path.join(fig_dir,cb_img)
             shutil.rmtree(cb_dir,True)
@@ -920,13 +925,15 @@ def plotclaw2kml(plotdata):
     os.mkdir(img_dir)
 
     # ------------------ Creating gauges.kml file -------------------------
-    print " "
     gauge_kml_file = "gauges.kml"
+
+    print " "
+    print "KML ===> Creating file %s" % gauge_kml_file
 
     try:
         f = open(os.path.join(plotdata.outdir,"gauges.data"),'r')
     except:
-        print "KML ===> No gauges.data file found.  Gauges will not be loaded into Google Earth"
+        print "     File gauges.data not found."
     else:
         # Read past comments;  last 'l' is blank line
         l = f.readline()
@@ -1013,8 +1020,7 @@ def plotclaw2kml(plotdata):
                     KML.Data(KML.value("%g" % x1),name="x1"),
                     KML.Data(KML.value("%g" % y1),name="y1")),
                 KML.Point(
-                    KML.coordinates(coords),
-                    KML.altitudeMode("clampToGround")))
+                    KML.coordinates(coords)))
 
             doc_gauges.Document.append(placemark)
 
@@ -1057,7 +1063,7 @@ def plotclaw2kml(plotdata):
 
     # Read claw.data to get computational domain
     print " "
-    print "KML ===> Creating regions"
+    print "KML ===> Creating file %s" % region_kml_file
     try:
         f = open(os.path.join(plotdata.outdir,"claw.data"),'r')
     except:
@@ -1105,7 +1111,7 @@ def plotclaw2kml(plotdata):
         doc_regions.Document.append(
             KML.Style(
                 KML.PolyStyle(
-                    KML.color("#FF9A5C4D"),   # light blue
+                    KML.color("FF98644E"),   # light blue 4E6498
                     KML.fill(1),
                     KML.outline(0)),
                 KML.BalloonStyle(deepcopy(domain_text)),
@@ -1165,9 +1171,8 @@ def plotclaw2kml(plotdata):
     try:
         f = open(os.path.join(plotdata.outdir,"regions.data"),'r')
     except:
-        print "KML ===> No regions.data file found."
+        print "     No regions.data file found."
     else:
-        print "KML ===> Reading in regions.data file and creating user-defined regions"
         # Read past comments;  last 'l' is blank line
         l = f.readline()
         while (l.startswith('#')):
@@ -1339,8 +1344,26 @@ def plotclaw2kml(plotdata):
             shutil.move(region_kml_file,kml_dir)
 
     # --------------- Create polygons for AMR patch borders --------------
+    level_kml_file = "levels.kml"
     print " "
-    print "KML ===> Creating file levels.kml"
+    print "KML ===> Creating file %s" % level_kml_file
+
+    # Read past comments;  last 'l' is blank line
+    try:
+        f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
+    except:
+        # Nothing terrible happens;  we just set maxlevels
+        maxlevels = 10
+    else:
+        # read past comments - last line is blank
+        a = f.readline()
+        while (a.startswith('#')):
+            a = f.readline()
+
+        # read line containing max number of levels
+        a = f.readline()
+        ainfo = np.fromstring(a.strip(),sep=' ')
+        maxlevels = int(ainfo[0])  # Hopefully, got this right
 
     plotdata.set_outdirs()  # set _outdirs attribute to be list of
     # all outdirs for all items
@@ -1362,7 +1385,6 @@ def plotclaw2kml(plotdata):
     width = 2
 
     # Create high level 'levels.kml' file
-    maxlevels = 10
     level_files = []
     doc_levels = []
     styles = []
@@ -1407,6 +1429,8 @@ def plotclaw2kml(plotdata):
             doc_frames[i][j] = KML.kml(KML.Document())
             doc_frames[i][j].Document.append(deepcopy(styles[i]))
 
+    print "     Re-reading output files to get patch information"
+    print " "
     maxlevel_real = 0
     for j in range(0,numframes):
         frameno = framenos[j]
@@ -1450,9 +1474,8 @@ def plotclaw2kml(plotdata):
                 """.format(**mapping).replace(' ','')
 
                 r = KML.Polygon(
-                    GX.drawOrder(maxlevels-level),
                     KML.tessellate(1),
-                    KML.altitudeMode("ClampToGround"),
+                    KML.altitudeMode("clampToGround"),
                     KML.outerBoundaryIs(
                         KML.LinearRing(
                             KML.coordinates(border_text))))
@@ -1468,7 +1491,7 @@ def plotclaw2kml(plotdata):
                 doc_frames[level-1][j].Document.append(deepcopy(p))
 
     if maxlevel_real > maxlevels:
-        raise IOError("*** plot2kml : (plotpages.py) Maximum number of "
+        raise IOError("KML ==> plotclaw2kml : (plotpages.py) Maximum number of "
                       "levels exceeded;  increase maxlevels")
 
     # Create directories for each level.
@@ -1510,7 +1533,7 @@ def plotclaw2kml(plotdata):
 
         doc_levels_top.Document.append(f)
 
-    kml_levels = open(os.path.join(kml_dir,"levels.kml"),'w')
+    kml_levels = open(os.path.join(kml_dir,level_kml_file),'w')
     kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     kml_levels.write(etree.tostring(etree.ElementTree(doc_levels_top),
                                     pretty_print=True))
@@ -1549,7 +1572,7 @@ def plotclaw2kml(plotdata):
 
     if plotdata.kml_publish is not None:
         print " "
-        print "KML ===> Writing file %s.kml" % plotdata.kml_index_fname
+        print "KML ===> Creating file %s.kml" % plotdata.kml_index_fname
         # Create a KML file that can be used to link to a remote server
         update_time = 5    # minutes
         doc = KML.kml(KML.Document(
@@ -1563,7 +1586,8 @@ def plotclaw2kml(plotdata):
                 KML.open(1),
                 KML.Snippet("Updates every %d minutes" % update_time),
                 KML.Link(
-                    KML.href(os.path.join(plotdata.kml_publish,plotdata.kml_index_fname + ".kmz")),
+                    KML.href(os.path.join(plotdata.kml_publish,
+                                          plotdata.kml_index_fname + ".kmz")),
                     KML.refreshMode("onInterval"),
                              KML.refreshInterval(update_time*60)))))
 
