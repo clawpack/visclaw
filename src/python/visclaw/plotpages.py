@@ -651,7 +651,7 @@ def plotclaw2kml(plotdata):
     zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w')
 
     # --------------------- Set initial view --------------------------
-    user_view = False
+    first_found = False
     for i,figname in enumerate(plotdata._fignames):
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -662,8 +662,10 @@ def plotclaw2kml(plotdata):
         if not plotfigure.use_for_kml:
             continue
 
+        print "i = %d" % i
+
         # Get a view that is used when GE first loads.
-        if plotfigure.kml_use_for_initial_view or i == 0:
+        if plotfigure.kml_use_for_initial_view or not first_found:
             x1 = plotfigure.kml_xlimits[0]
             x2 = plotfigure.kml_xlimits[1]
             y1 = plotfigure.kml_ylimits[0]
@@ -684,12 +686,12 @@ def plotclaw2kml(plotdata):
                 KML.range(initial_height))   # in meters?
 
             doc.Document.append(deepcopy(initial_view))
-            user_view = True
+            first_found = True
             break
 
-    if not user_view:
-        print "KML ===> No figure has been set as the initial view.  The first KML "\
-            "figure will be used.  Set plotfigure.kml_use_for_initial_view.\n"
+    #if not user_view:
+    #    print "KML ===> No figure has been set as the initial view.  The first KML "\
+    #        "figure will be used.  Set plotfigure.kml_use_for_initial_view.\n"
 
     # ------------------- Loop over figures ----------------------
 
