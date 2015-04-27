@@ -644,7 +644,6 @@ def plotclaw2kml(plotdata):
     doc = KML.kml(
         KML.Document(
             KML.name(plotdata.kml_name),
-            ATOM.author("Donna Calhoun"),
             KML.open(1)))
 
     # Open main zip file
@@ -661,8 +660,6 @@ def plotclaw2kml(plotdata):
 
         if not plotfigure.use_for_kml:
             continue
-
-        print "i = %d" % i
 
         # Get a view that is used when GE first loads.
         if plotfigure.kml_use_for_initial_view or not first_found:
@@ -686,8 +683,9 @@ def plotclaw2kml(plotdata):
                 KML.range(initial_height))   # in meters?
 
             doc.Document.append(deepcopy(initial_view))
+            # we found something;  any other figures will have to have 'use_for_initial_view'
+            # set to override this view.
             first_found = True
-            break
 
     #if not user_view:
     #    print "KML ===> No figure has been set as the initial view.  The first KML "\
@@ -695,7 +693,6 @@ def plotclaw2kml(plotdata):
 
     # ------------------- Loop over figures ----------------------
 
-    basehref = "<base href=\"%s\">" % os.path.join('..','..','images','')  # need trailing "\"
     fig_folder = KML.Folder(
         KML.name("Figures"),
         KML.open(1))
@@ -857,7 +854,7 @@ def plotclaw2kml(plotdata):
         lstr = os.path.join(fig_dir,"doc.kml")
         fig_folder.append(
             KML.NetworkLink(
-                KML.name(figname),
+                KML.name("%s (%d)" % (figname,figno)),
                 KML.visibility(fig_vis),
                 KML.Link(
                     KML.href(lstr))))
@@ -1563,7 +1560,13 @@ def plotclaw2kml(plotdata):
     # Top level KML file
     docfile = open("doc.kml",'w')
     docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-    docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+
+    kml_text = etree.tostring(etree.ElementTree(doc),pretty_print=True)
+    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
+    kml_text = kml_text.replace("&lt;","<")
+    docfile.write(kml_text)
+
+    #docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
     docfile.close()
 
     # Store this in the zip file and remove it.
