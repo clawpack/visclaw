@@ -41,7 +41,7 @@ lightblue = [0.31, 0.39, 0.60]    ## #4E6498 (also used in the computational dom
 # Colormaps
 TSUNAMI_MAX_AMPLITUDE = 0.6
 googleearth_lightblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
-                                                 0.0:lightblue,
+                                                 0.0:"#4E6498",
                                                  TSUNAMI_MAX_AMPLITUDE:red_a})
 
 googleearth_darkblue = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
