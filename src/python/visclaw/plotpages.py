@@ -617,7 +617,7 @@ def plotclaw2kml(plotdata):
     if numframes == 1:
         frameno = framenos[0]
         t1 = frametimes[frameno]
-        t2 = t1 + 1  # Add 1 second so final figure shows up
+        t2 = t1 + 5  # Add time second so final figure shows up
         sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
 
         # To be used below
@@ -631,7 +631,11 @@ def plotclaw2kml(plotdata):
             if i < numframes-1:
                 t2 = frametimes[framenos[i+1]]
             else:
-                t2 = t1 + 1   # Add 1 second so that the final figure shows up
+                # We could add 1 seconod at the end, or more time, depending on what
+                # effect is desired. In any case, the time span can't be empty or the
+                # last figure won't show up.
+                dt = (frametimes[framenos[numframes-1]] - frametimes[framenos[0]])/numframes
+                t2 = t1 + dt   # Add enough time for looping through animations
 
             sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
 
@@ -683,13 +687,10 @@ def plotclaw2kml(plotdata):
                 KML.range(initial_height))   # in meters?
 
             doc.Document.append(deepcopy(initial_view))
-            # we found something;  any other figures will have to have 'use_for_initial_view'
-            # set to override this view.
-            first_found = True
 
-    #if not user_view:
-    #    print "KML ===> No figure has been set as the initial view.  The first KML "\
-    #        "figure will be used.  Set plotfigure.kml_use_for_initial_view.\n"
+            # we found something;  any other figures will have to have
+            # 'kml_use_for_initial_view' set to override this view.
+            first_found = True
 
     # ------------------- Loop over figures ----------------------
 
@@ -843,7 +844,7 @@ def plotclaw2kml(plotdata):
             lstr = os.path.join(fname_str,'doc.kml')
             doc_fig.Document.Folder.append(
                 KML.NetworkLink(
-                    KML.name("Frame %d" % frameno),  # CDATA here formats snippet, not the balloon
+                    KML.name("Frame %d" % frameno),
                     KML.Snippet(snippet_str,maxLines="2"),
                     KML.description(desc_str),
                     deepcopy(TS[i]),
@@ -859,7 +860,8 @@ def plotclaw2kml(plotdata):
                 KML.Link(
                     KML.href(lstr))))
 
-        fig_vis = 0
+        fig_vis = 0   # All figures referenced after the first one will not be shown
+                      # when first loading GE.
 
 
         # -------------- add colorbar image file -----------------
@@ -887,15 +889,20 @@ def plotclaw2kml(plotdata):
                 KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
 
             doc_fig.Document.append(colorbar)
+            # -----  Done with colorbar ------
 
-        # write out doc.kml file in figure directory
+        # ------------------ done with fig<N>/doc.kml file ------------------
         fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
         fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+        # In case we used CDATA in any snippets or descriptions.  For some reason
+        # <tags> get converted to &gt;tags&lt;, which balloons don't translate.
         kml_text = etree.tostring(etree.ElementTree(doc_fig),pretty_print=True)
         kml_text = kml_text.replace("&gt;",">")
         kml_text = kml_text.replace("&lt;","<")
         fig_file.write(kml_text)
         fig_file.close()
+        # Done with fig<n>/doc.kml file
 
 
         # Clean up everything in the figure directory
@@ -904,7 +911,6 @@ def plotclaw2kml(plotdata):
             for filename in files:
                 zip.write(os.path.join(dirname, filename))
 
-        #zip.write(fig_dir)
         shutil.rmtree(fig_dir)
 
 
@@ -1051,7 +1057,7 @@ def plotclaw2kml(plotdata):
                 shutil.copy(gauge_pngfile[k],img_dir)
 
 
-# ----------------- Add a region for the computational domain ----------
+    # ----------------- Add a region for the computational domain ----------
 
     # Top level regions.kml file
     doc_regions = KML.kml(KML.Document())
@@ -1166,7 +1172,7 @@ def plotclaw2kml(plotdata):
         placemark_folder.append(placemark)
 
     print " "
-    # Create regions remaining regions
+    # Create regions for remaining regions specifed in regions.data
     try:
         f = open(os.path.join(plotdata.outdir,"regions.data"),'r')
     except:
@@ -1266,7 +1272,7 @@ def plotclaw2kml(plotdata):
                 for x in [x1,x2]:
                     lv.append(x + 360)
             else:
-                lv = [x1,x2]   # This seems to be okay, even if [x1,x2] are on either sides of 180...
+                lv = [x1,x2]   # Also okay if [x1,x2] straddle 180 or -180
 
             longitude = lv
 
@@ -1347,11 +1353,10 @@ def plotclaw2kml(plotdata):
     print " "
     print "KML ===> Creating file %s" % level_kml_file
 
-    # Read past comments;  last 'l' is blank line
     try:
         f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
     except:
-        # Nothing terrible happens;  we just set maxlevels
+        # Nothing terrible happens;  we just set maxlevels to some large value
         maxlevels = 10
     else:
         # read past comments - last line is blank
@@ -1364,8 +1369,8 @@ def plotclaw2kml(plotdata):
         ainfo = np.fromstring(a.strip(),sep=' ')
         maxlevels = int(ainfo[0])  # Hopefully, got this right
 
-    plotdata.set_outdirs()  # set _outdirs attribute to be list of
-    # all outdirs for all items
+    # set _outdirs attribute to be list of all outdirs for all items
+    plotdata.set_outdirs()
 
     level_dir = "levels"
     shutil.rmtree(level_dir,True)
@@ -1397,7 +1402,7 @@ def plotclaw2kml(plotdata):
         # Styles for levels
         styles.append(KML.Style(
             KML.LineStyle(
-                KML.color(colors[i % len(colors)]),
+                KML.color(colors[i % len(colors)]),   # cycle through colors
                 KML.width(width)),
             KML.PolyStyle(KML.color("00000000")),
             id="patchborder"))
@@ -1603,8 +1608,7 @@ def plotclaw2kml(plotdata):
         print " "
 
     print "KML ===> Done creating files for Google Earth.  Open " \
-        "%s.kmz in the Google Earth browser" %\
-        plotdata.kml_index_fname
+        "%s.kmz in the Google Earth browser" % plotdata.kml_index_fname
     print " "
     os.chdir(startdir)
 
