@@ -231,6 +231,8 @@ class ClawPlotData(clawdata.ClawData):
             framesoln = self.framesoln_dict[key]
 
         return framesoln
+
+
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.

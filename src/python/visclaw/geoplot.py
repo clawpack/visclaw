@@ -2,10 +2,11 @@
 Useful things for plotting GeoClaw results.
 """
 
+import numpy
+
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
 from clawpack.geoclaw import topotools
-from numpy import ma
 
 
 # Colormaps from geoclaw
@@ -152,7 +153,6 @@ water_colors = tsunami_colormap
 
 drytol_default = 1.e-3
 
-
 def topo(current_data):
    """
    Return topography = eta - h.
@@ -164,39 +164,40 @@ def topo(current_data):
    topo = eta - h
    return topo
 
+
 def land(current_data):
    """
    Return a masked array containing the surface elevation only in dry cells.
    """
-   from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
    h = q[0,:,:]
    eta = q[3,:,:]
-   land = ma.masked_where(h>drytol, eta)
+   land = numpy.ma.masked_where(h>drytol, eta)
    return land
+
 
 def water(current_data):
    """Deprecated: use surface instead."""
    raise DeprecationWarning("Deprecated function, use surface instead.")
-   from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
    h = q[0,:,:]
    eta = q[3,:,:]
-   water = ma.masked_where(h<=drytol, eta)
+   water = numpy.ma.masked_where(h<=drytol, eta)
    return water
+
 
 def depth(current_data):
    """
    Return a masked array containing the depth of fluid only in wet cells.
    """
-   from numpy import ma
    drytol = getattr(current_data.user, 'drytol', drytol_default)
    q = current_data.q
    h = q[0,:,:]
-   depth = ma.masked_where(h<=drytol, h)
+   depth = numpy.ma.masked_where(h<=drytol, h)
    return depth
+
 
 def surface(current_data):
     """
@@ -204,19 +205,19 @@ def surface(current_data):
     Surface is eta = h+topo, assumed to be output as 4th column of fort.q
     files.
     """
-    from numpy import ma
     drytol = getattr(current_data.user, 'drytol', drytol_default)
     q = current_data.q
     h = q[0,:,:]
     eta = q[3,:,:]
 
-    water = ma.masked_where(h <= drytol,eta)
+    water = numpy.ma.masked_where(h <= drytol,eta)
 
     # Mask covered coarse regions
     m = current_data.mask_coarse
-    water = ma.masked_where(m, eta)
+    water = numpy.ma.masked_where(m, eta)
 
     return water
+
 
 def surface_or_depth(current_data):
     """
@@ -226,7 +227,7 @@ def surface_or_depth(current_data):
     Surface is eta = h+topo, assumed to be output as 4th column of fort.q
     files.
     """
-    from numpy import ma, where
+    
     drytol = getattr(current_data.user, 'drytol', drytol_default)
     q = current_data.q
     h = q[0,:,:]
@@ -239,11 +240,12 @@ def surface_or_depth(current_data):
     # surface_or_depth = where(topo<0, surface, depth)
 
     # With this version, the land is transparent.
-    surface_or_depth = ma.masked_where(h <= drytol,where(topo<0,eta,h))
+    surface_or_depth = numpy.ma.masked_where(h <= drytol, 
+                                             numpy.where(topo<0, eta, h))
 
     # Mask covered coarse regions
     m = current_data.mask_coarse
-    surface_or_depth = ma.masked_where(m,surface_or_depth)
+    surface_or_depth = numpy.ma.masked_where(m, surface_or_depth)
 
     return surface_or_depth
 
@@ -428,15 +430,16 @@ def plot_topo_file(topoplotdata):
 
     return topodata
 
-def kml_build_colorbar(cb_filename,cmap,cmin,cmax):
 
-    from matplotlib import pyplot
+def kml_build_colorbar(cb_filename, cmap, cmin, cmax):
+
+    import matplotlib.pyplot as plt
     import matplotlib as mpl
 
-    fig = pyplot.figure(figsize=(0.8,3))
+    fig = plt.figure(figsize=(0.8,3))
     ax1 = fig.add_axes([0.1, 0.075, 0.25, 0.85])
     tick = ax1.yaxis.get_major_ticks()
-    pyplot.tick_params(axis='y', which='major', labelsize=8)
+    plt.tick_params(axis='y', which='major', labelsize=8)
 
     norm = mpl.colors.Normalize(vmin=cmin,vmax=cmax)
 
@@ -444,4 +447,4 @@ def kml_build_colorbar(cb_filename,cmap,cmin,cmax):
                                     norm=norm,
                                     orientation='vertical')
     # This is called from plotpages, in <plotdir>.
-    pyplot.savefig(cb_filename,Transparent=True)
+    plt.savefig(cb_filename,Transparent=True)

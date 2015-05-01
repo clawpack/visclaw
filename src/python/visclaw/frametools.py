@@ -179,25 +179,13 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                 current_data.add_attribute('framesoln',framesoln)
 
-                #print "+++ Looping over patches in outdir = ",outdirs[i]
-
                 # loop over patches:
                 # ----------------
 
                 # Mask out covered coarse grid regions.
                 for stateno,state in enumerate(framesoln.states):
-                    #print '+++ stateno = ',stateno
-                    patch = state.patch
-
-
-                    # From pyclaw/src/pyclaw/state.py : A 'state' is an array of
-                    # values (stored as [mq,i,j], mq = field.
-                    # self.q   = self.new_array(num_eqn)
-                    # self.aux = self.new_array(num_aux)
-
 
                     patch = state.patch
-
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute("level",1)
@@ -213,7 +201,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     # Mask out all coarse grid regions that are under fine grids
                     # This could be made into a subroutine
                     # -------------------------------------------------------------
-                    import numpy as np
                     this_level = patch.level
 
                     xc_centers,yc_centers = patch.grid.c_centers
@@ -450,7 +437,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 #==================================================================
     """
     Make a 1d plot for a single plot item for the solution in framesoln.
-m
+
     The current_data object holds data that should be passed into
     afterpatch or afteraxes if these functions are defined.  The functions
     may add to this object, so this function should return the possibly
