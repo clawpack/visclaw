@@ -115,7 +115,7 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
 
     lhs_dict = colormaps[0]._segmentdata
     rhs_dict = colormaps[1]._segmentdata
-    new_dict = dict(red=[], green=[], blue=[])
+    new_dict = dict(red=[], green=[], blue=[], alpha=[])
 
     # Scale rhs by half
     for key in rhs_dict:
