@@ -203,6 +203,9 @@ def surface_or_depth(current_data):
 
 
 class TopoPlotData(object):
+
+    raise DeprecationWarning("This object is being deprecated in favor of the",
+                             " Topography class in clawpack.geoclaw.topotools.")
     def __init__(self, fname):
         self.fname = fname 
         self.topotype = 3
@@ -231,6 +234,10 @@ def plot_topo_file(topoplotdata):
     """
     Read in a topo or bathy file and produce a pcolor map.
     """
+
+    raise DeprecationWarning("This function is being deprecated in favor of the",
+                             " Topography class in clawpack.geoclaw.topotools "
+                             "and plotting tools associated with it.")
 
     import os
     import pylab
