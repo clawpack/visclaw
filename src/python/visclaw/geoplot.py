@@ -2,6 +2,8 @@
 Useful things for plotting GeoClaw results.
 """
 
+import warnings
+
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize 
 from clawpack.geoclaw import topotools
@@ -204,9 +206,10 @@ def surface_or_depth(current_data):
 
 class TopoPlotData(object):
 
-    raise DeprecationWarning("This object is being deprecated in favor of the",
-                             " Topography class in clawpack.geoclaw.topotools.")
     def __init__(self, fname):
+        deprecation_msg = "This object is being deprecated in favor of the " + \
+                          "Topography class in clawpack.geoclaw.topotools."
+        warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
         self.fname = fname 
         self.topotype = 3
         self.neg_cmap = None
@@ -235,9 +238,10 @@ def plot_topo_file(topoplotdata):
     Read in a topo or bathy file and produce a pcolor map.
     """
 
-    raise DeprecationWarning("This function is being deprecated in favor of the",
-                             " Topography class in clawpack.geoclaw.topotools "
-                             "and plotting tools associated with it.")
+    deprecation_msg = "This function is being deprecated in favor of the " + \
+                      "Topography class in clawpack.geoclaw.topotools and " + \
+                      "plotting tools associated with it."
+    warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
 
     import os
     import pylab
