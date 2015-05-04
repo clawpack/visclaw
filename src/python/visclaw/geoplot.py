@@ -209,7 +209,9 @@ class TopoPlotData(object):
     def __init__(self, fname):
         deprecation_msg = "This object is being deprecated in favor of the " + \
                           "Topography class in clawpack.geoclaw.topotools."
+        warnings.filterwarnings('default', category=DeprecationWarning)
         warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
+        warnings.resetwarnings()
         self.fname = fname 
         self.topotype = 3
         self.neg_cmap = None
@@ -241,7 +243,9 @@ def plot_topo_file(topoplotdata):
     deprecation_msg = "This function is being deprecated in favor of the " + \
                       "Topography class in clawpack.geoclaw.topotools and " + \
                       "plotting tools associated with it."
+    warnings.filterwarnings('default', category=DeprecationWarning)
     warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
+    warnings.resetwarnings()
 
     import os
     import pylab
