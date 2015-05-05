@@ -399,7 +399,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 if figno in kml_fignos:
                     printfig(frameno=frameno, figno=figno, \
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                             verbose=verbose,kml_fig=True,kml_dpi=plotfigure.kml_dpi)
+                             verbose=verbose,kml_fig=True,kml_dpi=plotfigure.kml_dpi,
+                             kml_size_inches=plotfigure.kml_size_inches)
                 else:
                     printfig(frameno=frameno, figno=figno, \
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
@@ -978,7 +979,7 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True, kml_fig=False, kml_dpi=None):
+             verbose=True, kml_fig=False, kml_dpi=None, kml_size_inches=None):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1011,6 +1012,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         fig = plt.gcf()
         fig.patch.set_alpha(0)
         a = fig.gca()
+        a.set_position([0.,0.,1.0,1.0])
         a.set_frame_on(False)
 
         # These have to be turned off explicitly so the plot doesn't have any padding.
@@ -1018,6 +1020,8 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         a.set_yticks([])
 
         plt.axis('off')
+        if kml_size_inches is not None:
+            fig.set_size_inches(kml_size_inches[0],kml_size_inches[1])
         plt.savefig(fname, transparent=True, bbox_inches='tight', \
                       pad_inches=0,dpi=kml_dpi)
     else:
