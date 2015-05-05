@@ -54,10 +54,9 @@ googleearth_white = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
                                                 TSUNAMI_MAX_AMPLITUDE:red_a})
 
 
-TSUNAMI_MAX_AMPLITUDE = 0.6
-googleearth_transparent = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue_a,
+googleearth_transparent = colormaps.make_colormap({-1.0:blue_a,
                                                 0.0:transparent,
-                                                TSUNAMI_MAX_AMPLITUDE:red_a})
+                                                1.0:red_a})
 
 tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,
