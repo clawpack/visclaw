@@ -806,7 +806,7 @@ def plotclaw2kml(plotdata):
                 arg_list = ["gdal2tiles.py", \
                             "--profile=geodetic", \
                             "--force-kml", \
-                            "--resampling=cubic", \
+                            "--resampling=near", \
                             "%s.vrt" % (fname_str)]
 
                 retval = retval or subprocess.call(arg_list)
@@ -1129,7 +1129,7 @@ def plotclaw2kml(plotdata):
             for x in [x1,x2]:
                 lv.append(x + 360)
         else:
-            lv = [x1,x2]   # Not quite sure why this works in the case when x1,x2 cross 180 ...
+            lv = [x1,x2]   # Doesn't work for regions that straddle +/- 180.
 
         longitude = lv
 
@@ -1211,7 +1211,7 @@ def plotclaw2kml(plotdata):
         # the 'text' tag will replace Placemark description
         balloon_text = KML.text("<![CDATA[%s]]>" % btext)
 
-        width = 2
+        width = 1
         box_color = "FFFFFFFF"
 
         # Now start creating real regions.
@@ -1246,7 +1246,7 @@ def plotclaw2kml(plotdata):
                     KML.LineStyle(
                         KML.color(box_color),
                         KML.width(width)),
-                    KML.PolyStyle(KML.color("00000000")),
+                    KML.PolyStyle(KML.color("000000")),
                     KML.BalloonStyle(deepcopy(balloon_text)),
                     id=pathstr))
 
@@ -1386,7 +1386,7 @@ def plotclaw2kml(plotdata):
 
     # Color scheme to use for level patch borders.
     colors = black
-    width = 2
+    width = 1
 
     # Create high level 'levels.kml' file
     level_files = []
@@ -1462,10 +1462,21 @@ def plotclaw2kml(plotdata):
                 # maxlevel_real should start at 0 so it can be used for indexing
                 maxlevel_real = max(level,maxlevel_real)
 
+                lv = []
+                if xlower > 180:
+                    for x in [xlower,xupper]:
+                        lv.append(x - 360)
+                elif xupper < -180:
+                    for x in [xlower,xupper]:
+                        lv.append(x + 360)
+                else:
+                    # Not quite sure why this works in the case when x1,x2 cross 180 ...
+                    lv = [xlower,xupper]
+
                 mapping = {}
-                mapping["x1"] = xlower
+                mapping["x1"] = lv[0]
                 mapping["y1"] = ylower
-                mapping["x2"] = xupper
+                mapping["x2"] = lv[1]
                 mapping["y2"] = yupper
                 mapping["elev"] = 0
 
