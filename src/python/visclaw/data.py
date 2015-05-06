@@ -88,7 +88,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
-        self.add_attribute('kml',True)                # make kml plots and a kml file for figures
+        self.add_attribute('kml',False)                # make kml plots and a kml file for figures
         self.add_attribute('kml_index_fname','_GoogleEarth')   # name of html index file
         self.add_attribute('kml_publish',None)
         self.add_attribute('kml_name',"GeoClaw")
