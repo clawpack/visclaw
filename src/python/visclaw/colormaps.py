@@ -70,7 +70,7 @@ def make_colormap(color_list):
     cmap_dict['red'] = [(x0[i],R[i],R[i]) for i in range(len(R))]
     cmap_dict['green'] = [(x0[i],G[i],G[i]) for i in range(len(G))]
     cmap_dict['blue'] = [(x0[i],B[i],B[i]) for i in range(len(B))]
-    cmap_dict['alpha'] = [(x0[i],A[i],A[i]) for i in range(len(B))]
+    cmap_dict['alpha'] = [(x0[i],A[i],A[i]) for i in range(len(A))]
     mymap = colors.LinearSegmentedColormap('mymap',cmap_dict)
     return mymap
 
@@ -124,6 +124,9 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
         for val in val_list:
             new_dict[key].append((val[0] * break_location, val[1], val[2]))
 
+    if 'alpha' not in rhs_dict.keys():
+        new_dict['alpha'].append((0,1.0,1.0))
+
     # Append lhs
     for key in lhs_dict:
         val_list = lhs_dict[key]
@@ -131,6 +134,11 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
         for val in val_list:
             new_dict[key].append((break_location + val[0] * \
                                     (1.0 - break_location), val[1], val[2]))
+
+    if 'alpha' not in lhs_dict.keys():
+            new_dict['alpha'].append((1.0,1.0,1.0))
+
+
 
     N = 256
     gamma = 1.0

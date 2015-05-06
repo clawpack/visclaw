@@ -635,6 +635,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_tile_images',False)
         self.add_attribute('kml_colorbar',None)
         self.add_attribute('kml_use_for_initial_view',False)
+        self.add_attribute('kml_figsize',None)    # Figure size;  specify to get rid of aliasing
         self._next_AXES = 0
 
     def new_plotaxes(self, name=None, type='each_frame'):
