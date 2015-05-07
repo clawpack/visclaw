@@ -2,6 +2,7 @@
 Useful things for plotting GeoClaw results.
 """
 
+import numpy
 import warnings
 
 from clawpack.visclaw import colormaps
