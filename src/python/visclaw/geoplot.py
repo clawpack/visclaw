@@ -2,7 +2,7 @@
 Useful things for plotting GeoClaw results.
 """
 
-import numpy
+import warnings
 
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
@@ -226,7 +226,7 @@ def surface_or_depth(current_data):
     Surface is eta = h+topo, assumed to be output as 4th column of fort.q
     files.
     """
-    
+
     drytol = getattr(current_data.user, 'drytol', drytol_default)
     q = current_data.q
     h = q[0,:,:]
@@ -239,7 +239,7 @@ def surface_or_depth(current_data):
     # surface_or_depth = where(topo<0, surface, depth)
 
     # With this version, the land is transparent.
-    surface_or_depth = numpy.ma.masked_where(h <= drytol, 
+    surface_or_depth = numpy.ma.masked_where(h <= drytol,
                                              numpy.where(topo<0, eta, h))
 
     # Mask covered coarse regions
@@ -250,7 +250,13 @@ def surface_or_depth(current_data):
 
 
 class TopoPlotData(object):
+
     def __init__(self, fname):
+        deprecation_msg = "This object is being deprecated in favor of the " + \
+                          "Topography class in clawpack.geoclaw.topotools."
+        warnings.filterwarnings('default', category=DeprecationWarning)
+        warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
+        warnings.resetwarnings()
         self.fname = fname
         self.topotype = 3
         self.neg_cmap = None
@@ -278,6 +284,13 @@ def plot_topo_file(topoplotdata):
     """
     Read in a topo or bathy file and produce a pcolor map.
     """
+
+    deprecation_msg = "This function is being deprecated in favor of the " + \
+                      "Topography class in clawpack.geoclaw.topotools and " + \
+                      "plotting tools associated with it."
+    warnings.filterwarnings('default', category=DeprecationWarning)
+    warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
+    warnings.resetwarnings()
 
     import os
     import pylab
