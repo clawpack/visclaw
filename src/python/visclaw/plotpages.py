@@ -764,7 +764,10 @@ def plotclaw2kml(plotdata):
 
                 shutil.rmtree(fname_str,True)  # remove directory and ignore errors
                 os.mkdir(fname_str)
-                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+
+                # PNG file gets moved into subdirectory and will eventually be
+                # zipped into KMZ file.
+                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
@@ -782,7 +785,7 @@ def plotclaw2kml(plotdata):
 
                 os.chdir(fig_dir)
                 pngfile = os.path.join("..","%s.png"% fname_str)
-                shutil.copy(pngfile,".")
+                shutil.move(pngfile,".")
                 im = plt.imread("%s.png" % fname_str)
                 sx = im.shape[1]   # reversed?
                 sy = im.shape[0]
@@ -816,9 +819,12 @@ def plotclaw2kml(plotdata):
                 # Change back to top level directory before adding zipped files
                 os.chdir("..")
 
-                # Add the <fname>.vrt file to zipped file
+                # Add the <fname>.vrt file to zipped file. Remove
+                # figure PNG file
                 zip.write(os.path.join(fig_dir,"%s.vrt" % fname_str))
-                os.remove(os.path.join(fig_dir,"%s.png" % fname_str))
+
+                # Leave the PNG file in the KMZ file?
+                # os.remove(os.path.join(fig_dir,"%s.png" % fname_str))
 
                 # Clean up files
                 os.remove(os.path.join(fig_dir,"%s_tmp.vrt" % fname_str))
