@@ -587,8 +587,6 @@ def plotclaw2kml(plotdata):
     if plotdata.gauges_fignos is not None:
         plotdata = massage_gauges_data(plotdata)
         gauge_pngfile = plotdata._gauge_pngfile
-        #gauge_htmlfile = plotdata._gauge_htmlfile
-        #gauge_allfigsfile = plotdata._gauge_allfigsfile
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
@@ -2992,7 +2990,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # print out pointers to html index page:
     path_to_html_index = os.path.join(os.path.abspath(plotdata.plotdir), \
                                plotdata.html_index_fname)
-    print_html_pointers(path_to_html_index)
+    if plotdata.html:
+        print_html_pointers(path_to_html_index)
 
 
 
