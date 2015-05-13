@@ -726,6 +726,12 @@ def plotclaw2kml(plotdata):
         ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
         lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
 
+        # Shift so plots that cross the 180 meridian, rather than the -180 Meridian
+        if ul[0] < -180:
+            ul[0] = ul[0] + 360
+            ur[0] = ur[0] + 360
+            lr[0] = lr[0] + 360
+
         # ------------------- Loop over frames ----------------------
         # This will get created for each figure, but I need it
         # for createing the level boxes around each patch
