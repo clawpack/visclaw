@@ -211,9 +211,12 @@ def surface(current_data):
 
     water = numpy.ma.masked_where(h <= drytol,eta)
 
-    # Mask covered coarse regions
-    m = current_data.mask_coarse
-    water = numpy.ma.masked_where(m, eta)
+    try:
+        # Use mask covering coarse regions if it's set:
+        m = current_data.mask_coarse
+        water = numpy.ma.masked_where(m, water)
+    except:
+        pass
 
     return water
 
@@ -242,9 +245,12 @@ def surface_or_depth(current_data):
     surface_or_depth = numpy.ma.masked_where(h <= drytol,
                                              numpy.where(topo<0, eta, h))
 
-    # Mask covered coarse regions
-    m = current_data.mask_coarse
-    surface_or_depth = numpy.ma.masked_where(m, surface_or_depth)
+    try:
+        # Use mask covering coarse regions if it's set:
+        m = current_data.mask_coarse
+        surface_or_depth = numpy.ma.masked_where(m, surface_or_depth)
+    except:
+        pass
 
     return surface_or_depth
 
