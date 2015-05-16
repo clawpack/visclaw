@@ -182,7 +182,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
-                # Mask out covered coarse grid regions.
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
@@ -197,47 +196,51 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
 
-                    # -------------------------------------------------------------
-                    # Mask out all coarse grid regions that are under fine grids
-                    # This could be made into a subroutine
-                    # -------------------------------------------------------------
-                    this_level = patch.level
-
-                    xc_centers,yc_centers = patch.grid.c_centers
-                    mask_coarse = np.empty(xc_centers.shape, dtype=bool)
-                    mask_coarse.fill(False)
-
-                    # iterate over all grids to see which one masks this grid
-                    for stateno_fine,state_fine in enumerate(framesoln.states):
-                        # iterate over all patches, and find any finer level grids that are
-                        # sitting on top of this patch/grid/state.
-                        patch_fine = state_fine.patch
-
-                        # Only look at patches one level finer
-                        if patch_fine.level != this_level+1:
-                            continue
-
-                        xlower_fine = patch_fine.dimensions[0].lower
-                        xupper_fine = patch_fine.dimensions[0].upper
-                        ylower_fine = patch_fine.dimensions[1].lower
-                        yupper_fine = patch_fine.dimensions[1].upper
-
-                        m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
-                        m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
-
-                        # Mask all fine grid regions
-                        mask_coarse = (m1 & m2) | mask_coarse
-
-                    current_data.add_attribute('mask_coarse',mask_coarse)
-                    # -------------------------------------------------------------
-                    # Done with masking
-                    # -------------------------------------------------------------
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('ylower',patch.dimensions[1].lower)
                         current_data.add_attribute('yupper',patch.dimensions[1].upper)
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])
+            
+                    if plotfigure.use_for_kml:
+
+                        # -------------------------------------------------------------
+                        # Mask out all coarse grid regions that are under fine grids
+                        # This could be made into a subroutine
+                        # -------------------------------------------------------------
+                        this_level = patch.level
+
+                        xc_centers,yc_centers = patch.grid.c_centers
+                        mask_coarse = np.empty(xc_centers.shape, dtype=bool)
+                        mask_coarse.fill(False)
+
+                        # iterate over all grids to see which one masks this grid
+                        for stateno_fine,state_fine in enumerate(framesoln.states):
+                            # iterate over all patches, and find any finer level grids that are
+                            # sitting on top of this patch/grid/state.
+                            patch_fine = state_fine.patch
+
+                            # Only look at patches one level finer
+                            if patch_fine.level != this_level+1:
+                                continue
+
+                            xlower_fine = patch_fine.dimensions[0].lower
+                            xupper_fine = patch_fine.dimensions[0].upper
+                            ylower_fine = patch_fine.dimensions[1].lower
+                            yupper_fine = patch_fine.dimensions[1].upper
+
+                            m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
+                            m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
+
+                            # Mask all fine grid regions
+                            mask_coarse = (m1 & m2) | mask_coarse
+
+                        current_data.add_attribute('mask_coarse',mask_coarse)
+                        # -------------------------------------------------------------
+                        # Done with masking
+                        # -------------------------------------------------------------
+
 
                     # loop over items:
                     # ----------------
