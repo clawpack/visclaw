@@ -55,6 +55,9 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     for outdir in plotdata._outdirs:
         framesolns.append(plotdata.getframe(frameno, outdir, refresh=refresh))
 
+
+    # It seems that 'current_data', returned from plot_frame,
+    # doesn't get used at all.
     plot_frame(framesolns, plotdata, frameno,verbose=verbose)
 
 
@@ -68,7 +71,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     proper space dimension.  Framesolns is a list of solutions at the same time
     but usually from different output directories.
     """
-        
+
     if type(framesolns) is not list:
         framesolns = [framesolns]
 
@@ -86,7 +89,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     current_data.add_attribute('plotaxes',None)
     current_data.add_attribute('plotfigure',None)
 
-    # call beforeframe if present, which might define additional 
+    # call beforeframe if present, which might define additional
     # attributes in current_data or otherwise set up plotting for this
     # frame.
     beforeframe =  getattr(plotdata, 'beforeframe', None)
@@ -95,35 +98,39 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
     # iterate over each single plot that makes up this frame:
     # -------------------------------------------------------
- 
+
     if plotdata.mode() == 'iplotclaw':
         plt.ion()
         print '    Plotting Frame %s at t = %s' % (frameno,t)
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
+
     plotted_fignos = []
+    kml_fignos = []
 
     plotdata = set_show(plotdata)   # set _show attributes for which figures
                                     # and axes should be shown.
 
-    # loop over figures to appear for this frame: 
+    # loop over figures to appear for this frame:
     # -------------------------------------------
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if (not plotfigure._show) or (plotfigure.type != 'each_frame'):
-            continue  # skip to next figure 
+            continue  # skip to next figure
 
         figno = plotfigure.figno
         if (requested_fignos != 'all') and (figno not in requested_fignos):
             continue # skip to next figure
 
         plotted_fignos.append(figno)
+        if plotfigure.use_for_kml:
+            kml_fignos.append(figno)
 
         if not plotfigure.kwargs.has_key('facecolor'):
             # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'   
+            plotfigure.kwargs['facecolor'] = '#ffeebb'
 
         # create figure and set handle:
         plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
@@ -156,8 +163,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             current_data.plotfigure = plotaxes._plotfigure
 
 
-            # NOTE: This was rearranged December 2009 to 
-            # loop over patches first and then over plotitems so that 
+            # NOTE: This was rearranged December 2009 to
+            # loop over patches first and then over plotitems so that
             # finer patches will plot over coarser patches of other items.
             # Needed in particular if masked arrays are used, e.g. if
             # two different items do pcolor plots with different color maps
@@ -172,14 +179,12 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                 current_data.add_attribute('framesoln',framesoln)
 
-                #print "+++ Looping over patches in outdir = ",outdirs[i]
-
                 # loop over patches:
                 # ----------------
-    
+
+                # Mask out covered coarse grid regions.
                 for stateno,state in enumerate(framesoln.states):
-                    #print '+++ stateno = ',stateno
-                    state = framesoln.states[stateno]
+
                     patch = state.patch
 
                     current_data.add_attribute('patch',patch)
@@ -188,9 +193,45 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     current_data.add_attribute('aux',state.aux)
                     current_data.add_attribute('xlower',patch.dimensions[0].lower)
                     current_data.add_attribute('xupper',patch.dimensions[0].upper)
-                    
+
                     current_data.add_attribute("x",patch.grid.p_centers[0])
                     current_data.add_attribute("dx",patch.delta[0])
+
+                    # -------------------------------------------------------------
+                    # Mask out all coarse grid regions that are under fine grids
+                    # This could be made into a subroutine
+                    # -------------------------------------------------------------
+                    this_level = patch.level
+
+                    xc_centers,yc_centers = patch.grid.c_centers
+                    mask_coarse = np.empty(xc_centers.shape, dtype=bool)
+                    mask_coarse.fill(False)
+
+                    # iterate over all grids to see which one masks this grid
+                    for stateno_fine,state_fine in enumerate(framesoln.states):
+                        # iterate over all patches, and find any finer level grids that are
+                        # sitting on top of this patch/grid/state.
+                        patch_fine = state_fine.patch
+
+                        # Only look at patches one level finer
+                        if patch_fine.level != this_level+1:
+                            continue
+
+                        xlower_fine = patch_fine.dimensions[0].lower
+                        xupper_fine = patch_fine.dimensions[0].upper
+                        ylower_fine = patch_fine.dimensions[1].lower
+                        yupper_fine = patch_fine.dimensions[1].upper
+
+                        m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
+                        m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
+
+                        # Mask all fine grid regions
+                        mask_coarse = (m1 & m2) | mask_coarse
+
+                    current_data.add_attribute('mask_coarse',mask_coarse)
+                    # -------------------------------------------------------------
+                    # Done with masking
+                    # -------------------------------------------------------------
 
                     if patch.num_dim == 2:
                         current_data.add_attribute('ylower',patch.dimensions[1].lower)
@@ -200,7 +241,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     # loop over items:
                     # ----------------
-    
+
                     for itemname in plotaxes._itemnames:
 
                         plotitem = plotaxes.plotitem_dict[itemname]
@@ -231,10 +272,10 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                             elif num_dim == 2:
                                 plotitem_fun = plotitem2
                             current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
-    
-                            if verbose:  
+
+                            if verbose:
                                 print '      Plotted  plotitem ', itemname
-    
+
                     # end of loop over plotitems
                 # end of loop over patches
             # end of loop over framesolns
@@ -247,7 +288,10 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** use ClawPlotAxes.afteraxes "
                     print "*** or  ClawPlotItem.afterpatch instead"
                 try:
-                    if plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
+                    if plotfigure.use_for_kml:
+                        # Build colorbar for Google Earth (now done in setplot.py)
+                        pass
+                    elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
                         cbar = plt.colorbar(pobj, \
                                      shrink=plotitem.colorbar_shrink,\
@@ -261,14 +305,16 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     print "*** problem generating colorbar"
                     pass
 
-
-            if plotaxes.title_with_t:
-                if (t==0.) | ((t>=0.001) & (t<1000.)):
-                    plt.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                else:
-                    plt.title("%s at time t = %14.8e" % (plotaxes.title,t))
+            if plotfigure.use_for_kml:
+                pass
             else:
-                plt.title(plotaxes.title)
+                if plotaxes.title_with_t:
+                    if (t==0.) | ((t>=0.001) & (t<1000.)):
+                        plt.title("%s at time t = %14.8f" % (plotaxes.title,t))
+                    else:
+                        plt.title("%s at time t = %14.8e" % (plotaxes.title,t))
+                else:
+                    plt.title(plotaxes.title)
 
 
             # call an afteraxes function if present:
@@ -281,26 +327,44 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 plt.axis('image')
 
             # set axes limits:
-            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-                try:
-                    plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-                except:
-                    pass  # let axis be set automatically
-            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-                try:
-                    plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-                except:
-                    pass  # let axis be set automatically
+            if plotfigure.use_for_kml:
+                if (plotfigure.kml_xlimits is not None) & (type(plotfigure.kml_xlimits) is not str):
+                    try:
+                        plt.xlim(plotfigure.kml_xlimits[0], plotfigure.kml_xlimits[1])
+                    except:
+                        print " "
+                        print "*** KML error : Set plotfigure.kml_xlimits"
+                        print " "
+                        return
+
+                if (plotfigure.kml_ylimits is not None) & (type(plotfigure.kml_ylimits) is not str):
+                    try:
+                        plt.ylim(plotfigure.kml_ylimits[0], plotfigure.kml_ylimits[1])
+                    except:
+                        print " "
+                        print "*** KML error : Set plotfigure.kml_ylimits"
+                        print " "
+                        return
+
+            else:
+                if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
+                    try:
+                        plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                    except:
+                        pass  # let axis be set automatically
+                if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
+                    try:
+                        plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                    except:
+                        pass  # let axis be set automatically
 
             # end of loop over plotaxes
-            
         # end of loop over plotfigures
 
 
     # call an afterframe function if present:
     afterframe =  getattr(plotdata, 'afterframe', None)
     current_data = run_str_or_func(afterframe,current_data)
-
 
     if plotdata.mode() == 'iplotclaw':
         plt.ion()
@@ -311,14 +375,23 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
     if verbose:
         print '    Done with plotframe for frame %i at time %g' % (frameno,t)
 
-    
+
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
-        for figno in plotted_fignos:
-            printfig(frameno=frameno, figno=figno, \
-                    format=plotdata.print_format, plotdir=plotdata.plotdir,\
-                    verbose=verbose)
+        for figname in plotdata._fignames:
+            plotfigure = plotdata.plotfigure_dict[figname]
+            figno = plotfigure.figno
+            if figno in plotted_fignos:
+                if figno in kml_fignos:
+                    printfig(frameno=frameno, figno=figno, \
+                             format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                             verbose=verbose,kml_fig=True,kml_dpi=plotfigure.kml_dpi,
+                             kml_figsize=plotfigure.kml_figsize)
+                else:
+                    printfig(frameno=frameno, figno=figno, \
+                             format=plotdata.print_format, plotdir=plotdata.plotdir,\
+                             verbose=verbose,kml_fig=False)
 
     return current_data
     # end of plotframe
@@ -337,7 +410,7 @@ def run_str_or_func(str_or_func,current_data):
 
 
 def params_dict(plotitem, base_params, level_params, level):
-    """ 
+    """
     Create a dictionary containing the plot parameters.
 
     For each level_param check if there is an amr_ list for this
@@ -387,11 +460,11 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     t = framesoln.t
 
-    # the following plot parameters should be set and independent of 
+    # the following plot parameters should be set and independent of
     # which AMR level a patch is on:
 
     base_params = ['plot_type','afteritem','mapc2p','MappedGrid','gaugeno']
-    
+
     # the following plot parameters may be set, depending on what
     # plot_type was requested:
 
@@ -406,7 +479,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     if pp['plot_type'] == '1d':
         pp['plot_type'] = '1d_plot'  # '1d' is deprecated
-    
+
     if pp['plot_type'] == '1d_gauge_trace':
         gaugesoln = plotdata.getgauge(pp['gaugeno'])
         xc_centers = None
@@ -524,7 +597,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         pass # if no plot was done
 
     return current_data
-    
+
 
 #==================================================================
 def plotitem2(framesoln, plotitem, current_data, stateno):
@@ -557,7 +630,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     t = framesoln.t
 
-    # The following plot parameters should be set and independent of 
+    # The following plot parameters should be set and independent of
     # which AMR level a patch is on:
 
     base_params = ['plot_type','afteritem','mapc2p','MappedGrid']
@@ -584,7 +657,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     # turn patch background color into a colormap for use with pcolor cmd:
     pp['patch_bgcolormap'] = colormaps.make_colormap({0.: pp['patch_bgcolor'], \
                                              1.: pp['patch_bgcolor']})
-    
+
     var  = get_var(state,pp['plot_var'],current_data)
     current_data.var = var
 
@@ -607,7 +680,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     plt.hold(True)
 
     if ma.isMaskedArray(var):
-        # If var is a masked array: plotting should work ok unless all 
+        # If var is a masked array: plotting should work ok unless all
         # values are masked, in which case pcolor complains and there's
         # no need to try to plot.  Check for this case...
         var_all_masked = (ma.count(var) == 0)
@@ -630,7 +703,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
-        else: 
+        else:
             pcolor_cmd += ", shading='flat'"
 
         pcolor_cmd += ", **pp['kwargs'])"
@@ -641,7 +714,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
             if (pp['pcolor_cmin'] not in ['auto',None]) and \
                      (pp['pcolor_cmax'] not in ['auto',None]):
-                plt.clim(pp['pcolor_cmin'], pp['pcolor_cmax']) 
+                plt.clim(pp['pcolor_cmin'], pp['pcolor_cmax'])
         else:
             #print '*** Not doing pcolor on totally masked array'
             pass
@@ -653,7 +726,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 pp['imshow_cmin'] = np.min(var)
             if pp['imshow_cmax'] in ['auto',None]:
                 pp['imshow_cmax'] = np.max(var)
-            from matplotlib.colors import Normalize 
+            from matplotlib.colors import Normalize
             color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
@@ -664,7 +737,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             if pp['celledges_show']:
                 # This draws patch for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
-                # seem to be an easy way to do this. 
+                # seem to be an easy way to do this.
                 pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'])
                 pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
 
@@ -687,13 +760,13 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
                 pp['contour_levels'] = np.linspace(pp['contour_min'], \
                        pp['contour_max'], pp['contour_nlevels'])
-                levels_set = True 
+                levels_set = True
 
 
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
-        elif pp['patch_bgcolor'] is not 'w': 
+        elif pp['patch_bgcolor'] is not 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
         plt.hold(True)
@@ -706,20 +779,20 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 contourcmd += "pp['contour_levels']"
             else:
                 contourcmd += "pp['contour_nlevels']"
-    
+
             if pp['contour_cmap']:
                 if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
                     contourcmd += ", cmap = pp['contour_cmap']"
             elif pp['contour_colors']:
                 if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
                     contourcmd += ", colors = pp['contour_colors']"
-    
+
             contourcmd += ", **pp['kwargs'])"
-    
+
             if (pp['contour_show'] and not var_all_masked):
                 # may suppress plotting at coarse levels
                 exec(contourcmd)
-    
+
 
         if pp['plot_type'] == '2d_contourf':
 
@@ -729,30 +802,30 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 contourcmd += "pp['contour_levels']"
             else:
                 contourcmd += "pp['contour_nlevels']"
-    
+
             if pp['fill_cmap']:
                 if (pp['kwargs'] is None) or ('cmap' not in pp['kwargs']):
                     contourcmd += ", cmap = pp['fill_cmap']"
             elif pp['fill_colors']:
                 if (pp['kwargs'] is None) or ('colors' not in pp['kwargs']):
                     contourcmd += ", colors = pp['fill_colors']"
-    
-            
+
+
             if (pp['kwargs'] is None) or ('extend' not in pp['kwargs']):
                 contourcmd += ", extend = 'both'"
 
             contourcmd += ", **pp['kwargs'])"
-            
-    
+
+
             if (not var_all_masked):
                 # may suppress plotting at coarse levels
                 exec(contourcmd)
-    
+
                 if pp['fill_cmap'] and \
                          (pp['fill_cmin'] not in ['auto',None]) and \
                          (pp['fill_cmax'] not in ['auto',None]):
-                    plt.clim(pp['fill_cmin'], pp['fill_cmax']) 
-        
+                    plt.clim(pp['fill_cmin'], pp['fill_cmax'])
+
 
     elif pp['plot_type'] == '2d_patch':
         # plot only the patches, no data:
@@ -760,14 +833,14 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'],\
                     shading='faceted')
-        else: 
+        else:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
 
 
     elif pp['plot_type'] == '2d_schlieren':
         # plot 2-norm of gradient of variable var:
-        
+
         # No idea why this next line is needed...maybe a 64-/32-bit incompatibility issue?
         var = np.array(var)
         (vx,vy) = np.gradient(var)
@@ -778,7 +851,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
-        else: 
+        else:
             pcolor_cmd += ", edgecolors='None'"
 
         pcolor_cmd += ", **pp['kwargs'])"
@@ -788,7 +861,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
             if (pp['schlieren_cmin'] not in ['auto',None]) and \
                      (pp['schlieren_cmax'] not in ['auto',None]):
-                plt.clim(pp['schlieren_cmin'], pp['schlieren_cmax']) 
+                plt.clim(pp['schlieren_cmin'], pp['schlieren_cmax'])
 
     elif pp['plot_type'] == '2d_quiver':
         if pp['quiver_coarsening'] > 0:
@@ -832,7 +905,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             Y1 = Y_edge[i,:]
             plt.plot(X1, Y1, pp['patchedges_color'])
         for i in [0, X_edge.shape[1]-1]:
-            X1 = X_edge[:,i] 
+            X1 = X_edge[:,i]
             Y1 = Y_edge[:,i]
             plt.plot(X1, Y1, pp['patchedges_color'])
 
@@ -893,22 +966,22 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True):
+             verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
-.  
+.
     If fname is nonempty it is used as the filename, with extension
     determined by format if it does not already have a valid extension.
 
     If fname=='' then save to file frame000NfigJ.ext  where N is the frame
     number frameno passed in, J is the figure number figno passed in,
-    and the extension ext is determined by format.  
+    and the extension ext is determined by format.
     If figno='' then the figJ part is omitted.
     """
 
     if fname == '':
-        fname = 'frame' + str(frameno).rjust(4,'0') 
+        fname = 'frame' + str(frameno).rjust(4,'0')
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
@@ -920,8 +993,26 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     if plotdir != '.':
         fname = os.path.join(plotdir,fname)
     if verbose:  print '    Saving plot to file ', fname
-    plt.savefig(fname)
+    if kml_fig:
+        # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
+        # This was added so that in KML, axes, tick labels, etc do not get printed.
+        fig = plt.gcf()
+        fig.patch.set_alpha(0)
+        a = fig.gca()
+        a.set_position([0.,0.,1.0,1.0])
+        a.set_frame_on(False)
 
+        # These have to be turned off explicitly so the plot doesn't have any padding.
+        a.set_xticks([])
+        a.set_yticks([])
+
+        plt.axis('off')
+        if kml_figsize is not None:
+            fig.set_size_inches(kml_figsize[0],kml_figsize[1])
+        plt.savefig(fname, transparent=True, bbox_inches='tight', \
+                      pad_inches=0,dpi=kml_dpi)
+    else:
+        plt.savefig(fname)
 
 
 #======================================================================
@@ -937,7 +1028,7 @@ def printframes(plotdata=None, verbose=True):
     between them.  These will all be in directorey plotdata.plotdir.
 
     The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.  
+    function setplot unless plotdata.setplot=False.
 
     If plotdata.setplot=True then it is assumed that the current directory
     contains a module setplot.py that defines this function.
@@ -957,7 +1048,7 @@ def printframes(plotdata=None, verbose=True):
     if not sys.modules.has_key('matplotlib'):
         print '*** Error: matplotlib not found, no plots will be done'
         return plotdata
-        
+
     if not isinstance(plotdata,ClawPlotData):
         print '*** Error, plotdata must be an object of type ClawPlotData'
         return plotdata
@@ -999,7 +1090,7 @@ def printframes(plotdata=None, verbose=True):
         if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
             fignos_to_show.append(figno)
     fignos = fignos_to_show
-        
+
 
     rootdir = os.getcwd()
 
@@ -1047,7 +1138,7 @@ def printframes(plotdata=None, verbose=True):
             print "  or use overwrite=True in call to printframes"
             return plotdata
 
-    
+
     # Create each of the figures
     #---------------------------
 
@@ -1065,11 +1156,11 @@ def printframes(plotdata=None, verbose=True):
     for file in glob.glob('fort.q*'):
         frameno = int(file[6:])
         fortfile[frameno] = file
-    
+
     if len(fortfile) == 0:
         print '*** No fort.q files found in directory ', os.getcwd()
         return plotdata
-    
+
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = only_most_recent(framenos, plotdata.outdir)
@@ -1086,7 +1177,7 @@ def printframes(plotdata=None, verbose=True):
         fignames[figno] = figname
 
 
-    
+
     # Make png files by calling plotframe:
     # ------------------------------------
 
@@ -1116,11 +1207,11 @@ def printframes(plotdata=None, verbose=True):
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
-    
+
 
     # Movie:
     #-------
-    
+
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
         for figno in fignos:
@@ -1130,7 +1221,7 @@ def printframes(plotdata=None, verbose=True):
                 print '    Created moviefig%s.gif' % figno
             except:
                 print '*** Error creating moviefig%s.gif' % figno
-    
+
     os.chdir(rootdir)
 
     # print out pointers to html index page:
@@ -1144,17 +1235,6 @@ def printframes(plotdata=None, verbose=True):
     return plotdata
     # end of printframes
 
-#======================================================================
-def plotclaw2html(plotdata=None, verbose=True):
-#======================================================================
-    """
-    Old plotting routine no longer exists.
-    """
-    print '*** Error: plotclaw2html name is deprecated, use printframes.'
-    print '*** Plotting command syntax has also changed, you may need to'
-    print '*** update your setplot function.'
-
-
 
 #------------------------------------------------------------------
 def var_limits(plotdata,vars,padding=0.1):
@@ -1165,7 +1245,7 @@ def var_limits(plotdata,vars,padding=0.1):
     y-axis limits for plots.
 
     vars is a list of variables to return the limits for.
-    Each element of the list can be a number, indicating the 
+    Each element of the list can be a number, indicating the
     corresponding element of the q vector, or a function that should
     be applied to q to obtain the value of interest.  In other words,
     any valid plot_var attribute of a ClawPlotItem object.
@@ -1173,13 +1253,13 @@ def var_limits(plotdata,vars,padding=0.1):
     If vars=='all', use vars=[0,1,...] over all components of q.
     *** not implemented yet ***
 
-    Returns: varmin, varmax, varlim,  
+    Returns: varmin, varmax, varlim,
     each is a dictionary with keys consisting by the elements of vars.
 
-    For each var in vars, 
+    For each var in vars,
       varmin[var] is the minimum of var over all frames,
       varmax[var] is the maximum of var over all frames,
-      varlim[var] is of the form [v1, v2] suitable to use as the 
+      varlim[var] is of the form [v1, v2] suitable to use as the
             ylimits attritube of an object of class ClawPlotAxes with
                 v1 = vmin - padding*(vmax-vmin)
                 v2 = vmax + padding*(vmax-vmin)
@@ -1199,7 +1279,7 @@ def var_limits(plotdata,vars,padding=0.1):
         varlim[var] = [v1,v2]
 
     return varmin,varmax,varlim
-        
+
 
 #------------------------------------------------------------------
 def var_minmax(plotdata,framenos,vars):
@@ -1210,7 +1290,7 @@ def var_minmax(plotdata,framenos,vars):
     in the most recent computation.
 
     vars is a list of variables to return the min and max for.
-    Each element of the list can be a number, indicating the 
+    Each element of the list can be a number, indicating the
     corresponding element of the q vector, or a function that should
     be applied to q to obtain the value of interest.  In other words,
     any valid plot_var attribute of a ClawPlotItem object.
@@ -1218,19 +1298,19 @@ def var_minmax(plotdata,framenos,vars):
     If vars=='all', use vars=[0,1,...] over all components of q.
     *** not implemented yet ***
 
-    Returns (varmin, varmax) where varmin and varmax are each 
-    dictionaries with keys given by the variables.  
+    Returns (varmin, varmax) where varmin and varmax are each
+    dictionaries with keys given by the variables.
 
     For each var in vars, varmin[var] and varmax[var] are dictionaries, with
     keys given by frame numbers in framenos.
-    
+
     Also varmin[var]['all'] and varmax[var]['all'] are the min and max of
     variable var over all frames considered.
 
     For example if vars = [0,'machnumber'] then
        varmin[0][3] is the minimum of q[0] (the first component of the
            solution vector q) over all patches in frame 3.
-       varmin['machnumber']['all'] is the minimum of machnumber 
+       varmin['machnumber']['all'] is the minimum of machnumber
            over all patches in all frames.
 
     """
@@ -1289,7 +1369,7 @@ def var_minmax(plotdata,framenos,vars):
                 varmax[var]['all'] = max(varmax[var]['all'], \
                                          varmax[var][frameno])
     return (varmin, varmax)
-        
+
 
 
 #------------------------------------------------------------------
@@ -1299,7 +1379,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
     """
     Filter the list framenos of frame numbers and return a new
     list that only contains the ones from the most recent run.
-    This is determined by comparing modification times of 
+    This is determined by comparing modification times of
     fort.q files.
 
     Returns the filtered list.
@@ -1326,12 +1406,12 @@ def only_most_recent(framenos,outdir='.',verbose=True):
         for file in glob.glob('claw.pkl*'):
             frameno = int(file[8:])
             fortfile[frameno] = file
-    
+
     if len(fortfile) == 0:
         print '*** No fort.q or claw.pkl files found in directory ', os.getcwd()
         framenos = []
         return framenos
-    
+
     # Figure out which files are from latest run:
     numframes = 0
     mtime = 0
@@ -1346,7 +1426,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
         if mtime < mtimeprev-delaytime:
             break
         numframes = numframes + 1
-    
+
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
         print '*** Frames %s and above appear to be from an old run' \
@@ -1376,7 +1456,7 @@ def call_setplot(setplot, plotdata, verbose=True):
     """
     import types
 
-    # This is a bit of a hack to make sure that we still handle the 
+    # This is a bit of a hack to make sure that we still handle the
     # setplot == None case, we may want to deprecate this and require
     # an argument here
     if setplot is None:
@@ -1401,10 +1481,10 @@ def call_setplot(setplot, plotdata, verbose=True):
             setplot_module_name = os.path.splitext(os.path.basename(setplot))[0]
         else:
             raise Exception("Invalid setplot module specification.")
-        
+
         if verbose:
             print "Importing %s.setplot from %s." % (setplot_module_name,setplot_module_dir)
-        
+
         # Attempt to import whatever was handed to us and parsed above
         try:
             sys.path.insert(0,setplot_module_dir)
@@ -1421,8 +1501,8 @@ def call_setplot(setplot, plotdata, verbose=True):
             print >> sys.stderr, "\t%s\n\n" % e
             traceback.print_exc(file=sys.stderr)
             print >> sys.stderr, "="*80
-            
-            # Not sure if this is the right place to be doing this, maybe 
+
+            # Not sure if this is the right place to be doing this, maybe
             # this should go higher up than this routine so it can check all
             # of the same attributes?
             print "Would you like to use clawpack.visclaw.setplot_default() instead [Y/n]?"
@@ -1432,7 +1512,7 @@ def call_setplot(setplot, plotdata, verbose=True):
                 setplot = setplot_default.setplot
             else:
                 sys.exit(1)
-            
+
             plotdata = setplot(plotdata)
             return plotdata
         except:
@@ -1468,7 +1548,7 @@ def clawpack_header():
 def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
 #------------------------------------------------------------------
     """
-    Input: 
+    Input:
       solution: object of class ClawSolution with 2d computed solution
 
       reference: object of class ClawSolution with 1d reference solution
@@ -1499,7 +1579,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
 
         X_center, Y_center = patch.grid.p_centers
         X_edge, Y_edge = patch.grid.p_centers
-    
+
         if isinstance(var_2d, int):
             q = state.q[var_2d,:,:]
         else:
@@ -1508,8 +1588,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
-                return 
-        
+                return
+
         xs1, qs1 = map_2d_to_1d(q, X_center, Y_center, t)
 
         if hasattr(reference,'states'):
@@ -1530,8 +1610,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
                 qref = var_1d(refstate.q, xref, t)
             except:
                 print '*** Error applying function var_1d'
-                return 
-            
+                return
+
         qint1 = interp(xs1, xref, qref)
 
         xs[stateno] = xs1
@@ -1541,7 +1621,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
         errmax = max(errmax, errabs.max())
 
     return errmax, xs, qs, qint
-        
+
 
 
 #------------------------------------------------------------------
@@ -1565,20 +1645,18 @@ def set_show(plotdata):
             for plotaxes in plotfigure.plotaxes_dict.itervalues():
                 plotaxes._show = False
                 if plotaxes.show:
-                    # Loop through plotitems checking each item to see if it 
+                    # Loop through plotitems checking each item to see if it
                     # should be shown
                     for plotitem in plotaxes.plotitem_dict.itervalues():
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True
                             plotfigure._show = True
-                    # Check to see if the axes are supposed to be empty or 
+                    # Check to see if the axes are supposed to be empty or
                     # something may be in the afteraxes function
                     if not plotaxes._show:
                         if plotaxes.afteraxes is not None or plotaxes.type == 'empty':
                             plotaxes._show = True
                             plotfigure._show = True
-                
+
     return plotdata
-
-

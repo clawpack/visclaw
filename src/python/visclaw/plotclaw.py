@@ -20,7 +20,6 @@ import matplotlib
 matplotlib.use('Agg') 
 
 import sys, os
-import pylab
 
 if sys.platform in ['win32','cygwin']:
     pypath = 'C:/cygwin' + os.environ['CLAW'] + '/python'
@@ -50,14 +49,13 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
     plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
-#----------------------------------------------------------
 
 if __name__=='__main__':
     """
     If executed at command line prompt, simply call the function, with
     any arguments passed in.
     """
-    import sys
+
     if len(sys.argv) == 4:
         plotclaw(sys.argv[1], sys.argv[2], sys.argv[3])
     elif len(sys.argv) == 3:

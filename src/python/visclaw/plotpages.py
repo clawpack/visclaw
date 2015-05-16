@@ -5,8 +5,6 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
-
-
 import os, time, string, glob
 import sys
 from functools import wraps
@@ -29,7 +27,7 @@ if clawdir is not None:
 #===========================
 class PlotPagesData(object):
 #===========================
-    
+
     def __init__(self):
         self.plotdir = 'plots'
         self.overwrite = True
@@ -62,10 +60,9 @@ class PlotPagesData(object):
         self.timeframes_fignos = 'all'
         self.timeframes_fignames = {}
         self.timeframes_prefix = 'frame'
-        
-    
-        self.pageitem_list = []
 
+
+        self.pageitem_list = []
 
     def new_pageitem(self):
         """
@@ -99,11 +96,10 @@ class PlotPagesData(object):
                                    self.html_index_fname)
         print_html_pointers(path_to_html_index)
 
-
 #=======================
 class PageItem(object):
 #=======================
-    
+
     def __init__(self):
         self.fname = ''  # full path to png or other figure file
         self.html_index_entry = 'Untitled figure'  # Name for link from
@@ -112,7 +108,7 @@ class PageItem(object):
                                    # just before this item.
         self.latex_preitem = None  # any latex to be inserted in file
                                    # just before this item.
-    
+
 #=======================
 class HtmlIndex(object):
 #=======================
@@ -143,7 +139,7 @@ class HtmlIndex(object):
         path_to_html_index = os.path.join(os.getcwd(), \
                                    self.fname)
         print_html_pointers(path_to_html_index)
-                    
+
 
 #======================================================================
 def plots2html(plot_pages_data):
@@ -160,8 +156,8 @@ def plots2html(plot_pages_data):
 
     if numitems == 0:
         print '*** Warning: 0 plots to put in html file'
-        return 
-        
+        return
+
     ppd =plot_pages_data
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
@@ -171,19 +167,19 @@ def plots2html(plot_pages_data):
 
 
     creationtime = current_time()
-    
-    
+
+
     for pageitem in ppd.pageitem_list:
         splitname = os.path.splitext(pageitem.fname)
         pageitem.hname = splitname[0] + '.html'
         pageitem.ext = splitname[1]
 
-    
+
     # Create the index page:
     #-----------------------
-    
+
     html = open(ppd.html_index_fname,'w')
-    
+
     if ppd.html_eagle:
         html.write("""
           <html><meta http-equiv="expires" content="0">
@@ -240,7 +236,7 @@ def plots2html(plot_pages_data):
     html.write('</body></html>')
 
     #----------------------------------------------------------------------
-    
+
     # allfigures.html
     #-------------------
     html = open('allfigures.html', 'w')
@@ -259,13 +255,13 @@ def plots2html(plot_pages_data):
     for pageitem in ppd.pageitem_list:
         html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (pageitem.hname, pageitem.fname))
-    
+
     html.write('\n<p><h3><a href=%s>Return to Plot Index</a> </h3>' \
                 % ppd.html_index_fname)
     html.write('\n</center></body></html>\n')
     html.close()
-    
-    
+
+
     # individual html files for each figure
     #--------------------------------------
 
@@ -283,8 +279,8 @@ def plots2html(plot_pages_data):
             """ % (pageitem.html_index_entry,pageitem.html_index_entry))
 
         html.write("""
-              <p><img src="%s" ><p>  
-              <h3><a href=%s>Return to Plot Index</a> 
+              <p><img src="%s" ><p>
+              <h3><a href=%s>Return to Plot Index</a>
             """ % (pageitem.fname,ppd.html_index_fname))
         if j>0:
             html.write("&nbsp; ... &nbsp;  <a href=%s>Previous Figure</a> "\
@@ -293,14 +289,14 @@ def plots2html(plot_pages_data):
             html.write("&nbsp; ... &nbsp;  <a href=%s>Next Figure</a> "\
                    % ppd.pageitem_list[j+1].hname)
         html.write("\n</h3>")
-    
+
     html.write('\n</center></body></html>\n')
     html.close()
-    
+
     os.chdir(startdir)
     # end of plots2html
 
-    
+
 #======================================================================
 def print_html_pointers(path_to_html_index):
 #======================================================================
@@ -320,7 +316,7 @@ def print_html_pointers(path_to_html_index):
         print "\nOr, if you have the Clawpack server running, point your browser to:"
         print "    http://localhost:50005%s"  % path_to_html_index
 
-    
+
 
 #=====================================
 def htmlmovie(html_index_fname,pngfile,framenos,figno):
@@ -333,9 +329,9 @@ def htmlmovie(html_index_fname,pngfile,framenos,figno):
      figno: integer with the figure number for this movie.
 
     Returns:
-     text for an html file that incorporates javascript to loop through the 
-          plots one after another.  
-    
+     text for an html file that incorporates javascript to loop through the
+          plots one after another.
+
     New 6/7/10: The html page also has buttons for controlling the movie.
 
     The parameter iterval below is the time interval between loading
@@ -465,8 +461,8 @@ def plots2latex(plot_pages_data):
     if numitems == 0:
         print '*** Warning: 0 plots to put in latex file'
         print 'No latex file generated'
-        return 
-        
+        return
+
 
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
@@ -476,9 +472,9 @@ def plots2latex(plot_pages_data):
 
 
     creationtime = current_time()
-    
+
     latexfile = open(ppd.latex_fname + '.tex', 'w')
-    
+
     # latex header
     #-------------
 
@@ -520,11 +516,11 @@ def plots2latex(plot_pages_data):
     itempagecnt = 0
     for pageitem in ppd.pageitem_list:
         if itempagecnt >= itemsperpage:
-            latexfile.write('\\newpage \n')                       
+            latexfile.write('\\newpage \n')
             itempagecnt = 0
             itemlinecnt = 0
         elif itemlinecnt >= itemsperline:
-            latexfile.write('\\vskip 10pt \n')                       
+            latexfile.write('\\vskip 10pt \n')
             itemlinecnt = 0
         itemlinecnt += 1
         itempagecnt += 1
@@ -532,12 +528,12 @@ def plots2latex(plot_pages_data):
             latexfile.write(pageitem.latex_preitem)
         latexfile.write('\\includegraphics[width=%s\\textwidth]{%s}\n' \
                             % (fwidth,pageitem.fname))
-        #latexfile.write('\\vskip 10pt \n')                       
-    latexfile.write('\\end{document}\n')                         
+        #latexfile.write('\\vskip 10pt \n')
+    latexfile.write('\\end{document}\n')
     latexfile.close()
-    print "\nLatex file created:  " 
+    print "\nLatex file created:  "
     print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file" 
+    print "\nUse pdflatex to create pdf file"
 
     if ppd.latex_makepdf:
         try:
@@ -549,7 +545,1096 @@ def plots2latex(plot_pages_data):
 
     os.chdir(startdir)
     # end of plots2latex
-    
+
+
+#======================================================================
+def plotclaw2kml(plotdata):
+#======================================================================
+    """
+    Take a list of figure files and produce kml file to display them.
+
+    # Files that get created :
+
+      _GoogleEarthfig?.kmz : Zipped file containing all files, including doc.kml
+      _GoogleEarthfig?.kml : Network links to remote images
+                gauges.kml : Gauge Placemarks
+               regions.kml : Region polygons
+                levels.kml : Patch border polygons
+
+
+    """
+
+    print " "
+    print "KML ===> Creating file %s.kmz" % plotdata.kml_index_fname
+
+    startdir = os.getcwd()
+
+    from lxml import etree
+    from pykml.factory import KML_ElementMaker as KML
+    from pykml.factory import GX_ElementMaker as GX
+    from pykml.factory import ATOM_ElementMaker as ATOM
+    import zipfile
+    import shutil
+    from copy import deepcopy
+    from clawpack.geoclaw import kmltools
+
+    try:
+        cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
+    except:
+        print "KML ===> Error, aborting plotclaw2kml (cannot create plot directory"
+        raise
+
+    if plotdata.gauges_fignos is not None:
+        plotdata = massage_gauges_data(plotdata)
+        gauge_pngfile = plotdata._gauge_pngfile
+
+    creationtime = current_time()
+    plotdata = massage_frames_data(plotdata)
+
+    framenos = plotdata.timeframes_framenos
+    frametimes = plotdata.timeframes_frametimes
+    fignos = plotdata.timeframes_fignos
+    fignames = plotdata.timeframes_fignames
+    pngfile = plotdata._pngfile
+    htmlfile = plotdata._htmlfile
+    frametimef = plotdata._frametimef
+    allfigsfile = plotdata._allfigsfile
+    allframesfile = plotdata._allframesfile
+
+    numframes = len(framenos)
+    numfigs = len(fignos)
+    creationtime = current_time()
+
+    # ------------------- get time span ----------------------
+
+    # Collect time spans for use in several places.
+    TS = []
+    event_time = plotdata.kml_starttime
+    tz = plotdata.kml_tz_offset
+
+    if numframes == 1:
+        frameno = framenos[0]
+        t1 = frametimes[frameno]
+        t2 = t1 + 5  # Add time second so final figure shows up
+        sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
+
+        # To be used below
+        TS.append(KML.TimeSpan(
+            KML.begin(sbegin),
+            KML.end(send)))
+    else:
+        for i in range(0,numframes):
+            frameno = framenos[i]
+            t1 = frametimes[frameno]
+            if i < numframes-1:
+                t2 = frametimes[framenos[i+1]]
+            else:
+                # We could add 1 seconod at the end, or more time, depending on what
+                # effect is desired. In any case, the time span can't be empty or the
+                # last figure won't show up.
+                dt = (frametimes[framenos[numframes-1]] - frametimes[framenos[0]])/numframes
+                t2 = t1 + dt   # Add enough time for looping through animations
+
+            sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
+
+            TS.append(KML.TimeSpan(
+                KML.begin(sbegin),
+                KML.end(send)))
+
+
+    # Top level doc.kml file
+    doc = KML.kml(
+        KML.Document(
+            KML.name(plotdata.kml_name),
+            KML.open(1)))
+
+    # Open main zip file
+    zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w')
+
+    # --------------------- Set initial view --------------------------
+    first_found = False
+    for i,figname in enumerate(plotdata._fignames):
+        plotfigure = plotdata.plotfigure_dict[figname]
+        figno = plotfigure.figno
+
+        if not figno in fignos:
+            continue
+
+        if not plotfigure.use_for_kml:
+            continue
+
+        # Get a view that is used when GE first loads.
+        if plotfigure.kml_use_for_initial_view or not first_found:
+            x1 = plotfigure.kml_xlimits[0]
+            x2 = plotfigure.kml_xlimits[1]
+            y1 = plotfigure.kml_ylimits[0]
+            y2 = plotfigure.kml_ylimits[1]
+            ulinit = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+            urinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+            lrinit = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
+
+            R = 6371.0   # radius of earth
+            domain_width = R*np.cos(abs(y1+y2)*np.pi/360.0)*(x2-x1)*np.pi/180.0
+            dist_factor = 2  # factor by which height should exceed width
+            initial_height = min([1000*dist_factor*domain_width,9656064.0])   # <= 6000 miles
+
+            initial_view = KML.LookAt(
+                KML.longitude((ulinit[0]+urinit[0])/2),
+                KML.latitude((urinit[1]+lrinit[1])/2),
+                KML.tilt(0),
+                KML.range(initial_height))   # in meters?
+
+            doc.Document.append(deepcopy(initial_view))
+
+            # we found something;  any other figures will have to have
+            # 'kml_use_for_initial_view' set to override this view.
+            first_found = True
+
+    # ------------------- Loop over figures ----------------------
+
+    fig_folder = KML.Folder(
+        KML.name("Figures"),
+        KML.open(1))
+
+    # set all other figures to off.
+    fig_vis = 1
+
+    for figname in plotdata._fignames:
+        plotfigure = plotdata.plotfigure_dict[figname]
+        figno = plotfigure.figno
+
+        if not figno in fignos:
+            continue
+
+        if not plotfigure.use_for_kml:
+            continue
+
+        fig_dir = "fig" + str(figno)
+
+        shutil.rmtree(fig_dir,True)
+        os.mkdir(fig_dir)
+
+        doc_fig = KML.kml(
+            KML.Document(
+                KML.name(plotfigure.name),
+                KML.open(0),
+                KML.Folder(
+                    KML.name("Frames"))))
+
+        # Needed for each figure
+        ul = np.array([plotfigure.kml_xlimits[0], plotfigure.kml_ylimits[1]])
+        ur = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[1]])
+        lr = np.array([plotfigure.kml_xlimits[1], plotfigure.kml_ylimits[0]])
+
+        # Shift so plots that cross the 180 meridian, rather than the -180 Meridian
+        if ul[0] < -180:
+            ul[0] = ul[0] + 360
+            ur[0] = ur[0] + 360
+            lr[0] = lr[0] + 360
+
+        # ------------------- Loop over frames ----------------------
+        # This will get created for each figure, but I need it
+        # for createing the level boxes around each patch
+
+        for i in range(0,numframes):
+            frameno = framenos[i]
+
+            fname = 'frame' + str(frameno).rjust(4, '0')
+            fname_str = fname + 'fig%s' % figno
+
+
+            # ------------------- create subdirs with images ----------------------
+            if (not plotfigure.kml_tile_images):
+                print "KML ===> Adding to %s.png to %s.kmz" \
+                    " file (no tiling)" % (plotdata.kml_index_fname,fname_str)
+
+                # The 'etree'
+                doc_notile = KML.kml(KML.Document())
+
+                c = TS[i].getchildren()
+                desc = "t = %g\n" % frametimes[frameno] + c[0]
+
+                fstr = "%s.png" % fname_str
+                doc_notile.Document.append(
+                    KML.GroundOverlay(
+                        KML.name(fstr),
+                        KML.Icon(KML.href(fstr)),
+                        KML.LatLonBox(
+                            KML.north(ur[1]),
+                            KML.south(lr[1]),
+                            KML.east(ur[0]),
+                            KML.west(ul[0]))))
+
+                # Easier to just move into this directory to construct everything
+                os.chdir(fig_dir)
+
+                shutil.rmtree(fname_str,True)  # remove directory and ignore errors
+                os.mkdir(fname_str)
+
+                # PNG file gets moved into subdirectory and will eventually be
+                # zipped into KMZ file.
+                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
+
+                # The actual file to be written <framename>/doc.kml
+                docfile = os.path.join(fname_str,'doc.kml')
+                docfile_notile = open(os.path.join(fname_str,'doc.kml'),'w')
+                docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),
+                                                    pretty_print=True))
+                docfile_notile.close()
+
+                os.chdir("..")
+
+            else:
+                print " "
+                print "KML ===> Tiling %s.png" % fname_str
+
+                os.chdir(fig_dir)
+                pngfile = os.path.join("..","%s.png"% fname_str)
+                shutil.move(pngfile,".")
+                im = plt.imread("%s.png" % fname_str)
+                sx = im.shape[1]   # reversed?
+                sy = im.shape[0]
+
+                arg_list = ["gdal_translate", "-of", "VRT", \
+                            "-a_srs", "EPSG:4326",  \
+                            "-gcp", "0",         "0",        "%f"%(ul[0]),   "%f"%(ul[1]), \
+                            "-gcp", "%d"%(sx),   "0",        "%f"%(ur[0]),   "%f"%(ur[1]), \
+                            "-gcp", "%d"%(sx),   "%d"%(sy),  "%f"%(lr[0]),   "%f"%(lr[1]), "-90", \
+                            "%s.png"%(fname_str), "%s_tmp.vrt"%(fname_str)]
+
+                import subprocess
+                retval = subprocess.call(arg_list)
+
+                arg_list = ["gdalwarp", "-of", "VRT", "-t_srs", "EPSG:4326 ", "-overwrite", \
+                            "%s_tmp.vrt"%(fname_str), "%s.vrt"%(fname_str)]
+                retval = retval or subprocess.call(arg_list)
+
+                arg_list = ["gdal2tiles.py", \
+                            "--profile=geodetic", \
+                            "--force-kml", \
+                            "--resampling=near", \
+                            "%s.vrt" % (fname_str)]
+
+                retval = retval or subprocess.call(arg_list)
+
+                if retval > 0:
+                    print "KML ===> gdal : something went wrong!\n"
+                    sys.exit(1)
+
+                # Change back to top level directory before adding zipped files
+                os.chdir("..")
+
+                # Add the <fname>.vrt file to zipped file. Remove
+                # figure PNG file
+                zip.write(os.path.join(fig_dir,"%s.vrt" % fname_str))
+
+                # Leave the PNG file in the KMZ file?
+                # os.remove(os.path.join(fig_dir,"%s.png" % fname_str))
+
+                # Clean up files
+                os.remove(os.path.join(fig_dir,"%s_tmp.vrt" % fname_str))
+                os.remove(os.path.join(fig_dir,"%s.vrt" % fname_str))
+
+
+            # add Network link to high level doc.kml file.  This will referenece either
+            # tiled files or non-tiled files.
+            c = TS[i].getchildren()
+            desc = "Time : t = %g\n" \
+                   "UTC  : %s\n"\
+                   "File : %s.png" % (frametimes[frameno],c[0],fname_str)
+
+            # Description in Places panel
+            snippet_str = "<![CDATA[<b><pre>%s</pre></b>]]>" % desc
+
+            # Data that shows up in balloon
+            desc_style = "<b><pre><font style=\"font-size:10pt\">%s</font></pre></b>" % desc
+            desc_str = "<![CDATA[%s]]>" % desc_style
+
+            lstr = os.path.join(fname_str,'doc.kml')
+            doc_fig.Document.Folder.append(
+                KML.NetworkLink(
+                    KML.name("Frame %d" % frameno),
+                    KML.Snippet(snippet_str,maxLines="2"),
+                    KML.description(desc_str),
+                    deepcopy(TS[i]),
+                    KML.Link(KML.href(lstr))))
+
+        # ----------------- Done with frame loop --------------------
+
+        lstr = os.path.join(fig_dir,"doc.kml")
+        fig_folder.append(
+            KML.NetworkLink(
+                KML.name("%s (%d)" % (figname,figno)),
+                KML.visibility(fig_vis),
+                KML.Link(
+                    KML.href(lstr))))
+
+        fig_vis = 0   # All figures referenced after the first one will not be shown
+                      # when first loading GE.
+
+
+        # -------------- add colorbar image file -----------------
+        # Build the colorbar.
+        if plotfigure.kml_colorbar is not None:
+            print " "
+            print "KML ===> Building colorbar for figure %s" % plotfigure.name
+            cb_img = "images"
+            cb_dir = os.path.join(fig_dir,cb_img)
+            shutil.rmtree(cb_dir,True)
+            os.mkdir(cb_dir)
+            cb_filename = "colorbarfig%s.png" % figno
+            try:
+                plotfigure.kml_colorbar(cb_filename)
+                shutil.move(cb_filename,cb_dir)
+            except:
+                print "KML ===> Warning : Something went wrong when creating colorbar"
+
+            # add link to KML file, even if colorbar didn't get created.
+            cb_str = os.path.join(cb_img,cb_filename)
+            colorbar = KML.ScreenOverlay(
+                KML.name("Colorbar"),
+                KML.Icon(KML.href(cb_str)),
+                KML.overlayXY(x="0.025", y="0.05", xunits="fraction", yunits="fraction"),
+                KML.screenXY(x="0.025", y="0.05",xunits="fraction", yunits="fraction"))
+
+            doc_fig.Document.append(colorbar)
+            # -----  Done with colorbar ------
+
+        # ------------------ done with fig<N>/doc.kml file ------------------
+        fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
+        fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+        # In case we used CDATA in any snippets or descriptions.  For some reason
+        # <tags> get converted to &gt;tags&lt;, which balloons don't translate.
+        kml_text = etree.tostring(etree.ElementTree(doc_fig),pretty_print=True)
+        kml_text = kml_text.replace("&gt;",">")
+        kml_text = kml_text.replace("&lt;","<")
+        fig_file.write(kml_text)
+        fig_file.close()
+        # Done with fig<n>/doc.kml file
+
+
+        # Clean up everything in the figure directory
+        for dirname, subdirs, files in os.walk(fig_dir):
+            zip.write(dirname)
+            for filename in files:
+                zip.write(os.path.join(dirname, filename))
+
+        shutil.rmtree(fig_dir)
+
+
+    # ---------------------- Done with figure loop ------------------
+
+    # Add "Figures" folder to doc.kml
+    doc.Document.append(deepcopy(fig_folder))
+
+
+    # ---------- Create top-level resource subdirectories -----------
+    kml_dir = 'kml'
+    shutil.rmtree(kml_dir,True)  # remove directory and ignore errors
+    os.mkdir(kml_dir)
+
+    img_dir = 'images'
+    shutil.rmtree(img_dir,True)  # remove directory and ignore errors
+    os.mkdir(img_dir)
+
+    # ------------------ Creating gauges.kml file -------------------------
+    gauge_kml_file = "gauges.kml"
+
+    print " "
+    print "KML ===> Creating file %s" % gauge_kml_file
+
+    try:
+        f = open(os.path.join(plotdata.outdir,"gauges.data"),'r')
+    except:
+        print "     File gauges.data not found."
+    else:
+        # Read past comments;  last 'l' is blank line
+        l = f.readline()
+        while (l.startswith('#')):
+            l = f.readline()
+
+        # read line containing number of gauges
+        l = f.readline()
+
+        # Read the data lines containing gauge information
+        gauges = []
+        for g in f.readlines():
+            gauges.append(np.fromstring(g.strip(),sep=' '))
+
+        # Location of gauges PNG files (stored under <file>.kmz/images
+        basehref = "<base href=\"%s\"/>" % os.path.join('..','..','images','')  # need trailing "/"
+
+        # Format the text in the Placemark balloon.
+        btext = \
+                "<style media=\"screen\" type=\"text/css\">" \
+                "pre {font-weight:bold;font-style:12pt}" + \
+                "span.title {font-weight:bold;font-size:12pt} " + \
+                "</style>" + \
+                "%s" % basehref + \
+                "<center><span class=\"title\">$[name]</span></center>" + \
+                "<pre>" + \
+                "Time     : t1 = $[t1], t2 = $[t2]\n" + \
+                "Location : x1 = $[x1], y1 = $[y1]\n" + \
+                "</pre>" + \
+                "<center><img style=\"width:500\" src=\"$[pngfile]\"/></center>" + \
+                "<pre><b>File : $[pngfile]</pre>"
+
+        # the 'text' tag will replace Placemark description
+        bstyle = KML.text("<![CDATA[%s]]>" % btext)
+
+        # Start builing KML document
+        doc_gauges = KML.kml(KML.Document())
+
+        # Only one style for all of the gauges
+        doc_gauges.Document.append(KML.Style(
+            KML.BalloonStyle(bstyle),
+            id="gauge_style"))
+
+        # Loop over all gauges
+        for gnum,gauge in enumerate(gauges):
+            t1,t2 = gauge[3:5]
+            x1,y1 = gauge[1:3]
+            gaugeno = int(gauge[0])
+
+            # Get proper coordinates, otherwise placemark doesn't show up.
+            if x1 > 180:
+                longitude = x1 - 360
+            elif x1 < -180:
+                longitude = x1 + 360
+            else:
+                longitude = x1
+
+            print "Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
+                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+
+            # PNG file associated with this gauge
+            figname = 'not found'
+            for k in gauge_pngfile.keys():
+                if k[0] == gaugeno:
+                    figname = gauge_pngfile[k]
+
+            elev = 0
+            coords = "%10.4f %10.4f %10.4f" % (longitude,y1,elev)
+
+            # Text for 'Places' panel
+            snippet = "t1 = %g, t2 = %g\n" % (t1,t2) + \
+                      "x1 = %g, y1 = %g\n" % (x1,y1)
+            snippet_str = "<![CDATA[<pre><b>%s</b></pre>]]>" % snippet
+
+            # ExtendedData is used in BalloonStyle.text() fields.
+            placemark = KML.Placemark(
+                KML.name("Gauge %d" % gaugeno),
+                KML.Snippet(snippet_str),
+                KML.styleUrl(chr(35) + "gauge_style"),
+                KML.ExtendedData(
+                    KML.Data(KML.value(figname),name="pngfile"),
+                    KML.Data(KML.value("%g" % t1),name="t1"),
+                    KML.Data(KML.value("%g" % t2),name="t2"),
+                    KML.Data(KML.value("%g" % x1),name="x1"),
+                    KML.Data(KML.value("%g" % y1),name="y1")),
+                KML.Point(
+                    KML.coordinates(coords)))
+
+            doc_gauges.Document.append(placemark)
+
+        kml_file = open(gauge_kml_file,'w')
+        kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+        kml_text = etree.tostring(etree.ElementTree(doc_gauges),pretty_print=True)
+        kml_text = kml_text.replace("&gt;",">")   # Needed for CDATA blocks
+        kml_text = kml_text.replace("&lt;","<")
+
+        kml_file.write(kml_text)
+        kml_file.close()
+
+    # -------------- add gauge image and KML files -----------------
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Gauges"),
+            KML.visibility(1),
+            KML.Link(KML.href(os.path.join(kml_dir,
+                                           gauge_kml_file)))))
+
+    if os.path.isfile(gauge_kml_file):
+            shutil.move(gauge_kml_file,kml_dir)
+
+    # Add any gauge PNG files to images directory.
+    if plotdata.gauges_fignos is not None:
+        for k in gauge_pngfile.keys():
+            if os.path.isfile(gauge_pngfile[k]):
+                shutil.copy(gauge_pngfile[k],img_dir)
+
+
+    # ----------------- Add a region for the computational domain ----------
+
+    # Top level regions.kml file
+    doc_regions = KML.kml(KML.Document())
+    region_kml_file = "regions.kml"
+
+    # collect all the placemarks in a folder and append later
+    placemark_folder = []
+
+    # Read claw.data to get computational domain
+    print " "
+    print "KML ===> Creating file %s" % region_kml_file
+    try:
+        f = open(os.path.join(plotdata.outdir,"claw.data"),'r')
+    except:
+        # We don't have the dimensions of the full domain
+        print "     Cannot find claw.data. Region for the computational domain will not be created."
+    else:
+        # Read past comments;  last 'l' is blank line
+        l = f.readline()
+        while (l.startswith('#')):
+            l = f.readline()
+
+        # read line containing number of gauges
+        l = f.readline()
+        # read lower
+        c = f.readline()
+        lower = np.fromstring(c.strip(),sep=' ')
+        c = f.readline()
+        upper = np.fromstring(c.strip(),sep=' ')
+        x1 = lower[0]
+        x2 = upper[0]
+        y1 = lower[1]
+        y2 = upper[1]
+        bcomp_domain = \
+                       "<style media=\"screen\" type=\"text/css\">" \
+                       "pre {font-weight:bold;font-style:12pt}" + \
+                       "span.title {font-weight:bold;font-size:12pt} " + \
+                       "</style>" + \
+                       "<center><span class=\"title\">Computational Domain</span></center>" + \
+                       "<pre>" + \
+                       "Location : x1 = $[x1], x2 = $[x2]\n" + \
+                       "           y1 = $[y1], y2 = $[y2]\n" + \
+                       "</pre>"
+
+        domain_text =  KML.text("<![CDATA[%s]]>" % bcomp_domain)
+
+
+        print "Computational domain : %10.6f  %10.6f  %10.6f  %10.6f" \
+            % (x1,x2,y1,y2)
+        snippet_str = \
+                  "x1 = %g, x2 = %g\n" % (x1,x2) + \
+                  "y1 = %g, y2 = %g\n" % (y1,y2)
+        snippet = "<![CDATA[<b><pre>%s</pre></b>]]>" % snippet_str
+
+        # Style for this region
+        doc_regions.Document.append(
+            KML.Style(
+                KML.PolyStyle(
+                    KML.color("FF98644E"),   # light blue 4E6498
+                    KML.fill(1),
+                    KML.outline(0)),
+                KML.BalloonStyle(deepcopy(domain_text)),
+                id="comp_domain"))
+        lv = []
+        if x1 > 180 and x2 > 180:
+            for x in [x1,x2]:
+                lv.append(x - 360)
+        elif x1 < -180 and x2 < -180:
+            for x in [x1,x2]:
+                lv.append(x + 360)
+        else:
+            lv = [x1,x2]   # Doesn't work for regions that straddle +/- 180.
+
+        longitude = lv
+
+        # rectangle with 2 corners specified
+        mapping = {}
+        mapping['x1'] = longitude[0]
+        mapping['x2'] = longitude[1]
+        mapping['y1'] = y1
+        mapping['y2'] = y2
+        mapping['elev'] = 0
+
+        # The polygons tend to disappear when zooming.  One fix might be to
+        # add more points to the edges of the polygon
+        coords = """\
+                 {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                 {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                 {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                 {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                 {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                 """.format(**mapping).replace(' ','')
+
+                    # ExtendedData is used in BalloonStyle.text() fields.
+        placemark = KML.Placemark(
+            KML.name("Computational Domain"),
+            KML.visibility(0),
+            KML.Snippet(snippet,maxLines="2"),
+            KML.styleUrl(chr(35) + "comp_domain"),
+            KML.ExtendedData(
+                KML.Data(KML.value("%g"% x1),name="x1"),
+                KML.Data(KML.value("%g"% y1),name="y1"),
+                KML.Data(KML.value("%g"% x2),name="x2"),
+                KML.Data(KML.value("%g"% y2),name="y2")),
+            KML.Polygon(
+                KML.tessellate(1),
+                KML.altitudeMode("clampToGround"),
+                KML.outerBoundaryIs(
+                    KML.LinearRing(
+                        KML.coordinates(coords)))))
+
+        placemark_folder.append(placemark)
+
+    print " "
+    # Create regions for remaining regions specifed in regions.data
+    try:
+        f = open(os.path.join(plotdata.outdir,"regions.data"),'r')
+    except:
+        print "     No regions.data file found."
+    else:
+        # Read past comments;  last 'l' is blank line
+        l = f.readline()
+        while (l.startswith('#')):
+            l = f.readline()
+
+        # read line containing number of gauges
+        l = f.readline()
+
+        # Read the data lines containing gauge information
+        regions = []
+        for r in f.readlines():
+            regions.append(np.fromstring(r.strip(),sep=' '))
+
+        # Format the text in the Placemark balloon.
+        btext = \
+                "<style media=\"screen\" type=\"text/css\">" \
+                "pre {font-weight:bold;font-style:12pt}" + \
+                "span.title {font-weight:bold;font-size:12pt} " + \
+                "</style>" + \
+                "<center><span class=\"title\">$[name]</span></center>" + \
+                "<pre>" + \
+                "Levels   : minlevel = $[minlevel], maxlevel = $[maxlevel]\n" + \
+                "Time     : t1 = $[t1], t2 = $[t2]\n" + \
+                "Location : x1 = $[x1], x2 = $[x2]\n" + \
+                "           y1 = $[y1], y2 = $[y2]\n" + \
+                "\n" + \
+                "From (UTC) : $[tsbegin]\n" + \
+                "To   (UTC) : $[tsend]" + \
+                "</pre>"
+
+        # the 'text' tag will replace Placemark description
+        balloon_text = KML.text("<![CDATA[%s]]>" % btext)
+
+        width = 1
+        box_color = "FFFFFFFF"
+
+        # Now start creating real regions.
+        for rnum,region in enumerate(regions):
+            minlevel,maxlevel = region[0:2]
+            t1,t2 = region[2:4]
+            x1,x2,y1,y2 = region[4:]
+
+            print "Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
+                % (rnum,x1,x2,y1,y2)
+            print "           minlevel = %i,  maxlevel = %i" \
+                % (minlevel,maxlevel) \
+                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+
+            # get TimeSpan for region
+            event_time = plotdata.kml_starttime
+            tz = plotdata.kml_tz_offset
+            frameno = framenos[-1]
+            t2_slider = min([t2,frametimes[frameno]])   # Don't show times like 1e+9
+            sbegin, send = kmltools.kml_timespan(t1,t2_slider,event_time,tz)
+            TS_region = KML.TimeSpan(
+                KML.begin(sbegin),
+                KML.end(send))
+            c = TS_region.getchildren()
+            tsbegin = c[0]
+            tsend = c[1]
+
+            # Style for this region
+            pathstr = "Path_region_%02d" % rnum
+            doc_regions.Document.append(
+                KML.Style(
+                    KML.LineStyle(
+                        KML.color(box_color),
+                        KML.width(width)),
+                    KML.PolyStyle(KML.color("000000")),
+                    KML.BalloonStyle(deepcopy(balloon_text)),
+                    id=pathstr))
+
+            # Description for Places panel
+            snippet_str = \
+                "<b><pre>" + \
+                "minlevel = %i, maxlevel = %i\n" % (minlevel,maxlevel) + \
+                "t1 = %g, t2 = %g\n" % (t1,t2) +\
+                "\n" + \
+                "From (UTC) : %s\n" % tsbegin + \
+                "To   (UTC) : %s\n" % tsend + \
+                "</pre></b>"
+
+            snippet = "<![CDATA[%s]]>" % snippet_str
+
+            # Get x coordinates in longitude (-180 to 180).  Otherwise, the
+            # polygons don't show up after zooming.
+            lv = []
+            if x1 > 180 and x2 > 180:
+                for x in [x1,x2]:
+                    lv.append(x - 360)
+            elif x1 < -180 and x2 < -180:
+                for x in [x1,x2]:
+                    lv.append(x + 360)
+            else:
+                lv = [x1,x2]   # Also okay if [x1,x2] straddle 180 or -180
+
+            longitude = lv
+
+            # rectangle with 2 corners specified
+            mapping = {}
+            mapping['x1'] = longitude[0]
+            mapping['x2'] = longitude[1]
+            mapping['y1'] = y1
+            mapping['y2'] = y2
+            mapping['elev'] = 0
+
+            # The polygons tend to disappear when zooming.  One fix might be to
+            # add more points to the edges of the polygon
+            coords = """\
+                     {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                     {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                     {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                     {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                     {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                     """.format(**mapping).replace(' ','')
+
+            # ExtendedData is used in BalloonStyle.text() fields.
+            placemark = KML.Placemark(
+                KML.name("Region %d" % rnum),
+                KML.visibility(0),
+                KML.Snippet(snippet,maxLines="2"),
+                TS_region,
+                KML.styleUrl(chr(35) + pathstr),
+                KML.ExtendedData(
+                    KML.Data(KML.value("%g"% minlevel),name="minlevel"),
+                    KML.Data(KML.value("%g"% maxlevel),name="maxlevel"),
+                    KML.Data(KML.value("%g"% t1),name="t1"),
+                    KML.Data(KML.value("%g"% t2),name="t2"),
+                    KML.Data(KML.value("%g"% x1),name="x1"),
+                    KML.Data(KML.value("%g"% y1),name="y1"),
+                    KML.Data(KML.value("%g"% x2),name="x2"),
+                    KML.Data(KML.value("%g"% y2),name="y2"),
+                    KML.Data(KML.value("%s"% tsbegin),name="tsbegin"),
+                    KML.Data(KML.value("%s"% tsend),name="tsend")),
+                KML.Polygon(
+                    KML.tessellate(1),
+                    KML.altitudeMode("clampToGround"),
+                    KML.outerBoundaryIs(
+                        KML.LinearRing(
+                            KML.coordinates(coords)))))
+
+
+            placemark_folder.append(placemark)
+
+    # Do we have any regions (either computational (from claw.data) or from regions.data?
+    for p in placemark_folder:
+        doc_regions.Document.append(p)
+
+    kml_file = open(region_kml_file,'w')
+    kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+    kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
+    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
+    kml_text = kml_text.replace("&lt;","<")
+    kml_file.write(kml_text)
+
+    kml_file.close()
+
+    # -------------------- Add link to regions.kml file to top level doc.kml
+    # Note that we do this, even if a regions.kml file wasn't created.
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Regions"),
+            KML.visibility(0),
+            KML.Link(KML.href(os.path.join(kml_dir,
+                                           region_kml_file)))))
+
+    if os.path.isfile(region_kml_file):
+            shutil.move(region_kml_file,kml_dir)
+
+    # --------------- Create polygons for AMR patch borders --------------
+    level_kml_file = "levels.kml"
+    print " "
+    print "KML ===> Creating file %s" % level_kml_file
+
+    try:
+        f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
+    except:
+        # Nothing terrible happens;  we just set maxlevels to some large value
+        maxlevels = 10
+    else:
+        # read past comments - last line is blank
+        a = f.readline()
+        while (a.startswith('#')):
+            a = f.readline()
+
+        # read line containing max number of levels
+        a = f.readline()
+        ainfo = np.fromstring(a.strip(),sep=' ')
+        maxlevels = int(ainfo[0])  # Hopefully, got this right
+
+    # set _outdirs attribute to be list of all outdirs for all items
+    plotdata.set_outdirs()
+
+    level_dir = "levels"
+    shutil.rmtree(level_dir,True)
+    os.mkdir(os.path.join(kml_dir,level_dir))
+
+    # Level colors, in (alpha, blue, green, red)
+    black = ["FF000000"]
+    white = ["FFFFFFFF"]
+    ge_theme = ["FFCEC0C4", "FF476653", "FF9C5E4D", "#FF536F92",
+                "#FF9CC2CC", "FF935B47","FF000000"]
+    colorcube = ["FF0000FF", "FF00FF00","FFFFFFFF","FF000000","FFFFFF00",
+              "FFFF00FF","FF00FFFF","FFFF0000"]
+
+    # Color scheme to use for level patch borders.
+    colors = black
+    width = 1
+
+    # Create high level 'levels.kml' file
+    level_files = []
+    doc_levels = []
+    styles = []
+    for i in range(0,maxlevels):
+        level_file_name = "level_" + str(i+1).rjust(2,'0')
+        level_files.append(level_file_name)
+
+        # KML Document for each level
+        doc_levels.append(KML.kml(KML.Document()))
+
+        # Styles for levels
+        styles.append(KML.Style(
+            KML.LineStyle(
+                KML.color(colors[i % len(colors)]),   # cycle through colors
+                KML.width(width)),
+            KML.PolyStyle(KML.color("00000000")),
+            id="patchborder"))
+
+
+    # Create individual level files in subdirectories
+
+    doc_frames = [[0 for j in range(numframes)] for i in range(maxlevels)]
+    for j in range(0,numframes):
+        frameno = framenos[j]
+        for i in range(0,maxlevels):
+            frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
+            if i == 0:
+                vis = 0  # Don't show first level
+            else:
+                vis = 1
+
+            N = KML.NetworkLink(
+                KML.name("Frame %s" % str(frameno).rjust(4,'0')),
+                KML.visibility(vis),
+                deepcopy(TS[j]),
+                KML.Link(
+                    KML.href(os.path.join(level_files[i],frame_file_name))))
+            doc_levels[i].Document.append(deepcopy(N))
+
+
+            # Create files in each subdirectory
+            doc_frames[i][j] = KML.kml(KML.Document())
+            doc_frames[i][j].Document.append(deepcopy(styles[i]))
+
+    print "     Re-reading output files to get patch information"
+    print " "
+    maxlevel_real = 0
+    for j in range(0,numframes):
+        frameno = framenos[j]
+
+        framesolns = []
+        # loop over all outdirs:
+        if len(plotdata._outdirs) == 0:
+            plotdata._outdirs = [plotdata.outdir]
+
+        for outdir in plotdata._outdirs:
+            framesolns.append(plotdata.getframe(frameno, outdir))
+
+        if type(framesolns) is not list:
+            framesolns = [framesolns]
+
+        for k, framesoln in enumerate(framesolns):  # patches?
+            for stateno,state in enumerate(framesoln.states):
+                patch = state.patch
+                xlower = patch.dimensions[0].lower
+                xupper = patch.dimensions[0].upper
+                ylower = patch.dimensions[1].lower
+                yupper = patch.dimensions[1].upper
+                level = patch.level
+
+                # maxlevel_real should start at 0 so it can be used for indexing
+                maxlevel_real = max(level,maxlevel_real)
+
+                lv = []
+                if xlower > 180:
+                    for x in [xlower,xupper]:
+                        lv.append(x - 360)
+                elif xupper < -180:
+                    for x in [xlower,xupper]:
+                        lv.append(x + 360)
+                else:
+                    # Not quite sure why this works in the case when x1,x2 cross 180 ...
+                    lv = [xlower,xupper]
+
+                mapping = {}
+                mapping["x1"] = lv[0]
+                mapping["y1"] = ylower
+                mapping["x2"] = lv[1]
+                mapping["y2"] = yupper
+                mapping["elev"] = 0
+
+                border_text = """
+                {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                {x2:10.4f},{y1:10.4f},{elev:10.4f}
+                {x2:10.4f},{y2:10.4f},{elev:10.4f}
+                {x1:10.4f},{y2:10.4f},{elev:10.4f}
+                {x1:10.4f},{y1:10.4f},{elev:10.4f}
+                """.format(**mapping).replace(' ','')
+
+                r = KML.Polygon(
+                    KML.tessellate(1),
+                    KML.altitudeMode("clampToGround"),
+                    KML.outerBoundaryIs(
+                        KML.LinearRing(
+                            KML.coordinates(border_text))))
+
+
+                p = KML.Placemark(
+                    KML.name("Grid %d" % stateno),
+                    KML.visibility(1),
+                    KML.styleUrl(chr(35) + "patchborder"))
+
+                p.append(deepcopy(r))
+
+                doc_frames[level-1][j].Document.append(deepcopy(p))
+
+    if maxlevel_real > maxlevels:
+        raise IOError("KML ==> plotclaw2kml : (plotpages.py) Maximum number of "
+                      "levels exceeded;  increase maxlevels")
+
+    # Create directories for each level.
+    for i in range(0,maxlevel_real):
+        # Directory for storing levels for each time step
+        shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
+        os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
+
+
+    # Print out individual frame files for each element
+    for j in range(0,numframes):
+        for i in range(0,maxlevel_real):
+            frameno = framenos[j]
+            level_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
+            kml_frame_file = open(os.path.join(kml_dir,level_dir,
+                                               level_files[i],level_file_name),'w')
+            kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            kml_frame_file.write(etree.tostring(etree.ElementTree(doc_frames[i][j]),
+                                                pretty_print=True))
+            kml_frame_file.close()
+
+    # Print out level files containing time stamps and references to frame files
+    for i in range(0,maxlevel_real):
+        kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
+        kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        kml_level_file.write(etree.tostring(etree.ElementTree(doc_levels[i]),
+                                            pretty_print=True))
+        kml_level_file.close()
+
+    # Folders in top level file 'levels.kml'
+    doc_levels_top = KML.kml(KML.Document())
+    for i in range(0,maxlevel_real):
+        level_file_name = "level_" + str(i+1).rjust(2,'0')
+        f = KML.Folder(KML.name("Level " + str(i+1)))
+        f.append(KML.NetworkLink(
+            KML.name("Frames"),
+            KML.Link(
+                KML.href(os.path.join(level_dir,level_file_name + ".kml")))))
+
+        doc_levels_top.Document.append(f)
+
+    kml_levels = open(os.path.join(kml_dir,level_kml_file),'w')
+    kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    kml_levels.write(etree.tostring(etree.ElementTree(doc_levels_top),
+                                    pretty_print=True))
+    kml_levels.close()
+
+    # Add to top level KML file
+    doc.Document.append(
+        KML.NetworkLink(
+            KML.name("Levels"),
+            KML.visibility(1),
+            KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
+
+
+    # ----------- zip additional directories and clean up ------------
+    dir_list = [kml_dir, img_dir]
+    for d in dir_list:
+        for dirname, subdirs, files in os.walk(d):
+            zip.write(dirname)
+            for filename in files:
+                zip.write(os.path.join(dirname, filename))
+
+        shutil.rmtree(d)
+
+    # ----------- Write doc.kml file --------------------
+    # Top level KML file
+    docfile = open("doc.kml",'w')
+    docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+    kml_text = etree.tostring(etree.ElementTree(doc),pretty_print=True)
+    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
+    kml_text = kml_text.replace("&lt;","<")
+    docfile.write(kml_text)
+
+    #docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+    docfile.close()
+
+    # Store this in the zip file and remove it.
+    zip.write("doc.kml")   # Root KML file
+    os.remove("doc.kml")
+
+    zip.close()
+
+    if plotdata.kml_publish is not None:
+        print " "
+        print "KML ===> Creating file %s.kml" % plotdata.kml_index_fname
+        # Create a KML file that can be used to link to a remote server
+        update_time = 5    # minutes
+        doc = KML.kml(KML.Document(
+            KML.name("GeoClaw"),
+            KML.visibility(1),
+            KML.open(1),
+            deepcopy(initial_view),
+            KML.NetworkLink(
+                KML.name(plotdata.kml_name),
+                KML.visibility(1),
+                KML.open(1),
+                KML.Snippet("Updates every %d minutes" % update_time),
+                KML.Link(
+                    KML.href(os.path.join(plotdata.kml_publish,
+                                          plotdata.kml_index_fname + ".kmz")),
+                    KML.refreshMode("onInterval"),
+                             KML.refreshInterval(update_time*60)))))
+
+        file = open(plotdata.kml_index_fname + ".kml",'w')
+        file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        file.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+        file.close()
+        print " "
+
+    print "KML ===> Done creating files for Google Earth.  Open " \
+        "%s.kmz in the Google Earth browser" % plotdata.kml_index_fname
+    print " "
+    os.chdir(startdir)
+
+#   end of plotclaw2kml
+
 
 #======================================================================
 def cd_with_mkdir(newdir, overwrite=False, verbose=True):
@@ -633,8 +1718,8 @@ def massage_frames_data(plot_pages_data):
         return
 
     startdir = os.getcwd()
-        
-        
+
+
     if framenos == 'all' or fignos == 'all':
         # need to determine which figures exist
         files = glob.glob('%s*.png' % prefix)
@@ -659,7 +1744,7 @@ def massage_frames_data(plot_pages_data):
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
         allframesfile[figno] = '%s_allframesfig%s.html'  % (prefix,figno)
-       
+
     numframes = len(framenos)
     numfigs = len(fignos)
 
@@ -717,7 +1802,7 @@ def timeframes2latex(plot_pages_data):
       plot_pages_data.timeframes_frametimes  is dictionary of time for each frame
       plot_pages_data.timeframes_fignos  is list of figs to use,
       plot_pages_data.timeframes_fignames  is dictionary of fig names for index.
-      plot_pages_data.timeframes_prefix  is the string indicating how the 
+      plot_pages_data.timeframes_prefix  is the string indicating how the
                              files are named  ('frame' by default).
     """
 
@@ -743,12 +1828,12 @@ def timeframes2latex(plot_pages_data):
     fignos = ppd.timeframes_fignos
     fignames = ppd.timeframes_fignames
     pngfile = ppd._pngfile
-            
+
     numframes = len(framenos)
     numfigs = len(fignos)
-    
+
     latexfile = open(ppd.latex_fname + '.tex', 'w')
-    
+
     # latex header
     #-------------
 
@@ -776,23 +1861,23 @@ def timeframes2latex(plot_pages_data):
     #-------------
 
     # determine how many plots should appear on each page and line:
-    framesperpage = ppd.latex_framesperpage 
+    framesperpage = ppd.latex_framesperpage
     if framesperpage == 'all':
         framesperpage = len(framenos)
-    framesperline = ppd.latex_framesperline 
+    framesperline = ppd.latex_framesperline
     if framesperline == 'all':
         framesperline = len(framenos)
-    figsperline = ppd.latex_figsperline      
+    figsperline = ppd.latex_figsperline
     if figsperline == 'all':
         figsperline = len(fignos)
     if (figsperline < len(fignos)) & (framesperline > 1):
         print '*** Incompatible layout: resetting framesperline to 1'
         framesperline = 1
-    totalperline = framesperline * figsperline      
+    totalperline = framesperline * figsperline
     if totalperline < 1:
         print '*** Warning: 0 figures per line requested in latex file'
         print 'No latex file generated due to format error'
-        return 
+        return
 
     # width each plot must be:
     fwidth = 0.95/totalperline
@@ -802,27 +1887,27 @@ def timeframes2latex(plot_pages_data):
         #latexfile.write('\\centerline{\Large Frame %s at time = %s' \
         #       % (frameno frametime[frameno])
         if framecnt >= framesperpage:
-            latexfile.write('\\newpage \n')                       
+            latexfile.write('\\newpage \n')
             framecnt = 0
         elif framecnt >= framesperline:
-            latexfile.write('\\vskip 10pt \n')                       
+            latexfile.write('\\vskip 10pt \n')
             framecnt = 0
         framecnt += 1
         figcnt = 0
         for figno in fignos:
             if figcnt >= figsperline:
-                latexfile.write('\\vskip 10pt \n')                       
+                latexfile.write('\\vskip 10pt \n')
                 figcnt = 0
             figcnt += 1
             latexfile.write('\\includegraphics[width=%s\\textwidth]{%s}\n' \
                             % (fwidth,pngfile[frameno,figno]))
-        #latexfile.write('\\vskip 10pt \n')                       
-    latexfile.write('\\end{document}\n')                         
+        #latexfile.write('\\vskip 10pt \n')
+    latexfile.write('\\end{document}\n')
     latexfile.close()
 
-    print "\nLatex file created:  " 
+    print "\nLatex file created:  "
     print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file" 
+    print "\nUse pdflatex to create pdf file"
     if ppd.latex & ppd.latex_makepdf:
         try:
             os.system('pdflatex %s' % ppd.latex_fname)
@@ -834,7 +1919,7 @@ def timeframes2latex(plot_pages_data):
     os.chdir(startdir)
     # end of timeframes2latex
 
-    
+
 
 #============================
 def test(makeplots = True):
@@ -851,7 +1936,7 @@ def test(makeplots = True):
 
     ppd.html = True
 
-    ppd.latex = True 
+    ppd.latex = True
     ppd.latex_itemsperline = 2
     ppd.latex_itemsperpage = 4
     ppd.latex_makepdf = False
@@ -873,7 +1958,7 @@ def test(makeplots = True):
         if mod(n,2) == 0:
             pid.latex_preitem = r"""
               \vskip 5pt \noindent{\large\bf Plot of $x^%s$}\vskip 2pt""" % n
-    
+
     ppd.make_pages()
 
 
@@ -886,22 +1971,22 @@ def clawtest():
 
     for mx in [50, 100]:
         ppd = PlotPagesData()
-    
+
         outdir = 'output.mx%s' % mx
         ppd.plotdir = outdir
         ppd.overwrite = True
-    
+
         ppd.html = True
         ppd.html_index_title = 'Clawpack Plots with mx = %s' % mx
-    
-        ppd.latex = True 
+
+        ppd.latex = True
         ppd.latex_makepdf = False
-    
+
         ppd.timeframes_framenos = 'all'
         ppd.timeframes_frametimes = {}
         ppd.timeframes_fignos = 'all'
         ppd.timeframes_fignames = {}
-    
+
         ppd.make_timeframes_html()
         ppd.make_timeframes_latex()
 
@@ -935,8 +2020,8 @@ def plotclaw2html(plotdata):
     specified plotdata.
 
     Assumes the following types of figures may exist:
-       time frame figures of the form frame000NfigJ.png 
-       gauge figures of the form gauge000NfigJ.png 
+       time frame figures of the form frame000NfigJ.png
+       gauge figures of the form gauge000NfigJ.png
        other each_run type figures of the form figJ.png
        other figures can be specified in a dictionary plotdata.otherfigs
 
@@ -957,11 +2042,11 @@ def plotclaw2html(plotdata):
     print '\nCreating html pages for figures...\n'
 
     startdir = os.getcwd()
-        
+
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting timeframes2html"
+        print "*** Error, aborting plotclaw2html"
         raise
 
     creationtime = current_time()
@@ -981,19 +2066,19 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
-            
+
     numframes = len(framenos)
     numfigs = len(fignos)
-    
+
 
     eagle = getattr(plotdata,'html_eagle',False)
 
-    
+
     # Create the index page:
     #-----------------------
-    
+
     html = open(plotdata.html_index_fname,'w')
-    
+
     if eagle:
         html.write("""
           <html><meta http-equiv="expires" content="0">
@@ -1045,7 +2130,7 @@ def plotclaw2html(plotdata):
         html.write('\n   <td><a href="%s.pdf">%s.pdf</a></td>' \
                % (plotdata.latex_fname,plotdata.latex_fname))
         html.write('</tr>\n')
-        
+
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
@@ -1111,7 +2196,7 @@ def plotclaw2html(plotdata):
     #----------------
     if len(plotdata.otherfigure_dict)>0:
         html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
-        html.write('<p><ul>\n')  
+        html.write('<p><ul>\n')
         for name in plotdata.otherfigure_dict.iterkeys():
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
@@ -1131,9 +2216,9 @@ def plotclaw2html(plotdata):
                         print "    for otherfigure ",name
                         raise
 
-            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))  
-        html.write('<p></ul>\n')  
-    
+            html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))
+        html.write('<p></ul>\n')
+
     html.write('</body></html>')
 
     # end of index
@@ -1141,7 +2226,7 @@ def plotclaw2html(plotdata):
 
     fignos = plotdata.timeframes_fignos
     fignames = plotdata.timeframes_fignames
-    
+
     # allframesfigJ.html
     #-------------------
     for figno in fignos:
@@ -1156,15 +2241,15 @@ def plotclaw2html(plotdata):
         html.write('<p>\n')
         html.write('<h3>Click on a figure to enlarge</h3>\n')
         html.write('<p>\n')
-    
+
         for frameno in framenos:
             html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (htmlfile[frameno,figno], pngfile[frameno,figno]))
-    
+
         html.write('\n</center></body></html>\n')
         html.close()
-    
-    
+
+
     # allfigsframeN.html
     #-------------------
     if numfigs > 1:
@@ -1208,12 +2293,12 @@ def plotclaw2html(plotdata):
 
             html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                       % allfigsfile[framenos[numframes-1]])
-            html.write('&#062; &#062;</a>  \n') 
+            html.write('&#062; &#062;</a>  \n')
 
             html.write('</h3><p>\n')
             html.write('<h3>Click on a figure to enlarge</h3>\n')
             html.write('<p>\n')
-    
+
             for figno in fignos:
                 html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                         % (htmlfile[frameno,figno], pngfile[frameno,figno]))
@@ -1228,14 +2313,14 @@ def plotclaw2html(plotdata):
                 else:
                     html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
                            % (allfigsfile[frameno2],frameno2))
-    
+
             html.write('\n</center></body></html>\n')
             html.close()
-    
-    
+
+
     # frameNfigJ.html  -- individual files for each frame/fig combo
     #----------------
-    
+
     for iframe in range(numframes):
         frameno = framenos[iframe]
         for figno in fignos:
@@ -1247,7 +2332,7 @@ def plotclaw2html(plotdata):
             if numfigs > 1:
                 html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
             html.write('&nbsp;&nbsp; at time t = %s</h3>' % frametimef[frameno])
-        
+
             # Write link commands to previous and next frame:
 
             html.write('<p> <a href="%s">' % htmlfile[framenos[0],figno])
@@ -1278,8 +2363,8 @@ def plotclaw2html(plotdata):
 
             html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                       % htmlfile[framenos[numframes-1],figno])
-            html.write('&#062; &#062;</a>  \n') 
-        
+            html.write('&#062; &#062;</a>  \n')
+
             # image:
             html.write('\n\n <p><img src="%s"><p>  \n ' \
                         % pngfile[frameno,figno])
@@ -1313,7 +2398,7 @@ def plotclaw2html(plotdata):
                            % (htmlfile[frameno2,figno],frameno2))
             html.write('\n<a href="%s">  All Frames </a>' \
                      % allframesfile[figno])
-        
+
             html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
                       % (plotdata.html_index_fname))
             if eagle:
@@ -1321,26 +2406,26 @@ def plotclaw2html(plotdata):
                 this run-directory</a></h3>  """)
             html.write('</center></body></html>')
             html.close()
-    
-    
+
+
     # moviefigJ.html
     #-------------------
 
     if plotdata.html_movie in [True, "4.x"]:
-    
+
         # original style still used if plotdata.html_movie == "4.x":
         for figno in fignos:
             html = open('movie%s' % allframesfile[figno], 'w')
             text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
             html.write(text)
             html.close()
-    
- 
+
+
 
     #----------------------------------------------------------------------
     fignos = plotdata.gauges_fignos
     fignames = plotdata.gauges_fignames
-    
+
     # allgaugesfigJ.html
     #-------------------
     if fignos is None:
@@ -1357,15 +2442,15 @@ def plotclaw2html(plotdata):
         html.write('<p>\n')
         html.write('<h3>Click on a figure to enlarge</h3>\n')
         html.write('<p>\n')
-    
+
         for gaugeno in gaugenos:
             html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                 % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
-    
+
         html.write('\n</center></body></html>\n')
         html.close()
-    
-    
+
+
     # allfigsgaugeN.html
     #-------------------
     if gaugenos is not None:
@@ -1409,12 +2494,12 @@ def plotclaw2html(plotdata):
 
                 html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                           % gauge_allfigsfile[gaugenos[numgauges-1]])
-                html.write('&#062; &#062;</a>  \n') 
+                html.write('&#062; &#062;</a>  \n')
 
                 html.write('</h3><p>\n')
                 html.write('<h3>Click on a figure to enlarge</h3>\n')
                 html.write('<p>\n')
-        
+
                 for figno in fignos:
                     html.write('  <a href="%s"><img src="%s" width=400></a>\n' \
                             % (gauge_htmlfile[gaugeno,figno], gauge_pngfile[gaugeno,figno]))
@@ -1429,14 +2514,14 @@ def plotclaw2html(plotdata):
                     else:
                         html.write('\n<a href="%s">%i</a>  &nbsp; &nbsp; ' \
                                % (gauge_allfigsfile[gaugeno2],gaugeno2))
-        
+
                 html.write('\n</center></body></html>\n')
                 html.close()
-    
-    
+
+
         # gaugeNfigJ.html  -- individual files for each gauge/fig combo
         #----------------
-        
+
         for igauge in range(numgauges):
             gaugeno = gaugenos[igauge]
             for figno in fignos:
@@ -1447,7 +2532,7 @@ def plotclaw2html(plotdata):
                 html.write('\n<h3>Gauge %i ' % gaugeno)
                 if numfigs > 1:
                     html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
-            
+
                 # Write link commands to previous and next gauge:
 
                 html.write('<p> <a href="%s">' % gauge_htmlfile[gaugenos[0],figno])
@@ -1478,8 +2563,8 @@ def plotclaw2html(plotdata):
 
                 html.write('&nbsp; &nbsp; \n<a href="%s"> ' \
                           % gauge_htmlfile[gaugenos[numgauges-1],figno])
-                html.write('&#062; &#062;</a>  \n') 
-            
+                html.write('&#062; &#062;</a>  \n')
+
                 # image:
                 html.write('\n\n <p><img src="%s"><p>  \n ' \
                             % gauge_pngfile[gaugeno,figno])
@@ -1513,7 +2598,7 @@ def plotclaw2html(plotdata):
                                % (gauge_htmlfile[gaugeno2,figno],gaugeno2))
                 html.write('\n<a href="allgaugesfig%s.html">  All Gauges </a>' \
                          % figno)
-            
+
                 html.write('\n<p><h3><a href=%s>Plot Index</a></h3>' \
                           % (plotdata.html_index_fname))
                 if eagle:
@@ -1524,7 +2609,7 @@ def plotclaw2html(plotdata):
 
     os.chdir(startdir)
     # end of plotclaw2html
-    
+
 
 #=====================================
 def massage_gauges_data(plot_pages_data):
@@ -1541,11 +2626,11 @@ def massage_gauges_data(plot_pages_data):
         return
 
     startdir = os.getcwd()
-        
+
     for figno in fignos:
         if not fignames.has_key(figno):
             fignames[figno] = 'Solution'
-            
+
     numgauges = len(gaugenos)
     numfigs = len(fignos)
 
@@ -1578,7 +2663,7 @@ def redirect_stdouts(f):
         stdout_save = sys.stdout
         stderr_save = sys.stderr
         try:
-            return f(*args, **kwds) 
+            return f(*args, **kwds)
         finally:
             # reset stdout for future print statements
             sys.stdout = stdout_save
@@ -1591,7 +2676,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
     The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.  
+    function setplot unless plotdata.setplot=False.
 
     If plotdata.setplot=True then it is assumed that the current directory
     contains a module setplot.py that defines this function.
@@ -1613,7 +2698,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if not sys.modules.has_key('matplotlib'):
         print '*** Error: matplotlib not found, no plots will be done'
         return plotdata
-        
+
     if not isinstance(plotdata,ClawPlotData):
         print '*** Error, plotdata must be an object of type ClawPlotData'
         return plotdata
@@ -1637,7 +2722,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         plotdir = plotdata.plotdir     # where to put png and html files
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
-        
+
     except:
         print '*** Error in printframes: plotdata missing attribute'
         print '  *** plotdata = ',plotdata
@@ -1657,7 +2742,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
             fignos_to_show.append(figno)
     fignos = fignos_to_show
-        
+
     # figure out what type each figure is:
     fignos_each_frame = []
     fignos_each_gauge = []
@@ -1670,7 +2755,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             fignos_each_gauge.append(figno)
         if plotdata.plotfigure_dict[figname].type == 'each_run':
             fignos_each_run.append(figno)
-        
+
 
     rootdir = os.getcwd()
 
@@ -1734,7 +2819,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-    
+
     #DK: In PetClaw, we don't output fort.q* files.  Instead count the
     #claw.pkl* files.
     if len(fortfile) == 0:
@@ -1743,11 +2828,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             fortfile[frameno] = file
             for figno in fignos_each_frame:
                 pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
- 
+
     if len(fortfile) == 0:
         print '*** No fort.q or claw.pkl files found in directory ', os.getcwd()
         return plotdata
-    
+
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
@@ -1795,7 +2880,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Make html files for time frame figures:
     # ---------------------------------------
-    
+
     if plotdata.html_movie == "JSAnimation":
         # Only import if we need it:
         try:
@@ -1813,7 +2898,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         #plotpages.timeframes2html(plotdata)
         plotpages.plotclaw2html(plotdata)
         pass
-    
+
     # Make png files for all frames and gauges:
     # -----------------------------------------
 
@@ -1841,9 +2926,12 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
 
-    
+#
+    if plotdata.kml:
+        plotpages.plotclaw2kml(plotdata)
+
     if plotdata.html_movie == "JSAnimation":
-        
+
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
 
         class myHTMLWriter(HTMLWriter):
@@ -1855,11 +2943,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                    metadata=None, embed_frames=False, frame_dir=None, add_html='', \
                    frame_width=650, default_mode='once', file_names=None):
                 self.file_names=file_names
-                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate, 
-                   extra_args=extra_args, metadata=metadata, 
-                   embed_frames=embed_frames, frame_dir=frame_dir, 
+                super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate,
+                   extra_args=extra_args, metadata=metadata,
+                   embed_frames=embed_frames, frame_dir=frame_dir,
                    add_html=add_html, frame_width=frame_width, default_mode=default_mode)
-          
+
             def get_all_framenames(self):
                 frame_fullname = self.file_names
                 return frame_fullname
@@ -1874,15 +2962,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             def init():
                 im.set_data(Image.imread(filenames[0]))
                 return im,
-      
+
             def animate(i):
                 image=Image.imread(filenames[i])
                 im.set_data(image)
                 return im,
-      
+
             anim = animation.FuncAnimation(fig, animate, init_func=init,
                                           frames=len(filenames), blit=True)
-      
+
             #set embed_frames=True to embed base64-encoded frames directly in the HTML
             pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
             myHTMLwriter=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
@@ -1894,11 +2982,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             # Clean up animation temporary files of the form frame0000.png
             myHTMLwriter.clear_temp = True
             myHTMLwriter.cleanup()
-              
+
     #-----------
     # gif movie:
     #-----------
-    
+
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
         for figno in fignos_each_frame:
@@ -1908,16 +2996,16 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 print '    Created moviefig%s.gif' % figno
             except:
                 print '*** Error creating moviefig%s.gif' % figno
-    
+
     os.chdir(rootdir)
 
     # print out pointers to html index page:
     path_to_html_index = os.path.join(os.path.abspath(plotdata.plotdir), \
                                plotdata.html_index_fname)
-    print_html_pointers(path_to_html_index)
+    if plotdata.html:
+        print_html_pointers(path_to_html_index)
 
-   
+
 
     return plotdata
     # end of printframes
-
