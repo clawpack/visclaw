@@ -649,7 +649,7 @@ def plotclaw2kml(plotdata):
             KML.open(1)))
 
     # Open main zip file
-    zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w')
+    zip = zipfile.ZipFile(plotdata.kml_index_fname + ".kmz",'w',allowZip64=True)
 
     # --------------------- Set initial view --------------------------
     first_found = False
