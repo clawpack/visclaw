@@ -666,7 +666,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     # Grid mapping:
 
-    xc_edges, yc_edges = patch.grid.c_edges
+    xc_edges, yc_edges = patch.grid.c_nodes
     xc_centers, yc_centers = patch.grid.c_centers
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
