@@ -791,7 +791,7 @@ def plotclaw2kml(plotdata):
 
                 os.chdir(fig_dir)
                 pngfile = os.path.join("..","%s.png"% fname_str)
-                shutil.move(pngfile,".")
+                shutil.copy(pngfile,".")
                 im = plt.imread("%s.png" % fname_str)
                 sx = im.shape[1]   # reversed?
                 sy = im.shape[0]
