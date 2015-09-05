@@ -35,7 +35,7 @@ for idir = 1:length(sdirs),
     for level = 1:length(slice),
       pvec = slice{level};
       for k = 1:length(pvec),
-	set_patch_visibility(pvec(k),'on');
+          set_patch_visibility(pvec(k),'on');
       end; % Patches loop
     end; % level loop
   end;
