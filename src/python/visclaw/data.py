@@ -833,8 +833,8 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_ticks', None)
             self.add_attribute('colorbar_tick_labels',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """celledges_show celledges_color patch_bgcolor
-                     patchedges_show patchedges_color kwargs""".split()
+            amr_attributes = """celledges_show celledges_color data_show 
+              patch_bgcolor patchedges_show patchedges_color kwargs""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
