@@ -805,7 +805,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """show color kwargs""".split()
+            amr_attributes = """show color kwargs data_show""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
@@ -833,8 +833,8 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_ticks', None)
             self.add_attribute('colorbar_tick_labels',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """celledges_show celledges_color patch_bgcolor
-                     patchedges_show patchedges_color kwargs""".split()
+            amr_attributes = """celledges_show celledges_color data_show 
+              patch_bgcolor patchedges_show patchedges_color kwargs""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
@@ -859,7 +859,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('contour_show',1)
                 self.add_attribute('contour_colors','k')
                 self.add_attribute('contour_cmap',None)
-                amr_attributes = """show colors cmap""".split()
+                amr_attributes = """show colors cmap data_show""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_contour_%s' % a, [])
 
@@ -893,7 +893,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('quiver_key_scale',None)
                 self.add_attribute('quiver_key_kwargs',{})
                 amr_attributes = """coarsening key_show key_label_x key_label_y
-                         key_scale key_kwargs""".split()
+                         key_scale key_kwargs data_show""".split()
                 for a in amr_attributes:
                     self.add_attribute('amr_quiver_%s' % a, [])
 
