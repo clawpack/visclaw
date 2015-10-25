@@ -433,7 +433,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     return current_data
     
-def read_setgauges(datadir):
+def read_setgauges(outdir):
     """
     Read the info from gauges.data.
     """
@@ -447,7 +447,7 @@ def read_setgauges(datadir):
 
     setgauges = amrclaw.GaugeData()
     try:
-        setgauges.read(datadir)
+        setgauges.read(outdir)
     except IOError as e:
         # No gauges.data file was found, ignore this exception
         pass
@@ -472,7 +472,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
     datadir = plotdata.rundir  # this should contain gauges.data
 
     try:
-        setgauges = read_setgauges(datadir)
+        setgauges = read_setgauges(plotdata.outdir)
     except:
         return
 
