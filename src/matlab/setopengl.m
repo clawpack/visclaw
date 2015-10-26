@@ -29,5 +29,5 @@ end;
 if (~found_opengl)
   disp('*** Warning : The OpenGL renderer is not available on your system.');
 else
-  set(gcf,'Renderer','OpenGL');
+  set(gcf,'Renderer','opengl');
 end;
