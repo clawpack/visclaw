@@ -75,8 +75,9 @@ def make_colormap(color_list):
     return mymap
 
 
-def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_name="something"):
-    r"""Concatenate colormaps in *colormaps* list.
+def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, 
+                             colormap_name="JohnDoe"):
+    r"""Concatenate colormaps in *colormaps* list and return Normalize object.
 
     Appends the colormaps in the list *colormaps* adjusting the mapping to the
     colormap such that it maps the data space limits *data_limits* and puts the
@@ -86,7 +87,8 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
 
     Originally contributed by Damon McDougall
 
-    returns `matplotlib.colors.LinearSegmentedColormap`
+    returns `matplotlib.colors.LinearSegmentedColormap`, 
+            `matplotlib.colors.Normalize`
 
     Example
     -------
@@ -97,53 +99,54 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5, colormap_nam
     >>> import clawpack.visclaw.colormaps as colormaps
     >>> import numpy
     >>> cmaps = (plt.get_cmap("BuGn_r"), plt.get_cmap("Blues_r"))
-    >>> new_cmap = colormaps.add_colormaps(cmaps, data_limits=[-1.0, 5.0],
+    >>> new_cmap, norm = colormaps.add_colormaps(cmaps, data_limits=[-1.0, 5.0],
         data_break=1.0)
     >>> x = numpy.linspace(-1,1,100)
     >>> y = x
     >>> X, Y = numpy.meshgrid(x, y)
     >>> fig = plt.figure()
     >>> axes = fig.add_subplot(1,1,1)
-    >>> plot = axes.pcolor(X, Y, 3.0 * X + 2.0, cmap=new_cmap)
+    >>> plot = axes.pcolor(X, Y, 3.0 * X + 2.0, cmap=new_cmap, norm=norm)
     >>> fig.colorbar(plot)
     >>> plt.show()
 
     """
 
-    break_location = (data_break - data_limits[0])      \
-                            / (data_limits[1] - data_limits[0])
-
     lhs_dict = colormaps[0]._segmentdata
     rhs_dict = colormaps[1]._segmentdata
     new_dict = dict(red=[], green=[], blue=[], alpha=[])
 
-    # Scale rhs by half
+    # Add first colorbar
     for key in rhs_dict:
         val_list = rhs_dict[key]
-        # print(key, val_list)
         for val in val_list:
-            new_dict[key].append((val[0] * break_location, val[1], val[2]))
+            new_dict[key].append((val[0] * 0.5, val[1], val[2]))
 
     if 'alpha' not in rhs_dict.keys():
-        new_dict['alpha'].append((0,1.0,1.0))
+        new_dict['alpha'].append((0.0,1.0,1.0))
 
-    # Append lhs
+    # Add second colorbar
     for key in lhs_dict:
         val_list = lhs_dict[key]
-        # print(key, val_list)
         for val in val_list:
-            new_dict[key].append((break_location + val[0] * \
-                                    (1.0 - break_location), val[1], val[2]))
+            new_dict[key].append(((val[0] + 1.0) * 0.5, val[1], val[2]))
 
     if 'alpha' not in lhs_dict.keys():
-            new_dict['alpha'].append((1.0,1.0,1.0))
-
-
+        new_dict['alpha'].append((1.0,1.0,1.0))
 
     N = 256
     gamma = 1.0
 
-    return colors.LinearSegmentedColormap(colormap_name, new_dict, N, gamma)
+    cmap = colors.LinearSegmentedColormap(colormap_name, new_dict, N, gamma)
+
+    # Compute new norm object
+    bounds = numpy.empty(N)
+    bounds[:int(N / 2)] = numpy.linspace(data_limits[0], data_break, int(N / 2))
+    bounds[int(N / 2):] = numpy.linspace(data_break, data_limits[1], 
+                                                             int(N / 2) + N % 2)
+    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=N)
+
+    return cmap, norm
 
 
 def showcolors(cmap):
