@@ -2865,11 +2865,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Gauges:
     # -------
-    if os.path.exists(os.path.join(datadir,"gauges.data")):
+    if os.path.exists(os.path.join(plotdata.outdir,"gauges.data")):
         gaugenos = plotdata.print_gaugenos
         if gaugenos == 'all':
             # Read gauge numbers from setgauges.data if it exists:
-            setgauges = gaugetools.read_setgauges(datadir)
+            setgauges = gaugetools.read_setgauges(plotdata.outdir)
             gaugenos = setgauges.gauge_numbers
 
         plotdata.gauges_gaugenos = gaugenos
@@ -2954,6 +2954,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
         # Create Animations
+        
+        import pdb; pdb.set_trace()
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
