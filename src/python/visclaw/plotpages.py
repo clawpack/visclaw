@@ -2411,7 +2411,7 @@ def plotclaw2html(plotdata):
     # moviefigJ.html
     #-------------------
 
-    if plotdata.html_movie in [True, "4.x"]:
+    if (plotdata.html_movie in [True, "4.x"]) and (len(framenos) > 0):
 
         # original style still used if plotdata.html_movie == "4.x":
         for figno in fignos:
@@ -2930,7 +2930,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
-    if plotdata.html_movie == "JSAnimation":
+    if (plotdata.html_movie == "JSAnimation") and (len(framenos) > 0):
 
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
 
@@ -2988,7 +2988,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # gif movie:
     #-----------
 
-    if plotdata.gif_movie:
+    if plotdata.gif_movie and (len(framenos) > 0):
         print 'Making gif movies.  This may take some time....'
         for figno in fignos_each_frame:
             try:
