@@ -2955,7 +2955,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
         # Create Animations
         
-        import pdb; pdb.set_trace()
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
