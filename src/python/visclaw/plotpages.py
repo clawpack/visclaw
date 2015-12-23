@@ -2705,7 +2705,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     plotdata._mode = 'printframes'
 
-    plotdata = frametools.call_setplot(plotdata.setplot, plotdata)
+    # plotdata = frametools.call_setplot(plotdata.setplot, plotdata)
 
     try:
         plotdata.rundir = os.path.abspath(plotdata.rundir)
@@ -2836,7 +2836,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
-
+    
     numframes = len(framenos)
 
     print "Will plot %i frames numbered:" % numframes, framenos

@@ -146,6 +146,14 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('gauges_fignos',None)
         self.add_attribute('gauges_fignames',None)
 
+        # Parallel capabilities
+        # Run multiple processess dividing up the frames that need to be plotted
+        self.add_attribute('parallel', True)
+        # Default to OMP_NUM_THREADS available if defined
+        self.add_attribute('num_procs', None)
+        self.add_attribute('proc_frames', None)
+
+
         self._next_FIG = 1000
         self._fignames = []
         self._fignos = []
