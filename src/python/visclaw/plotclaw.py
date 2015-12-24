@@ -54,10 +54,12 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
     frametools.call_setplot(plotdata.setplot, plotdata)
 
+
     if plotdata.parallel:
 
         # If this is the original call then we need to split up the work and 
         # call this function again
+
         if frames is None:
             if plotdata.num_procs is None:
                 plotdata.num_procs = os.environ.get("OMP_NUM_THREADS", 1)
@@ -66,18 +68,23 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
             frames = [[] for n in xrange(plotdata.num_procs)]
             framenos = frametools.only_most_recent(plotdata.print_framenos,
                                                    outdir)
+
+            # don't use more procs than frames or infinite loop!!
+            num_procs = min(plotdata.num_procs, len(framenos))
+
             for (n, frame) in enumerate(framenos):
-                frames[n%plotdata.num_procs].append(frame)
+                frames[n%num_procs].append(frame)
 
             # Create subprocesses to work on each
             plotclaw_cmd = "python $CLAW/visclaw/src/python/visclaw/plotclaw.py"
             process_queue = []
-            for n in xrange(plotdata.num_procs):
+            for n in xrange(num_procs):
                 plot_cmd = "%s %s %s %s" % (plotclaw_cmd, 
                                             outdir,
                                             plotdir, 
                                             setplot)
                 plot_cmd = plot_cmd + " " + " ".join([str(i) for i in frames[n]])
+
                 process_queue.append(subprocess.Popen(plot_cmd, shell=True))
 
 
@@ -91,12 +98,22 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                         if process.poll() is not None:
                             process_queue.remove(process)
                     print "Number of processes currently:",len(process_queue)
-            sys.exit(0)
+
+            # After all frames have been plotted via recursive calls,
+            # make index and gauge plots only:
+            plotdata._subprocess = False
+            plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
         else:
+            # make frame plots only:
+            plotdata._subprocess = True 
             plotdata.print_framenos = frames
+            plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
-    plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
+    else:
+        # not in parallel:
+        plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
+
 
 
 if __name__=='__main__':

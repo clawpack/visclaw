@@ -2691,6 +2691,13 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
+    if plotdata._subprocess:
+        # all we need to do is make png's for some frames in this case:
+        for frameno in plotdata.print_framenos:
+            frametools.plotframe(frameno, plotdata, verbose)
+            print 'Creating png for Frame %i' % frameno
+        return
+
     plotdata.save_frames = False
 
     datadir = os.getcwd()  # assume data files in this directory
@@ -2907,9 +2914,12 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     else:
         print "Now making png files for all figures..."
 
-        for frameno in framenos:
-            frametools.plotframe(frameno, plotdata, verbose)
-            print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
+        if not plotdata.parallel:
+            # don't create the png for frames when run in parallel
+            # (unless plotdata._subprocess == True, checked earlier)
+            for frameno in framenos:
+                frametools.plotframe(frameno, plotdata, verbose)
+                print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
         gaugenos_input = tuple(gaugenos)
         gaugenos = []
@@ -2958,6 +2968,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
+            print '+++ filenames: ',filenames
+            # dies here unexpected in parallel
+            #import pdb; pdb.set_trace()
             fig = plt.figure()
             im = plt.imshow(Image.imread(filenames[0]))
             def init():
