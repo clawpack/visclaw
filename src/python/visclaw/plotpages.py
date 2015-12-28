@@ -2691,7 +2691,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
-    if plotdata._subprocess:
+    if plotdata._parallel_todo == 'frames':
         # all we need to do is make png's for some frames in this case:
         for frameno in plotdata.print_framenos:
             frametools.plotframe(frameno, plotdata, verbose)
@@ -2799,16 +2799,21 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     framefiles = glob.glob(os.path.join(plotdir,'frame*.png')) + \
                     glob.glob(os.path.join(plotdir,'frame*.html'))
-    if overwrite:
-        # remove any old versions:
-        for file in framefiles:
-            os.remove(file)
-    else:
-        if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
-            return plotdata
 
+    if (not plotdata.parallel) or (plotdata._parallel_todo=='initialize'):
+        if overwrite:
+            # remove any old versions:
+            for file in framefiles:
+                os.remove(file)
+        else:
+            if len(framefiles) > 1:
+                print "*** Remove frame*.png and frame*.html and try again,"
+                print "  or use overwrite=True in call to printframes"
+                return plotdata
+
+    if plotdata._parallel_todo=='initialize':
+        os.chdir(rundir)
+        return plotdata
 
     try:
         os.chdir(outdir)
@@ -2916,7 +2921,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
         if not plotdata.parallel:
             # don't create the png for frames when run in parallel
-            # (unless plotdata._subprocess == True, checked earlier)
+            # (unless plotdata._parallell_todo=='frames', handled earlier)
             for frameno in framenos:
                 frametools.plotframe(frameno, plotdata, verbose)
                 print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
@@ -2968,9 +2973,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
-            print '+++ filenames: ',filenames
-            # dies here unexpected in parallel
-            #import pdb; pdb.set_trace()
             fig = plt.figure()
             im = plt.imshow(Image.imread(filenames[0]))
             def init():

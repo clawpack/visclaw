@@ -152,7 +152,7 @@ class ClawPlotData(clawdata.ClawData):
         # Default to OMP_NUM_THREADS available if defined
         self.add_attribute('num_procs', None)
         self.add_attribute('proc_frames', None)
-        self.add_attribute('_subprocess', False)
+        self.add_attribute('_parallel_todo', None)
 
 
         self._next_FIG = 1000

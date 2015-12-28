@@ -60,6 +60,11 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
         # If this is the original call then we need to split up the work and 
         # call this function again
 
+        # First set up plotdir:
+
+        plotdata._parallel_todo = 'initialize'
+        plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
+
         if frames is None:
             if plotdata.num_procs is None:
                 plotdata.num_procs = os.environ.get("OMP_NUM_THREADS", 1)
@@ -101,17 +106,18 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
             # After all frames have been plotted via recursive calls,
             # make index and gauge plots only:
-            plotdata._subprocess = False
+            plotdata._parallel_todo = 'finalize'
             plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
         else:
             # make frame plots only:
-            plotdata._subprocess = True 
+            plotdata._parallel_todo = 'frames'
             plotdata.print_framenos = frames
             plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
     else:
         # not in parallel:
+        plotdata._parallel_todo = None
         plotpages.plotclaw_driver(plotdata, verbose=False, format=format)
 
 
