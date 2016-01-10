@@ -32,7 +32,7 @@ if sys.platform in ['win32','cygwin']:
 
 
 def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
-             format='ascii', msgfile='', frames=None):
+             format='ascii', msgfile='', frames=None, verbose=False):
     """
     Create html and/or latex versions of plots.
 
@@ -52,6 +52,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     plotdata.format = format
     plotdata.msgfile = msgfile
 
+
     frametools.call_setplot(plotdata.setplot, plotdata)
 
 
@@ -67,7 +68,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
         if frames is None:
             if plotdata.num_procs is None:
-                plotdata.num_procs = os.environ.get("OMP_NUM_THREADS", 1)
+                plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
 
 
             frames = [[] for n in xrange(plotdata.num_procs)]
@@ -102,7 +103,8 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                     for process in process_queue:
                         if process.poll() is not None:
                             process_queue.remove(process)
-                    print "Number of processes currently:",len(process_queue)
+                    if verbose:
+                        print "Number of processes currently:",len(process_queue)
 
             # After all frames have been plotted via recursive calls,
             # make index and gauge plots only:
