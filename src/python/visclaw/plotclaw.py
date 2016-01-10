@@ -22,6 +22,7 @@ matplotlib.use('Agg')
 
 import sys
 import os
+import time
 import subprocess
 
 import clawpack.visclaw.frametools as frametools
@@ -93,11 +94,8 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
                 process_queue.append(subprocess.Popen(plot_cmd, shell=True))
 
-
-            wait = True
-            poll_interval = 1
-            if wait:
-                import time
+            poll_interval = 5
+            try:
                 while len(process_queue) > 0:
                     time.sleep(poll_interval)
                     for process in process_queue:
@@ -105,6 +103,23 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                             process_queue.remove(process)
                     if verbose:
                         print "Number of processes currently:",len(process_queue)
+            
+            # Stop child processes if interrupt was caught or something went 
+            # wrong
+            except KeyboardInterrupt:
+                print "ABORTING: A keyboard interrupt was caught.  All " + \
+                      "child processes will be terminated as well."
+                for process in process_queue:
+                    process.terminate()
+                raise
+
+            except:
+                print "ERROR: An error occurred while waiting for " + \
+                      "plotting processes to complete.  Aborting all " + \
+                      "child processes."
+                for process in process_queue:
+                    process.terminate()
+                raise 
 
             # After all frames have been plotted via recursive calls,
             # make index and gauge plots only:
