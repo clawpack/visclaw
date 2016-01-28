@@ -57,7 +57,10 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     frametools.call_setplot(plotdata.setplot, plotdata)
 
 
-    if plotdata.parallel:
+    if plotdata.num_procs is None:
+        plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
+
+    if plotdata.parallel and plotdata.num_procs != 1:
 
         # If this is the original call then we need to split up the work and 
         # call this function again
