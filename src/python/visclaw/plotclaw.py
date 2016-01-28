@@ -83,7 +83,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                 frames[n%num_procs].append(frame)
 
             # Create subprocesses to work on each
-            plotclaw_cmd = "python $CLAW/visclaw/src/python/visclaw/plotclaw.py"
+            plotclaw_cmd = "python %s" % __file__
             process_queue = []
             for n in xrange(num_procs):
                 plot_cmd = "%s %s %s %s" % (plotclaw_cmd, 
@@ -139,7 +139,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
 
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     """
     If executed at command line prompt, simply call the function, with
     any arguments passed in.
