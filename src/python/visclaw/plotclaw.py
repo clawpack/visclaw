@@ -60,7 +60,15 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     if plotdata.num_procs is None:
         plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
 
-    if plotdata.parallel and plotdata.num_procs != 1:
+    # Make sure plotdata.parallel is False in some cases:
+
+    if plotdata.num_procs == 1:
+        plotdata.parallel = False   # not doing in parallel in this case
+
+    if type(setplot) is not str:
+        plotdata.parallel = False   # cannot call plotclaw from shell
+
+    if plotdata.parallel:
 
         # If this is the original call then we need to split up the work and 
         # call this function again
