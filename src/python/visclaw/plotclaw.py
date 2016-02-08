@@ -60,7 +60,15 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     if plotdata.num_procs is None:
         plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
 
-    if plotdata.parallel and plotdata.num_procs != 1:
+    # Make sure plotdata.parallel is False in some cases:
+
+
+    if plotdata.parallel:
+        assert type(setplot) in [str, bool, type(None)], \
+                "*** Parallel plotting is not supported when ClawPlotData " \
+                + "attribute setplot is a function."
+
+    if plotdata.parallel and (plotdata.num_procs > 1):
 
         # If this is the original call then we need to split up the work and 
         # call this function again

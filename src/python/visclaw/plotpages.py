@@ -2691,6 +2691,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
+    # doing plots in parallel?
+    _parallel = plotdata.parallel and (plotdata.num_procs > 1) 
+
     if plotdata._parallel_todo == 'frames':
         # all we need to do is make png's for some frames in this case:
         for frameno in plotdata.print_framenos:
@@ -2800,7 +2803,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     framefiles = glob.glob(os.path.join(plotdir,'frame*.png')) + \
                     glob.glob(os.path.join(plotdir,'frame*.html'))
 
-    if (not plotdata.parallel) or (plotdata._parallel_todo=='initialize'):
+    if (not _parallel) or (plotdata._parallel_todo=='initialize'):
         if overwrite:
             # remove any old versions:
             for file in framefiles:
@@ -2919,7 +2922,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     else:
         print "Now making png files for all figures..."
 
-        if not plotdata.parallel:
+        if not _parallel:
             # don't create the png for frames when run in parallel
             # (unless plotdata._parallell_todo=='frames', handled earlier)
             for frameno in framenos:
