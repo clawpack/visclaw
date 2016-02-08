@@ -148,7 +148,7 @@ class ClawPlotData(clawdata.ClawData):
 
         # Parallel capabilities
         # Run multiple processess dividing up the frames that need to be plotted
-        self.add_attribute('parallel', True)
+        self.add_attribute('parallel', False)
         # Default to OMP_NUM_THREADS available if defined
         self.add_attribute('num_procs', None)
         self.add_attribute('proc_frames', None)
