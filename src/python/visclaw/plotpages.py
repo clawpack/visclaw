@@ -2691,6 +2691,13 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
+    if plotdata._parallel_todo == 'frames':
+        # all we need to do is make png's for some frames in this case:
+        for frameno in plotdata.print_framenos:
+            frametools.plotframe(frameno, plotdata, verbose)
+            print 'Creating png for Frame %i' % frameno
+        return
+
     plotdata.save_frames = False
 
     datadir = os.getcwd()  # assume data files in this directory
@@ -2705,7 +2712,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     plotdata._mode = 'printframes'
 
-    plotdata = frametools.call_setplot(plotdata.setplot, plotdata)
+    # plotdata = frametools.call_setplot(plotdata.setplot, plotdata)
 
     try:
         plotdata.rundir = os.path.abspath(plotdata.rundir)
@@ -2792,16 +2799,21 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     framefiles = glob.glob(os.path.join(plotdir,'frame*.png')) + \
                     glob.glob(os.path.join(plotdir,'frame*.html'))
-    if overwrite:
-        # remove any old versions:
-        for file in framefiles:
-            os.remove(file)
-    else:
-        if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
-            return plotdata
 
+    if (not plotdata.parallel) or (plotdata._parallel_todo=='initialize'):
+        if overwrite:
+            # remove any old versions:
+            for file in framefiles:
+                os.remove(file)
+        else:
+            if len(framefiles) > 1:
+                print "*** Remove frame*.png and frame*.html and try again,"
+                print "  or use overwrite=True in call to printframes"
+                return plotdata
+
+    if plotdata._parallel_todo=='initialize':
+        os.chdir(rundir)
+        return plotdata
 
     try:
         os.chdir(outdir)
@@ -2836,7 +2848,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
-
+    
     numframes = len(framenos)
 
     print "Will plot %i frames numbered:" % numframes, framenos
@@ -2907,9 +2919,12 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     else:
         print "Now making png files for all figures..."
 
-        for frameno in framenos:
-            frametools.plotframe(frameno, plotdata, verbose)
-            print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
+        if not plotdata.parallel:
+            # don't create the png for frames when run in parallel
+            # (unless plotdata._parallell_todo=='frames', handled earlier)
+            for frameno in framenos:
+                frametools.plotframe(frameno, plotdata, verbose)
+                print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
 
         gaugenos_input = tuple(gaugenos)
         gaugenos = []
