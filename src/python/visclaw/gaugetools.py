@@ -6,6 +6,7 @@ import os,sys,shutil,glob
 import string,re
 import time
 import traceback
+import warnings
 
 import numpy as np
 
@@ -83,6 +84,12 @@ class GaugeSolution(object):
 
     def __init__(self,number,location=None):
         
+        warnings.warn("This version of GaugeSolution is deprecated, use the ",
+                      "class definition in clawpack.amrclaw.gauges instead.")
+
+        raise DeprecationWarning("This version of GaugeSolution is deprecated,",
+                " use the class definition in clawpack.amrclaw.gauges instead.")
+
         # Gauge descriptors
         self.number = number
         self._location = None
@@ -121,7 +128,6 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     to ClawPlotFigure objects with plot_type="each_gauge".
 
     """
-
 
     if verbose:  
         gaugesoln = plotdata.getgauge(gaugeno)
@@ -408,7 +414,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     # Need to debug why gaugesoln.number always 1 here
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
-                 gaugesoln.number))
+                 gaugesoln.id))
 
     pylab.xlabel("time")
 
