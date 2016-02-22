@@ -82,13 +82,10 @@ class GaugeSolution(object):
         return locals()
     location = property(**location())
 
-    def __init__(self,number,location=None):
+    def __init__(self, number, location=None):
         
         warnings.warn("This version of GaugeSolution is deprecated, use the ",
                       "class definition in clawpack.amrclaw.gauges instead.")
-
-        raise DeprecationWarning("This version of GaugeSolution is deprecated,",
-                " use the class definition in clawpack.amrclaw.gauges instead.")
 
         # Gauge descriptors
         self.number = number
