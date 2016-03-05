@@ -373,6 +373,11 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     """
 
+    if not gaugesoln.is_valid():
+        import warnings
+        warnings.warn("Gauge has not been initialized properly.")
+        return
+
     plotdata = plotitem._plotdata
     plotfigure = plotitem._plotfigure
     plotaxes = plotitem._plotaxes

@@ -315,17 +315,16 @@ class ClawPlotData(clawdata.ClawData):
                 gauge_data = clawpack.amrclaw.data.GaugeData()
                 gauge_data.read(outdir)
 
-                if gauge_id not in gauge_data.gauge_numbers:
-                    raise ValueError("Gauge id %s not found in the gauge data file." % gauge_id)
-
-                self.gaugesoln_dict[key] = gauges.GaugeSolution(gauge_id=gauge_id,
-                                                                path=outdir)
+                self.gaugesoln_dict[key] = gauges.GaugeSolution(
+                                                              gauge_id=gauge_id,
+                                                              path=outdir)
 
                 if verbose:
                     print "Read in gauge %s." % gauge_id
 
             except Exception as e:
-                warn.warning(str(e))
+                import warnings
+                warnings.warn(str(e))
                 return None
 
         return self.gaugesoln_dict[key]
