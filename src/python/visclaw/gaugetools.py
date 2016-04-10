@@ -182,8 +182,13 @@ def plotgauge(gaugeno, plotdata, verbose=False):
  
     if plotdata._mode == 'iplotclaw':
         gaugesoln = plotdata.getgauge(gaugeno)
-        print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
-                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
+        gaugeloc = gaugesoln.location
+        if len(gaugeloc) == 2:
+            print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1])
+        elif len(gaugeloc) == 3:
+            print '    Plotting Gauge %s  at x = %s, y = %s, z = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1], gaugeloc[2])
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
