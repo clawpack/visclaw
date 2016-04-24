@@ -213,7 +213,7 @@ for ng = 1:ngrids,
   % if we're not plotting data at this level, skip to next grid
   if (PlotData(level) == 0)
     continue;
-  end;
+  end
 
   % Set block number for multi-block calculations.
   set_blocknumber(blockno);

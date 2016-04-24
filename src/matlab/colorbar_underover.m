@@ -38,7 +38,7 @@ colorbar;
 o = findobj('Tag','Colorbar');
 n = length(colormap);
 
-set(o,'ticklength',[0 0]);
+set(o,'ticklength',0);
 
 if (nargin == 0)
   under_label = 'undershoot';

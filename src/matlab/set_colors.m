@@ -177,7 +177,9 @@ switch  colormapping
         end;
         
         % Hardwire colors for the patch
-        set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        % set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        set(p,'FaceVertexCData',fv_idx);
+        set(p,'cdatamapping','direct');
         
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
