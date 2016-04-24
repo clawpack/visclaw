@@ -262,11 +262,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         num_dim = plotitem.num_dim
 
                         # option to suppress printing some levels:
-                        try:
-                            pp['amr_data_show'] = plotitem.amr_data_show
-                            i = min(len(pp['amr_data_show']), state.level) - 1
-                            show_this_level = pp['amr_data_show'][i]
-                        except:
+                        amr_data_show = plotitem.amr_data_show
+                        if len(amr_data_show) > 0:
+                            j = min(len(amr_data_show), patch.level) - 1
+                            show_this_level = amr_data_show[j]
+                        else:
                             show_this_level = True
 
                         if plotitem._show and show_this_level:
