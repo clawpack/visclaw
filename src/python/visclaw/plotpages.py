@@ -773,7 +773,7 @@ def plotclaw2kml(plotdata):
 
                 # PNG file gets moved into subdirectory and will eventually be
                 # zipped into KMZ file.
-                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
+                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
@@ -2692,7 +2692,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
     # doing plots in parallel?
-    _parallel = plotdata.parallel and (plotdata.num_procs > 1) 
+    _parallel = plotdata.parallel and (plotdata.num_procs > 1)
 
     if plotdata._parallel_todo == 'frames':
         # all we need to do is make png's for some frames in this case:
@@ -2851,7 +2851,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
-    
+
     numframes = len(framenos)
 
     print "Will plot %i frames numbered:" % numframes, framenos
@@ -2972,7 +2972,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
         # Create Animations
-        
+
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
