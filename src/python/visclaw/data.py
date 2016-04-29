@@ -641,7 +641,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_dpi',200)
         self.add_attribute('kml_xlimits',None)
         self.add_attribute('kml_ylimits',None)
-        self.add_attribute('kml_use_figure_limits',None)
+        self.add_attribute('kml_use_figure_limits',True)
         self.add_attribute('kml_tile_images',False)
         self.add_attribute('kml_colorbar',None)
         self.add_attribute('kml_use_for_initial_view',False)
