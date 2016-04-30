@@ -83,6 +83,6 @@ for ng = 1:ngrids,
 
   amr(ng) = amrdata;
 
-end;
+end
 
 fclose(fid);

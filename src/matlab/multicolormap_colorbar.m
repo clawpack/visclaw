@@ -22,6 +22,6 @@ o = colorbar;
 set(o,'ytick',(0:(npmax)) + 0.5);
 set(o,'yticklabel',(1:npmax)-1);
 set(o,'ylim',[qmin qmax+1]);
-set(o,'ticklength',[0 0])
+set(o,'ticklength',[0])
 set(o,'fontsize',16,'fontweight','bold')
 

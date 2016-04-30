@@ -101,14 +101,26 @@ switch  colormapping
         npmax = pp.npmax;
         
         % Seed to use for random processor colormap.
-        s = pp.seed;
-        ppcm = multicolormap(npmax,s);
+        if (~isfield(pp,'pp_colormap'))
+            s = pp.seed;
+            ppcm = multicolormap(npmax,s);
+        else
+            ppcm = pp.pp_colormap;
+            if (size(ppcm,1) ~= pp.npmax)
+                error('set_colors: length(ppcm) ~= npmax')
+            end
+        end
 
         mpirank = getmpirank();  % mpirank for this patch        
+        if (~isfield(pp,'plotq'))
+            pp.plotq = ~isempty(pp.qcolors);
+        end
         
-        if (isempty(pp.qcolors))            
-            cm_extended = ppcm;
+        if (~pp.plotq)
+            cm_extended = [ppcm; [1 1 1]];
             qcolors = mpirank+1 + zeros(size(q));            
+            m = isnan(q);
+            qcolors(m) = length(cm_extended);
         else
             % == NAN where processor colors should be used. 
             qcolors = pp.qcolors;  
@@ -124,8 +136,7 @@ switch  colormapping
                         
             % Everything less than qmin will take processor color
             m1 = qm < qmin;
-            % cidx(m1) = mpirank + 1;
-            cidx(m1) = npmax + 2;
+            cidx(m1) = mpirank + 1;
             
             % Everything between qmin and qmax, map linearly into 
             % pp.colormap.
@@ -135,12 +146,15 @@ switch  colormapping
             end
             cidx(m2) = cidx(m2) + npmax;
             
-            % Everything larger than qmax is white
+            % Everything larger than qmax is a processor color
             m3 = qm > qmax;
-            cidx(m3) = npmax + n + 1;
+            cidx(m3) = mpirank + 1;
             
             qcolors(m) = cidx;
-            qcolors(~m) = mpirank + 1;
+            % qcolors(~m) = mpirank + 1;
+            
+            % NANs are colored white.
+            qcolors(~m) = npmax + n + 1;
 
             
             w = [1 1 1]; 
@@ -163,7 +177,9 @@ switch  colormapping
         end;
         
         % Hardwire colors for the patch
-        set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        % set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        set(p,'FaceVertexCData',fv_idx);
+        set(p,'cdatamapping','direct');
         
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
