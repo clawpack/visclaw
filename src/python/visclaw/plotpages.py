@@ -996,6 +996,8 @@ def plotclaw2kml(plotdata):
         for gnum,gauge in enumerate(gauges):
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
+            if plotdata.kml_map_topo_to_latlong is not None:
+                x1,y1 = plotdata.kml_map_topo_to_latlong(x1,y1)
             gaugeno = int(gauge[0])
 
             # Get proper coordinates, otherwise placemark doesn't show up.
@@ -1009,11 +1011,11 @@ def plotclaw2kml(plotdata):
             print "Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
                 + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
 
-            # PNG file associated with this gauge
-            figname = 'not found'
-            for k in gauge_pngfile.keys():
-                if k[0] == gaugeno:
-                    figname = gauge_pngfile[k]
+            # plotdata.gauges_fignos
+            # Not clear how to get the figure number for each gauge.   Assume that
+            # there is only one figure number for all gauges
+            figno = plotdata.gauges_fignos[0]
+            figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
             coords = "%10.4f %10.4f %10.4f" % (longitude,y1,elev)
@@ -1097,10 +1099,16 @@ def plotclaw2kml(plotdata):
         lower = np.fromstring(c.strip(),sep=' ')
         c = f.readline()
         upper = np.fromstring(c.strip(),sep=' ')
-        x1 = lower[0]
-        x2 = upper[0]
-        y1 = lower[1]
-        y2 = upper[1]
+        if plotdata.kml_map_topo_to_latlong is not None:
+            x1,y1 = plotdata.kml_map_topo_to_latlong(lower[0],lower[1])
+            x2,y2 = plotdata.kml_map_topo_to_latlong(upper[0],upper[1])
+        else:
+            x1 = lower[0]
+            x2 = upper[0]
+            y1 = lower[1]
+            y2 = upper[1]
+
+
         bcomp_domain = \
                        "<style media=\"screen\" type=\"text/css\">" \
                        "pre {font-weight:bold;font-style:12pt}" + \
@@ -1468,6 +1476,9 @@ def plotclaw2kml(plotdata):
                 ylower = patch.dimensions[1].lower
                 yupper = patch.dimensions[1].upper
                 level = patch.level
+                if plotdata.kml_map_topo_to_latlong is not None:
+                    xlower,ylower = plotdata.kml_map_topo_to_latlong(xlower,ylower)
+                    xupper,yupper = plotdata.kml_map_topo_to_latlong(xupper,yupper)
 
                 # maxlevel_real should start at 0 so it can be used for indexing
                 maxlevel_real = max(level,maxlevel_real)
@@ -2671,7 +2682,7 @@ def redirect_stdouts(f):
     return wrapper
 
 #============================================
-@redirect_stdouts
+#@redirect_stdouts
 def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
