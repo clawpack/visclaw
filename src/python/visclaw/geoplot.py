@@ -195,6 +195,13 @@ def depth(current_data):
    q = current_data.q
    h = q[0,:,:]
    depth = numpy.ma.masked_where(h<=drytol, h)
+   try:
+       # Use mask covering coarse regions if it's set:
+       m = current_data.mask_coarse
+       depth = numpy.ma.masked_where(m, depth)
+   except:
+       pass
+
    return depth
 
 
