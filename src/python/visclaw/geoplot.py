@@ -59,6 +59,12 @@ googleearth_transparent = colormaps.make_colormap({-1.0:light_green_a,
                                                    0.0:transparent,
                                                    1.0:red_a})
 
+# Start transparency at 0.2
+googleearth_flooding = colormaps.make_colormap({ -1:transparent,
+                                                 -0.2:light_blue,
+                                                 1.0:dark_blue})
+
+
 tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,
                                             TSUNAMI_MAX_AMPLITUDE:red})
@@ -111,7 +117,7 @@ land_colormap = colormaps.make_colormap({ 0:[0.95,0.9,0.7],
 
 colormaps_list = {"tsunami":tsunami_colormap,"land1":land1_colormap,
              "land2":land2_colormap,"water_land":water_land_colormap,
-             "bathy1":bathy1_colormap,"bathy2":bathy2_colormap}
+                  "bathy1":bathy1_colormap,"bathy2":bathy2_colormap}
 
 def plot_colormaps():
     r"""Plots all colormaps avaiable or the ones specified"""

@@ -773,7 +773,10 @@ def plotclaw2kml(plotdata):
 
                 # PNG file gets moved into subdirectory and will eventually be
                 # zipped into KMZ file.
-                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
+                if plotdata.html:
+                    shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+                else:
+                    shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
