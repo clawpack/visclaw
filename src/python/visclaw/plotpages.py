@@ -773,7 +773,7 @@ def plotclaw2kml(plotdata):
 
                 # PNG file gets moved into subdirectory and will eventually be
                 # zipped into KMZ file.
-                shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
@@ -2682,7 +2682,7 @@ def redirect_stdouts(f):
     return wrapper
 
 #============================================
-#@redirect_stdouts
+@redirect_stdouts
 def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 #============================================
     """
