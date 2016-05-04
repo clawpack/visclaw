@@ -16,7 +16,7 @@ if exist('NoQuery')
     pause(1)
     Frame = Frame + frameinc;
     if Frame > MaxFrames
-      break;   % break out of plotclawN after last frame
+      return  % break out of plotclawN after last frame
     end
     return
   end
@@ -139,7 +139,7 @@ end % while strcmp
 
 if strcmp(inp,'q')
   % quit now
-  break
+  return
 end
 
 

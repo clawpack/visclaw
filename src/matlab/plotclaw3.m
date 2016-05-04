@@ -69,7 +69,7 @@ if strcmp(whichfile,'')
 
 if ~exist('MaxFrames')
   disp('MaxFrames parameter not set... you may need to execute setplot3')
-  break;
+  return
 end
 
 set_value('frameinc','plot_interval',1);

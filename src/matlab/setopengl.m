@@ -22,9 +22,9 @@ found_opengl = 0;
 for i = 1:length(rset),
   if (strcmp(lower(rset(i)),'opengl'))
     found_opengl = 1;
-    break;
-  end;
-end;
+    break
+  end
+end
 
 if (~found_opengl)
   disp('*** Warning : The OpenGL renderer is not available on your system.');

@@ -73,8 +73,8 @@ end
 
 if ~exist('MaxFrames')
    disp('MaxFrames parameter not set... you may need to execute setplot2')
-   break
-   end
+   return
+end
 
 set_value('frameinc','plot_interval',1);
 set_value('outputdir','OutputDir','./');
