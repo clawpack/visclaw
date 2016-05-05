@@ -94,6 +94,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('kml_name',"GeoClaw")
         self.add_attribute('kml_starttime',None)
         self.add_attribute('kml_tz_offset',None)
+        self.add_attribute('kml_map_topo_to_latlong',None)
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
@@ -641,6 +642,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_dpi',200)
         self.add_attribute('kml_xlimits',None)
         self.add_attribute('kml_ylimits',None)
+        self.add_attribute('kml_use_figure_limits',True)
         self.add_attribute('kml_tile_images',False)
         self.add_attribute('kml_colorbar',None)
         self.add_attribute('kml_use_for_initial_view',False)
@@ -842,7 +844,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_ticks', None)
             self.add_attribute('colorbar_tick_labels',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """celledges_show celledges_color data_show 
+            amr_attributes = """celledges_show celledges_color data_show
               patch_bgcolor patchedges_show patchedges_color kwargs""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])

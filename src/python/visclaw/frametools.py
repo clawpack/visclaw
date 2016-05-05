@@ -202,7 +202,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         current_data.add_attribute('yupper',patch.dimensions[1].upper)
                         current_data.add_attribute('y',patch.grid.p_centers[1])
                         current_data.add_attribute('dy',patch.delta[1])
-            
+
                     if plotfigure.use_for_kml:
 
                         # -------------------------------------------------------------
@@ -330,7 +330,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 plt.axis('image')
 
             # set axes limits:
-            if plotfigure.use_for_kml:
+            if (plotfigure.use_for_kml and plotfigure.kml_use_figure_limits):
                 if (plotfigure.kml_xlimits is not None) & (type(plotfigure.kml_xlimits) is not str):
                     try:
                         plt.xlim(plotfigure.kml_xlimits[0], plotfigure.kml_xlimits[1])
@@ -348,7 +348,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         print "*** KML error : Set plotfigure.kml_ylimits"
                         print " "
                         return
-
             else:
                 if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                     try:
