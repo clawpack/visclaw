@@ -310,7 +310,7 @@ class ClawPlotData(clawdata.ClawData):
             try:        
                 # Import necessary gauge description classes
                 import clawpack.amrclaw.data
-                import clawpack.amrclaw.gauges as gauges
+                import clawpack.pyclaw.gauges as gauges
 
                 # Read in gauge specification
                 gauge_data = clawpack.amrclaw.data.GaugeData()
