@@ -308,17 +308,12 @@ class ClawPlotData(clawdata.ClawData):
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
     
             try:        
-                # Import necessary gauge description classes
-                import clawpack.amrclaw.data
+
+                # Read gauge solution:
                 import clawpack.pyclaw.gauges as gauges
 
-                # Read in gauge specification
-                gauge_data = clawpack.amrclaw.data.GaugeData()
-                gauge_data.read(outdir)
-
                 self.gaugesoln_dict[key] = gauges.GaugeSolution(
-                                                              gauge_id=gauge_id,
-                                                              path=outdir)
+                                           gauge_id=gauge_id, path=outdir)
 
                 if verbose:
                     print "Read in gauge %s." % gauge_id
