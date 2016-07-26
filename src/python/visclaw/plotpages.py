@@ -1111,7 +1111,6 @@ def plotclaw2kml(plotdata):
             y1 = lower[1]
             y2 = upper[1]
 
-
         bcomp_domain = \
                        "<style media=\"screen\" type=\"text/css\">" \
                        "pre {font-weight:bold;font-style:12pt}" + \
@@ -1232,7 +1231,7 @@ def plotclaw2kml(plotdata):
         # the 'text' tag will replace Placemark description
         balloon_text = KML.text("<![CDATA[%s]]>" % btext)
 
-        width = 1
+        width = 2
         box_color = "FFFFFFFF"
 
         # Now start creating real regions.
