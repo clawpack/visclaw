@@ -278,114 +278,52 @@ class ClawPlotData(clawdata.ClawData):
                    print 'Cleared data for frame ',frameno
 
 
-    def getgauge(self, gaugeno, outdir=None, verbose=True):
-        """
-        ClawPlotData.getgauge:
-        Return an object of class clawdata.Gauge containing the solution
-        for gauge number gaugeno.
+    def getgauge(self, gauge_id, outdir=None, verbose=True):
+        r"""Read in the gauge labeled with `gaugeno` in path `outdir`
 
-        If self.refresh_gauges == True then this gauge is read from the
-        fort.gauge file, otherwise it is read only if the
-        the dictionary self.gaugesoln_dict has no key gaugeno.  If it does, the
-        gauge has previously been read and the dictionary value is returned.
+        :Note:
+        The behavior of this function has changed to actually only read in the 
+        requested gauge id rather than all of the gauges.  The dictionary 
+        `gaugesoln_dict` remains the same.
+
+        :Input:
+         - *gauge_id* - (int) The gauge id of the gauge to be read in.
+         - *outdir* - (path) Path to output directory containing gauge files.
+           Defaults to this data object's `self.outdir`.
+         - *verbose* - (bool) Verbose console output, default is `False`.
+
+        :Output:
+         - (clawpack.amrclaw.GaugeSolution) The read in gauge solution either 
+           from the `gaugeson_dict` or from file.  If something went wrong then
+           the routine prints a warning and returns `None`.
         """
+
         # Construct path to file
         if outdir is None:
             outdir = self.outdir
         outdir = os.path.abspath(outdir)
 
-        key = (gaugeno, outdir)
-
         # Reread gauge data file
+        key = (gauge_id, outdir)
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
-            # Attempt to fetch location and time data for checking
-            location = None
-            try:
-                try:
-                    import clawpack.amrclaw.data as amrclaw
-                except ImportError as e:
-                    print "You must have AMRClaw installed to plot gauges."
-                    print "continuing..."
-                    return None
+    
+            try:        
 
-                gauge_data = amrclaw.GaugeData()
-                gauge_data.read(outdir)
+                # Read gauge solution:
+                import clawpack.pyclaw.gauges as gauges
 
-                # Check to make sure the gauge requested is in the data file
-                if gaugeno not in gauge_data.gauge_numbers:
-                    raise Exception("Could not find guage %s in gauges data file.")
-                # Extract locations from gauge data file to be used with the
-                # solutions below
-                locations = {}
-                for gauge in gauge_data.gauges:
-                    locations[gauge[0]] = gauge[1:-2]
+                self.gaugesoln_dict[key] = gauges.GaugeSolution(
+                                           gauge_id=gauge_id, path=outdir)
 
-            except:
                 if verbose:
-                    print "*** WARNING *** Could not read gauges.data file from"
-                    print "     %s" % outdir
-                    print "*** Unable to determine gauge locations"
-                    # raise Warning()
-
-            # Read in all gauges
-            try:
-                file_path = os.path.join(outdir,'fort.gauge')
-                if not os.path.exists(file_path):
-                    print '*** Warning: cannot find gauge data file %s'%file_path
-                    pass
-                else:
-                    if verbose:
-                        print "Reading gauge data from %s" % file_path
-                    raw_data = np.loadtxt(file_path)
-
-                    gauge_read_string = ""
-                    if len(raw_data) == 0:
-                        print '*** Warning: fort.gauge is empty'
-                        gauge_numbers = []
-                    else:
-                        # Convert type for equality comparison:
-                        raw_numbers = np.array(raw_data[:,0], dtype=int)
-
-                        gauge_numbers = list(set(raw_numbers))
-                        gauge_numbers.sort()
-                        if verbose:
-                            print "In fort.gauge file, found gauge numbers %s" \
-                                   % gauge_numbers
-
-
-                    for n in gauge_numbers:
-                        try:
-                            loc = locations[n]
-                        except:
-                            loc = None
-                        gauge = gaugetools.GaugeSolution(gaugeno,
-                                                         location=loc)
-                        gauge_indices = np.nonzero(n == raw_numbers)[0]
-
-                        gauge.level = [int(value) for value in raw_data[gauge_indices,1]]
-                        gauge.t = raw_data[gauge_indices,2]
-                        gauge.q = raw_data[gauge_indices,3:].transpose()
-                        gauge.number = n
-                        gauge_read_string = " ".join((gauge_read_string,str(n)))
-
-                        self.gaugesoln_dict[(n, outdir)] = gauge
-
-                    if verbose:
-                        print "Read in gauges [%s]" % gauge_read_string[1:]
+                    print "Read in gauge %s." % gauge_id
 
             except Exception as e:
-                print '*** Error reading gauges in ClawPlotData.getgauge'
-                print '*** outdir = ', outdir
-                import pdb; pdb.set_trace()
-                raise e
+                import warnings
+                warnings.warn(str(e))
+                return None
 
-        # Attempt to fetch gauge requested
-        try:
-            return self.gaugesoln_dict[key]
-        except Exception as e:
-            print '*** Unable to find gauge %d in solution dictionary'%gaugeno
-            print '*** Lookup key was %s'%str(key)
-            raise e
+        return self.gaugesoln_dict[key]
 
 
     def plotframe(self, frameno):

@@ -304,9 +304,24 @@ def print_html_pointers(path_to_html_index):
     #if PlotPath[0] != '/':
         #PlotPath = '/' + PlotPath
     #PlotPath.replace('\\','/') # for windows
+
+    # check if path appears to be in format of SageMathCloud:
+    smc_user = (path_to_html_index[:9] == '/projects') \
+             & (path_to_html_index[18] == '-')
+
+    if smc_user:
+        # For SageMathCloud only:  modify the path to be of the form that can
+        # be opened in a browser window to view the html files
+        s1 = path_to_html_index.replace('/projects','https://cloud.sagemath.com')
+        path_to_html_index = s1[:64] + 'raw/' + s1[64:]
+    else:
+        # make the URL point to a local file:
+        path_to_html_index = 'file://' + path_to_html_index
+ 
     print "\n--------------------------------------------------------"
     print "\nPoint your browser to:"
-    print "    file://%s" % path_to_html_index
+    print "    %s" % path_to_html_index
+
     clawdir = os.getenv('CLAW','')
 
     # Removed next message since clawpack server is rarely used...
