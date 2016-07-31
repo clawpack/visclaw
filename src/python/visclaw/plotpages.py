@@ -317,7 +317,7 @@ def print_html_pointers(path_to_html_index):
     else:
         # make the URL point to a local file:
         path_to_html_index = 'file://' + path_to_html_index
- 
+
     print "\n--------------------------------------------------------"
     print "\nPoint your browser to:"
     print "    %s" % path_to_html_index
@@ -760,8 +760,8 @@ def plotclaw2kml(plotdata):
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
-                print "KML ===> Adding to %s.png to %s.kmz" \
-                    " file (no tiling)" % (plotdata.kml_index_fname,fname_str)
+                print "KML ===> Adding %s.png to %s.kmz" \
+                    " file (no tiling)" % (fname_str,plotdata.kml_index_fname)
 
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
@@ -1600,8 +1600,31 @@ def plotclaw2kml(plotdata):
             KML.Link(KML.href(os.path.join(kml_dir,"levels.kml")))))
 
 
+    # ----------- add user-supplied KML files ------------
+    user_dir = "user_files"
+    shutil.rmtree(user_dir,True)
+    os.mkdir(user_dir)
+
+    if plotdata.kml_user_files.__len__ > 0:
+        for f in plotdata.kml_user_files:
+            print " "
+            print "KML ===> Adding user KML file %s" % f[0]
+            fname = f[0].partition('.')[0]
+            if f[1]:
+                vis = 1
+            else:
+                vis = 0
+
+            shutil.copy(os.path.join("..",f[0]),user_dir)
+            doc.Document.append(
+                KML.NetworkLink(
+                    KML.name(fname),
+                    KML.visibility(vis),
+                    KML.Link(KML.href(os.path.join(user_dir,f[0])))))
+
+
     # ----------- zip additional directories and clean up ------------
-    dir_list = [kml_dir, img_dir]
+    dir_list = [kml_dir, img_dir, user_dir]
     for d in dir_list:
         for dirname, subdirs, files in os.walk(d):
             zip.write(dirname)
