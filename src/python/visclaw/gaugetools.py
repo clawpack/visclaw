@@ -6,6 +6,7 @@ import os,sys,shutil,glob
 import string,re
 import time
 import traceback
+import warnings
 
 import numpy as np
 
@@ -81,8 +82,11 @@ class GaugeSolution(object):
         return locals()
     location = property(**location())
 
-    def __init__(self,number,location=None):
+    def __init__(self, number, location=None):
         
+        warnings.warn("This version of GaugeSolution is deprecated, use the ",
+                      "class definition in clawpack.amrclaw.gauges instead.")
+
         # Gauge descriptors
         self.number = number
         self._location = None
@@ -121,7 +125,6 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     to ClawPlotFigure objects with plot_type="each_gauge".
 
     """
-
 
     if verbose:  
         gaugesoln = plotdata.getgauge(gaugeno)
@@ -179,8 +182,13 @@ def plotgauge(gaugeno, plotdata, verbose=False):
  
     if plotdata._mode == 'iplotclaw':
         gaugesoln = plotdata.getgauge(gaugeno)
-        print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
-                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
+        gaugeloc = gaugesoln.location
+        if len(gaugeloc) == 2:
+            print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1])
+        elif len(gaugeloc) == 3:
+            print '    Plotting Gauge %s  at x = %s, y = %s, z = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1], gaugeloc[2])
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -370,6 +378,11 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     """
 
+    if not gaugesoln.is_valid():
+        import warnings
+        warnings.warn("Gauge has not been initialized properly.")
+        return
+
     plotdata = plotitem._plotdata
     plotfigure = plotitem._plotfigure
     plotaxes = plotitem._plotaxes
@@ -408,7 +421,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     # Need to debug why gaugesoln.number always 1 here
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
-                 gaugesoln.number))
+                 gaugesoln.id))
 
     pylab.xlabel("time")
 

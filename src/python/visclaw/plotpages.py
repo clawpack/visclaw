@@ -304,9 +304,24 @@ def print_html_pointers(path_to_html_index):
     #if PlotPath[0] != '/':
         #PlotPath = '/' + PlotPath
     #PlotPath.replace('\\','/') # for windows
+
+    # check if path appears to be in format of SageMathCloud:
+    smc_user = (path_to_html_index[:9] == '/projects') \
+             & (path_to_html_index[18] == '-')
+
+    if smc_user:
+        # For SageMathCloud only:  modify the path to be of the form that can
+        # be opened in a browser window to view the html files
+        s1 = path_to_html_index.replace('/projects','https://cloud.sagemath.com')
+        path_to_html_index = s1[:64] + 'raw/' + s1[64:]
+    else:
+        # make the URL point to a local file:
+        path_to_html_index = 'file://' + path_to_html_index
+ 
     print "\n--------------------------------------------------------"
     print "\nPoint your browser to:"
-    print "    file://%s" % path_to_html_index
+    print "    %s" % path_to_html_index
+
     clawdir = os.getenv('CLAW','')
 
     # Removed next message since clawpack server is rarely used...
@@ -773,7 +788,10 @@ def plotclaw2kml(plotdata):
 
                 # PNG file gets moved into subdirectory and will eventually be
                 # zipped into KMZ file.
-                shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
+                if plotdata.html:
+                    shutil.copy(os.path.join("..","%s.png" % fname_str),fname_str)
+                else:
+                    shutil.move(os.path.join("..","%s.png" % fname_str),fname_str)
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
@@ -996,6 +1014,8 @@ def plotclaw2kml(plotdata):
         for gnum,gauge in enumerate(gauges):
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
+            if plotdata.kml_map_topo_to_latlong is not None:
+                x1,y1 = plotdata.kml_map_topo_to_latlong(x1,y1)
             gaugeno = int(gauge[0])
 
             # Get proper coordinates, otherwise placemark doesn't show up.
@@ -1009,11 +1029,11 @@ def plotclaw2kml(plotdata):
             print "Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
                 + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
 
-            # PNG file associated with this gauge
-            figname = 'not found'
-            for k in gauge_pngfile.keys():
-                if k[0] == gaugeno:
-                    figname = gauge_pngfile[k]
+            # plotdata.gauges_fignos
+            # Not clear how to get the figure number for each gauge.   Assume that
+            # there is only one figure number for all gauges
+            figno = plotdata.gauges_fignos[0]
+            figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
             coords = "%10.4f %10.4f %10.4f" % (longitude,y1,elev)
@@ -1097,10 +1117,16 @@ def plotclaw2kml(plotdata):
         lower = np.fromstring(c.strip(),sep=' ')
         c = f.readline()
         upper = np.fromstring(c.strip(),sep=' ')
-        x1 = lower[0]
-        x2 = upper[0]
-        y1 = lower[1]
-        y2 = upper[1]
+        if plotdata.kml_map_topo_to_latlong is not None:
+            x1,y1 = plotdata.kml_map_topo_to_latlong(lower[0],lower[1])
+            x2,y2 = plotdata.kml_map_topo_to_latlong(upper[0],upper[1])
+        else:
+            x1 = lower[0]
+            x2 = upper[0]
+            y1 = lower[1]
+            y2 = upper[1]
+
+
         bcomp_domain = \
                        "<style media=\"screen\" type=\"text/css\">" \
                        "pre {font-weight:bold;font-style:12pt}" + \
@@ -1468,6 +1494,9 @@ def plotclaw2kml(plotdata):
                 ylower = patch.dimensions[1].lower
                 yupper = patch.dimensions[1].upper
                 level = patch.level
+                if plotdata.kml_map_topo_to_latlong is not None:
+                    xlower,ylower = plotdata.kml_map_topo_to_latlong(xlower,ylower)
+                    xupper,yupper = plotdata.kml_map_topo_to_latlong(xupper,yupper)
 
                 # maxlevel_real should start at 0 so it can be used for indexing
                 maxlevel_real = max(level,maxlevel_real)
@@ -2692,7 +2721,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     from clawpack.visclaw import frametools, gaugetools, plotpages
 
     # doing plots in parallel?
-    _parallel = plotdata.parallel and (plotdata.num_procs > 1) 
+    _parallel = plotdata.parallel and (plotdata.num_procs > 1)
 
     if plotdata._parallel_todo == 'frames':
         # all we need to do is make png's for some frames in this case:
@@ -2851,7 +2880,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = frametools.only_most_recent(framenos, plotdata.outdir)
-    
+
     numframes = len(framenos)
 
     print "Will plot %i frames numbered:" % numframes, framenos
@@ -2972,7 +3001,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
         # Create Animations
-        
+
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
