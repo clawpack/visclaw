@@ -77,7 +77,7 @@ Frame = -1;  % initialize frame counter
 
 if ~exist('MaxFrames')
   disp('MaxFrames parameter not set... you may need to execute setplot1')
-  break
+  return
 end
 
 set_value('frameinc','plot_interval',1);
