@@ -95,6 +95,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('kml_starttime',None)
         self.add_attribute('kml_tz_offset',None)
         self.add_attribute('kml_map_topo_to_latlong',None)
+        self.add_attribute('kml_user_files',[])
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
@@ -282,8 +283,8 @@ class ClawPlotData(clawdata.ClawData):
         r"""Read in the gauge labeled with `gaugeno` in path `outdir`
 
         :Note:
-        The behavior of this function has changed to actually only read in the 
-        requested gauge id rather than all of the gauges.  The dictionary 
+        The behavior of this function has changed to actually only read in the
+        requested gauge id rather than all of the gauges.  The dictionary
         `gaugesoln_dict` remains the same.
 
         :Input:
@@ -293,7 +294,7 @@ class ClawPlotData(clawdata.ClawData):
          - *verbose* - (bool) Verbose console output, default is `False`.
 
         :Output:
-         - (clawpack.amrclaw.GaugeSolution) The read in gauge solution either 
+         - (clawpack.amrclaw.GaugeSolution) The read in gauge solution either
            from the `gaugeson_dict` or from file.  If something went wrong then
            the routine prints a warning and returns `None`.
         """
@@ -306,8 +307,8 @@ class ClawPlotData(clawdata.ClawData):
         # Reread gauge data file
         key = (gauge_id, outdir)
         if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
-    
-            try:        
+
+            try:
 
                 # Read gauge solution:
                 import clawpack.pyclaw.gauges as gauges
