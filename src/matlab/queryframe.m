@@ -137,7 +137,6 @@ while strcmp(inp,'k')
 end % while strcmp
 
 if strcmp(inp,'q')
-    quit_plotting = true
     % quit now
     break  % Breaks from while loop in plotclaw2
 end
