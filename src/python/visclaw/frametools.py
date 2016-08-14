@@ -135,7 +135,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         # create figure and set handle:
         plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
 
-        plt.ioff()
+        #plt.ioff()
         if plotfigure.clf_each_frame:
             plt.clf()
 
