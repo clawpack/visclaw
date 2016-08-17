@@ -1,7 +1,7 @@
 # Convert Clawpack output data to VTK format
 
 An example, water\_depth.avi can be found at:
-https://github.com/xinshengqin/claw\_to\_vtk
+https://github.com/xinshengqin/claw_to_vtk
 
 It shows an example of visualizing result of
 the GeoClaw case in $CLAW/geoclaw/examples/tsunami/bowl-radial, using Paraview.
