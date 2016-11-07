@@ -31,9 +31,7 @@ for i = 1:length(hlines),
   else
     cvallist(j).hlines(end+1) = hlines(i);
     cvallist(j).plist(end+1) = p;
-  end;
-end;
-
-
+  end
+end
 
 set(gcf,'UserData',amrplot);
