@@ -755,7 +755,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """show color kwargs data_show""".split()
+            amr_attributes = """show color kwargs data_show plotstyle""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 

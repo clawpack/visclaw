@@ -268,6 +268,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                             show_this_level = amr_data_show[j]
                         else:
                             show_this_level = True
+                        import pdb; pdb.set_trace()
 
                         if plotitem._show and show_this_level:
                             if num_dim == 1:
@@ -470,8 +471,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     # the following plot parameters may be set, depending on what
     # plot_type was requested:
 
+    # Note: not all of these are initialized in data.py - need to clean up
     level_params = ['plot_var','afterpatch','plotstyle','color','kwargs',\
-             'plot_var2','fill_where','map_2d_to_1d','plot_show']
+             'plot_var2','fill_where','map_2d_to_1d','data_show']
 
     pp = params_dict(plotitem, base_params, level_params, patch.level)
 
@@ -529,7 +531,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if pp['color']:
         pp['kwargs']['color'] = pp['color']
 
-    if pp['plot_show']:
+    if pp['data_show']:
         if (pp['plot_type'] in ['1d_plot','1d_from_2d_data']):
             pobj=plt.plot(p_centers,var,pp['plotstyle'],**pp['kwargs'])
 
