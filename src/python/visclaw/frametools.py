@@ -268,7 +268,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                             show_this_level = amr_data_show[j]
                         else:
                             show_this_level = True
-                        import pdb; pdb.set_trace()
+                        #import pdb; pdb.set_trace()
 
                         if plotitem._show and show_this_level:
                             if num_dim == 1:
