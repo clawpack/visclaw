@@ -3,6 +3,7 @@ Interactive animations in IPython notebooks using matplotlib and JSAnimation.
 """
 
 
+from __future__ import absolute_import
 def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     """
         frame_list may be:

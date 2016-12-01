@@ -14,6 +14,8 @@ Can specify plotdir and optionally figno for movie on the command line.
 It would be better to figure out the bug in JSAnimation.html_writer.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os, glob
 
 def fix_file(fname, verbose=True):
@@ -27,7 +29,7 @@ def fix_file(fname, verbose=True):
     f.write(html)
     f.close()
     if verbose:
-        print "Fixed file ",fname
+        print("Fixed file ",fname)
 
 def fix_movie(plotdir, figno):
     fname = os.path.join(plotdir, 'movieframe_allframesfig%s.html' % figno)

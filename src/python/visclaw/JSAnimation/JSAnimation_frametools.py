@@ -4,6 +4,8 @@ Requires the JSAnimation package,
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import glob
 from matplotlib import image, animation
 from matplotlib import pyplot as plt
@@ -25,7 +27,7 @@ def make_plotdir(plotdir='_plots', clobber=True):
             raise IOError('*** Cannot clobber existing directory %s' % plotdir)
     else:
         os.system("mkdir %s" % plotdir)
-    print "Figure files for each frame will be stored in ", plotdir
+    print("Figure files for each frame will be stored in ", plotdir)
 
 
 def save_frame(frameno, plotdir='_plots', fname_base='frame', verbose=False):
@@ -39,7 +41,7 @@ def save_frame(frameno, plotdir='_plots', fname_base='frame', verbose=False):
     filename = '%s/%s%s.png' % (plotdir, fname_base, str(frameno).zfill(5))
     plt.savefig(filename)
     if verbose:
-        print "Saved ",filename
+        print("Saved ",filename)
 
 
 def make_anim(plotdir, fname_base=None, figno=None, figsize=(10,6)):
@@ -64,7 +66,7 @@ def make_anim(plotdir, fname_base=None, figno=None, figsize=(10,6)):
             fname_base = 'frame'
     else:
         if fname_base is not None:
-            print "*** Warning: figno is specified so fname_base ignored"
+            print("*** Warning: figno is specified so fname_base ignored")
         fname_base = 'frame*fig%s' % figno
 
     # Find all frame files:
@@ -110,5 +112,5 @@ def make_html(anim, file_name='anim.html', title=None, \
     html_file.write("<html>\n <h1>%s</h1>\n" % title)
     html_file.write(html_body)
     html_file.close()
-    print "Created %s" % file_name
+    print("Created %s" % file_name)
 

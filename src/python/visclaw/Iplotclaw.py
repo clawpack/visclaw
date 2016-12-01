@@ -10,9 +10,13 @@ For options during looping type:
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
+import six
+from six.moves import input
 
-if not sys.modules.has_key('matplotlib'):
+if 'matplotlib' not in sys.modules:
     import matplotlib
     # Override system defaults before importing pylab
     # If you set the backend here, you must start ipython w/o pylab
@@ -23,7 +27,7 @@ if not sys.modules.has_key('matplotlib'):
     matplotlib.interactive(True)
 
 from clawpack.visclaw import frametools
-from iplot import Iplot
+from .iplot import Iplot
 
 #------------------------
 class Iplotclaw(Iplot):
@@ -109,11 +113,11 @@ class Iplotclaw(Iplot):
             try:
                 plotdata = frametools.call_setplot(self.setplot,plotdata)
             except:
-                print '*** Problem executing setplot in Iplotclaw'
-                print '    setplot = ', self.setplot
-                print '*** Either this file does not exist or '
-                print '    there is a problem executing the function setplot in this file.'
-                print '*** PLOT PARAMETERS MAY NOT BE SET! ***'
+                print('*** Problem executing setplot in Iplotclaw')
+                print('    setplot = ', self.setplot)
+                print('*** Either this file does not exist or ')
+                print('    there is a problem executing the function setplot in this file.')
+                print('*** PLOT PARAMETERS MAY NOT BE SET! ***')
                 raise
 
         self.plotdata = plotdata
@@ -125,15 +129,15 @@ class Iplotclaw(Iplot):
 
     def plot_and_cache(self,frameno):
         try:
-            if frameno not in self.frames.keys():
+            if frameno not in list(self.frames.keys()):
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=True)
                 self.frames[str(frameno)] = ''
             else:
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=False)
         except IOError as e:
-            print str(e)
+            print(str(e))
     def help_n(self):
-        print 'n: advance to next frame\n'
+        print('n: advance to next frame\n')
 
     def load_frame(self,frameno):
         frame = self.plotdata.getframe(frameno, self.plotdata.outdir)
@@ -148,23 +152,23 @@ class Iplotclaw(Iplot):
     def do_resetplot(self, rest):
         if rest:
             self.setplot = rest
-            print '*** Resetting setplot to: ',rest
+            print('*** Resetting setplot to: ',rest)
             self.plotdata.setplot = self.setplot
-        print 'Executing setplot from ',self.setplot
+        print('Executing setplot from ',self.setplot)
         try:
             frametools.call_setplot(self.setplot,self.plotdata)
         except:
-            print '*** Problem re-executing setplot'
+            print('*** Problem re-executing setplot')
             raise
 
     def help_resetplot(self):
-        print 'resetplot: re-execute the function setplot'
-        print '           The easiest way to change plotting parameters'
-        print '           is to modify setplot.py and then do resetplot.'
-        print ' '
-        print 'resetplot <new>: switch to a different setplot function'
-        print '           as specified by <new>, which is a function or'
-        print '           a string specifying the module containing setplot.'
+        print('resetplot: re-execute the function setplot')
+        print('           The easiest way to change plotting parameters')
+        print('           is to modify setplot.py and then do resetplot.')
+        print(' ')
+        print('resetplot <new>: switch to a different setplot function')
+        print('           as specified by <new>, which is a function or')
+        print('           a string specifying the module containing setplot.')
 
     # show plot parameters:
     # ---------------------
@@ -172,7 +176,7 @@ class Iplotclaw(Iplot):
         self.plotdata.showitems()
 
     def help_show(self):
-        print 'show: show the current plot items'
+        print('show: show the current plot items')
 
 
     # cleargauges
@@ -180,14 +184,14 @@ class Iplotclaw(Iplot):
     def do_cleargauges(self, rest):
         if rest=='':
             self.plotdata.gaugesoln_dict.clear()
-            print 'Cleared all gauges'
+            print('Cleared all gauges')
         else:
-            print 'Not implemented: try cleargauges'
+            print('Not implemented: try cleargauges')
 
     def help_cleargauges(self):
-        print 'cleargauges: delete gauge data from cache to replot'
-        print '    use if you have rerun the code and want to plot the'
-        print '    latest results'
+        print('cleargauges: delete gauge data from cache to replot')
+        print('    use if you have rerun the code and want to plot the')
+        print('    latest results')
 
 
     # plotgauge commands:
@@ -202,8 +206,8 @@ class Iplotclaw(Iplot):
             try:
                 import clawpack.amrclaw.data as amrclaw
             except ImportError as e:
-                print "You must have AMRClaw installed to plot gauges."
-                print "continuing..."
+                print("You must have AMRClaw installed to plot gauges.")
+                print("continuing...")
                 return
             
             gaugedata = amrclaw.GaugeData()
@@ -220,15 +224,15 @@ class Iplotclaw(Iplot):
             gaugetools.plotgauge(gaugeno,self.plotdata)
 
             if n < len(gaugenos) - 1:
-                ans = raw_input("      Hit return for next gauge or q to quit ")
+                ans = input("      Hit return for next gauge or q to quit ")
                 if ans == "q":
                     break
 
 
     def help_plotgauge(self):
-        print 'plotgauge n  : plot figure for gauge number n, if found'
-        print 'plotgauge all: loop through plots of all gauges'
-        print 'plotgauge    : loop through plots of all gauges'
+        print('plotgauge n  : plot figure for gauge number n, if found')
+        print('plotgauge all: loop through plots of all gauges')
+        print('plotgauge    : loop through plots of all gauges')
         
         
     # Convenience functions for examining solution or making additional
@@ -288,9 +292,9 @@ class Iplotclaw(Iplot):
         
         plotdata = self.plotdata
         if len(plotdata.otherfigure_dict)==0:
-            print "No other figures specified."
+            print("No other figures specified.")
         else:
-            for name in plotdata.otherfigure_dict.iterkeys():
+            for name in six.iterkeys(plotdata.otherfigure_dict):
                 otherfigure = plotdata.otherfigure_dict[name]
                 fname = otherfigure.fname
                 makefig = otherfigure.makefig
@@ -299,17 +303,17 @@ class Iplotclaw(Iplot):
                         try:
                             exec(makefig)
                         except:
-                            print "*** Problem executing makefig "
-                            print "    for otherfigure ",name
+                            print("*** Problem executing makefig ")
+                            print("    for otherfigure ",name)
                             import pdb; pdb.set_trace()
                     else:
                         try:
                             makefig(plotdata)
                         except:
-                            print "*** Problem executing makefig function"
-                            print "    for otherfigure ",name
+                            print("*** Problem executing makefig function")
+                            print("    for otherfigure ",name)
                 else:
-                    print "No makefig function specified for ",name
+                    print("No makefig function specified for ",name)
 
 
 # end of Iplotclaw.
