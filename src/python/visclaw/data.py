@@ -729,7 +729,7 @@ class ClawPlotItem(clawdata.ClawData):
 
         self.add_attribute('plot_type',plot_type)
         self.add_attribute('plot_var',0)
-        self.add_attribute('plot_show',True)
+        self.add_attribute('data_show',True)
 
         self.add_attribute('MappedGrid',None)          # False to plot on comput. patch even
                                         # if _plotdata.mapc2p is not None.
