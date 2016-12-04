@@ -729,7 +729,7 @@ class ClawPlotItem(clawdata.ClawData):
 
         self.add_attribute('plot_type',plot_type)
         self.add_attribute('plot_var',0)
-        self.add_attribute('plot_show',True)
+        self.add_attribute('data_show',True)
 
         self.add_attribute('MappedGrid',None)          # False to plot on comput. patch even
                                         # if _plotdata.mapc2p is not None.
@@ -755,7 +755,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """show color kwargs data_show""".split()
+            amr_attributes = """show color kwargs data_show plotstyle""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
