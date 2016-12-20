@@ -3,12 +3,16 @@
 Module frametools for plotting frames of time-dependent data.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os,sys
 import traceback
 import numpy as np
 import matplotlib.pyplot as plt
 
 import clawpack.clawutil.data as clawdata
+import six
+from six.moves import input
 
 
 #==============================================================================
@@ -25,7 +29,7 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     Solution object and plots it.
     """
 
-    if verbose:  print '    Plotting frame %s ... '  % frameno
+    if verbose:  print('    Plotting frame %s ... '  % frameno)
 
     if simple:
         plotfun = plotdata.setplot
@@ -37,13 +41,13 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except AttributeError:
-        print '*** Error in plotframe: plotdata missing plotfigure_dict'
-        print '*** This should not happen'
+        print('*** Error in plotframe: plotdata missing plotfigure_dict')
+        print('*** This should not happen')
         return None
 
     if len(plotfigure_dict) == 0:
-        print '*** Warning in plotframe: plotdata has empty plotfigure_dict'
-        print '*** Apparently no figures to plot'
+        print('*** Warning in plotframe: plotdata has empty plotfigure_dict')
+        print('*** Apparently no figures to plot')
 
     plotdata.set_outdirs()  # set _outdirs attribute to be list of
                                       # all outdirs for all items
@@ -101,7 +105,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
     if plotdata.mode() == 'iplotclaw':
         plt.ion()
-        print '    Plotting Frame %s at t = %s' % (frameno,t)
+        print('    Plotting Frame %s at t = %s' % (frameno,t))
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -128,7 +132,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         if plotfigure.use_for_kml:
             kml_fignos.append(figno)
 
-        if not plotfigure.kwargs.has_key('facecolor'):
+        if 'facecolor' not in plotfigure.kwargs:
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'
 
@@ -142,8 +146,8 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         plotaxes_dict = plotfigure.plotaxes_dict
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
-            print '*** Warning in plotframe: plotdata has empty plotaxes_dict'
-            print '*** Apparently no axes to plot in figure ',figno
+            print('*** Warning in plotframe: plotdata has empty plotaxes_dict')
+            print('*** Apparently no axes to plot in figure ',figno)
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
@@ -173,9 +177,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             for i, framesoln in enumerate(framesolns):
 
                 if abs(framesoln.t - t) > 1e-12:
-                    print '*** Warning: t values do not agree for frame ',frameno
-                    print '*** t = %22.15e for outdir = %s' % (t,plotdata.outdir)
-                    print '*** t = %22.15e for outdir = %s' % (framesoln.t,plotdata._outdirs[i])
+                    print('*** Warning: t values do not agree for frame ',frameno)
+                    print('*** t = %22.15e for outdir = %s' % (t,plotdata.outdir))
+                    print('*** t = %22.15e for outdir = %s' % (framesoln.t,plotdata._outdirs[i]))
 
                 current_data.add_attribute('framesoln',framesoln)
 
@@ -278,7 +282,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                             current_data = plotitem_fun(framesoln,plotitem,current_data,stateno)
 
                             if verbose:
-                                print '      Plotted  plotitem ', itemname
+                                print('      Plotted  plotitem ', itemname)
 
                     # end of loop over plotitems
                 # end of loop over patches
@@ -288,9 +292,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             for itemname in plotaxes._itemnames:
                 plotitem = plotaxes.plotitem_dict[itemname]
                 if plotitem.afteritem:
-                    print "*** ClawPlotItem.afteritem is deprecated"
-                    print "*** use ClawPlotAxes.afteraxes "
-                    print "*** or  ClawPlotItem.afterpatch instead"
+                    print("*** ClawPlotItem.afteritem is deprecated")
+                    print("*** use ClawPlotAxes.afteraxes ")
+                    print("*** or  ClawPlotItem.afterpatch instead")
                 try:
                     if plotfigure.use_for_kml:
                         # Build colorbar for Google Earth (now done in setplot.py)
@@ -306,7 +310,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         if plotitem.colorbar_label is not None:
                             cbar.set_label(plotitem.colorbar_label)
                 except:
-                    print "*** problem generating colorbar"
+                    print("*** problem generating colorbar")
                     pass
 
             if plotfigure.use_for_kml:
@@ -336,18 +340,18 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     try:
                         plt.xlim(plotfigure.kml_xlimits[0], plotfigure.kml_xlimits[1])
                     except:
-                        print " "
-                        print "*** KML error : Set plotfigure.kml_xlimits"
-                        print " "
+                        print(" ")
+                        print("*** KML error : Set plotfigure.kml_xlimits")
+                        print(" ")
                         return
 
                 if (plotfigure.kml_ylimits is not None) & (type(plotfigure.kml_ylimits) is not str):
                     try:
                         plt.ylim(plotfigure.kml_ylimits[0], plotfigure.kml_ylimits[1])
                     except:
-                        print " "
-                        print "*** KML error : Set plotfigure.kml_ylimits"
-                        print " "
+                        print(" ")
+                        print("*** KML error : Set plotfigure.kml_ylimits")
+                        print(" ")
                         return
             else:
                 if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
@@ -376,7 +380,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         plt.draw()
 
     if verbose:
-        print '    Done with plotframe for frame %i at time %g' % (frameno,t)
+        print('    Done with plotframe for frame %i at time %g' % (frameno,t))
 
 
     # print the figure(s) to file(s) if requested:
@@ -508,7 +512,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
 
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
+        print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
         p_centers = pp['mapc2p'](current_data.x)
     else:
@@ -516,8 +520,8 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
-            print '*** Error, plot_type = 1d_from_2d_data requires '
-            print '*** map_2d_to_1d function as plotitem attribute'
+            print('*** Error, plot_type = 1d_from_2d_data requires ')
+            print('*** map_2d_to_1d function as plotitem attribute')
             raise
             return
         p_centers, var = pp['map_2d_to_1d'](current_data)
@@ -560,7 +564,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 qt = gaugeq[i1] + slope * (t-gauget[i1])
             except IndexError:
                 qt = gaugeq[0]
-                print "Warning: t out of range"
+                print("Warning: t out of range")
             plt.plot([t], [qt], 'ro')
 
         elif pp['plot_type'] == '1d_empty':
@@ -592,7 +596,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 output = pp['afterpatch'](current_data)
                 if output: current_data = output
             except:
-                print '*** Error in afterpatch ***'
+                print('*** Error in afterpatch ***')
                 raise
 
     try:
@@ -755,8 +759,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         if pp['contour_levels'] is None:
             levels_set = False
             if pp['contour_nlevels'] is None:
-                print '*** Error in plotitem2:'
-                print '    contour_levels or contour_nlevels must be set'
+                print('*** Error in plotitem2:')
+                print('    contour_levels or contour_nlevels must be set')
                 raise
                 return
             if (pp['contour_min'] is not None) and \
@@ -936,7 +940,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 output = pp['afterpatch'](current_data)
                 if output: current_data = output
         except:
-            print '*** Warning: could not execute afterpatch'
+            print('*** Warning: could not execute afterpatch')
             raise
 
 
@@ -962,7 +966,7 @@ def get_var(state, plot_var, current_data):
         try:
             var = plot_var(current_data)
         except:
-            print '*** Error applying function plot_var = ',plot_var
+            print('*** Error applying function plot_var = ',plot_var)
             raise
 
     return var
@@ -996,7 +1000,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     plt.figure(figno)
     if plotdir != '.':
         fname = os.path.join(plotdir,fname)
-    if verbose:  print '    Saving plot to file ', fname
+    if verbose:  print('    Saving plot to file ', fname)
     if kml_fig:
         # from webpage : https://robotics.usc.edu/~ampereir/wordpress/?p=626
         # This was added so that in KML, axes, tick labels, etc do not get printed.
@@ -1049,12 +1053,12 @@ def printframes(plotdata=None, verbose=True):
 
 
 
-    if not sys.modules.has_key('matplotlib'):
-        print '*** Error: matplotlib not found, no plots will be done'
+    if 'matplotlib' not in sys.modules:
+        print('*** Error: matplotlib not found, no plots will be done')
         return plotdata
 
     if not isinstance(plotdata,ClawPlotData):
-        print '*** Error, plotdata must be an object of type ClawPlotData'
+        print('*** Error, plotdata must be an object of type ClawPlotData')
         return plotdata
 
     plotdata._mode = 'printframes'
@@ -1076,8 +1080,8 @@ def printframes(plotdata=None, verbose=True):
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
     except AttributeError:
-        print '*** Error in printframes: plotdata missing attribute'
-        print '  *** plotdata = ',plotdata
+        print('*** Error in printframes: plotdata missing attribute')
+        print('  *** plotdata = ',plotdata)
         return plotdata
 
     if fignos == 'all':
@@ -1113,8 +1117,8 @@ def printframes(plotdata=None, verbose=True):
     try:
         os.chdir(rundir)
     except OSError:
-        print '*** Error: cannot move to run directory ',rundir
-        print 'rootdir = ',rootdir
+        print('*** Error: cannot move to run directory ',rundir)
+        print('rootdir = ',rootdir)
         return plotdata
 
 
@@ -1126,7 +1130,7 @@ def printframes(plotdata=None, verbose=True):
     try:
         plotpages.cd_plotdir(plotdata)
     except:
-        print "*** Error, aborting plotframes"
+        print("*** Error, aborting plotframes")
         return plotdata
 
 
@@ -1138,8 +1142,8 @@ def printframes(plotdata=None, verbose=True):
             os.remove(file)
     else:
         if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
+            print("*** Remove frame*.png and frame*.html and try again,")
+            print("  or use overwrite=True in call to printframes")
             return plotdata
 
 
@@ -1149,7 +1153,7 @@ def printframes(plotdata=None, verbose=True):
     try:
         os.chdir(outdir)
     except OSError:
-        print '*** Error printframes: cannot move to outdir = ',outdir
+        print('*** Error printframes: cannot move to outdir = ',outdir)
         return plotdata
 
 
@@ -1162,7 +1166,7 @@ def printframes(plotdata=None, verbose=True):
         fortfile[frameno] = file
 
     if len(fortfile) == 0:
-        print '*** No fort.q files found in directory ', os.getcwd()
+        print('*** No fort.q files found in directory ', os.getcwd())
         return plotdata
 
     # Discard frames that are not from latest run, based on
@@ -1171,9 +1175,9 @@ def printframes(plotdata=None, verbose=True):
 
     numframes = len(framenos)
 
-    print "Will plot %i frames numbered:" % numframes, framenos
-    print 'Will make %i figure(s) for each frame, numbered: ' % len(fignos),\
-          fignos
+    print("Will plot %i frames numbered:" % numframes, framenos)
+    print('Will make %i figure(s) for each frame, numbered: ' % len(fignos),\
+          fignos)
 
     fignames = {}
     for figname in plotdata._fignames:
@@ -1201,13 +1205,13 @@ def printframes(plotdata=None, verbose=True):
         plotpages.timeframes2html(plotdata)
 
     if not plotdata.printfigs:
-        print "Using previously printed figure files"
+        print("Using previously printed figure files")
     else:
-        print "Now making png files for all figures..."
+        print("Now making png files for all figures...")
         for frameno in framenos:
             plotframe(frameno, plotdata, verbose)
             #frametimes[frameno] = plotdata.framesoln_dict[frameno].t
-            print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
+            print('Frame %i at time t = %s' % (frameno, frametimes[frameno]))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
@@ -1217,14 +1221,14 @@ def printframes(plotdata=None, verbose=True):
     #-------
 
     if plotdata.gif_movie:
-        print 'Making gif movies.  This may take some time....'
+        print('Making gif movies.  This may take some time....')
         for figno in fignos:
             try:
                 os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
                    % (figno,figno))
-                print '    Created moviefig%s.gif' % figno
+                print('    Created moviefig%s.gif' % figno)
             except:
-                print '*** Error creating moviefig%s.gif' % figno
+                print('*** Error creating moviefig%s.gif' % figno)
 
     os.chdir(rootdir)
 
@@ -1321,15 +1325,15 @@ def var_minmax(plotdata,framenos,vars):
 
     framenos = only_most_recent(framenos, plotdata.outdir)
     if len(framenos) == 0:
-        print '*** No frames found in var_minmax!'
+        print('*** No frames found in var_minmax!')
 
-    print 'Determining min and max of variables: ',vars
-    print '   over frames: ',framenos
+    print('Determining min and max of variables: ',vars)
+    print('   over frames: ',framenos)
 
     varmin = {}
     varmax = {}
     if vars=='all':
-        print "*** Error in var_minmax: vars == 'all' is not implemented yet"
+        print("*** Error in var_minmax: vars == 'all' is not implemented yet")
         return (varmin,varmax)
     for var in vars:
         varmin[var] = {'all': np.inf}
@@ -1396,7 +1400,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
         try:
             os.chdir(outdir)
         except OSError:
-            print "*** Could not chdir to ", outdir
+            print("*** Could not chdir to ", outdir)
             return framenos
 
     fortfile = {}
@@ -1412,14 +1416,14 @@ def only_most_recent(framenos,outdir='.',verbose=True):
             fortfile[frameno] = file
 
     if len(fortfile) == 0:
-        print '*** No fort.q or claw.pkl files found in directory ', os.getcwd()
+        print('*** No fort.q or claw.pkl files found in directory ', os.getcwd())
         framenos = []
         return framenos
 
     # Figure out which files are from latest run:
     numframes = 0
     mtime = 0
-    framekeys = fortfile.keys()
+    framekeys = list(fortfile.keys())
     framekeys.sort()
     for frameno in framekeys:
         mtimeprev = mtime
@@ -1433,9 +1437,9 @@ def only_most_recent(framenos,outdir='.',verbose=True):
 
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
-        print '*** Frames %s and above appear to be from an old run' \
-                       % framekeys[numframes]
-        print '***    and will be ignored.'
+        print('*** Frames %s and above appear to be from an old run' \
+                       % framekeys[numframes])
+        print('***    and will be ignored.')
         time.sleep(2)
 
     #print 'framenos = ',framenos
@@ -1476,7 +1480,7 @@ def call_setplot(setplot, plotdata, verbose=True):
                 setplot_module_name = "setplot"
             else:
                 if verbose:
-                    print >> sys.stderr, "*** WARNING:  No setplot specified!"
+                    print("*** WARNING:  No setplot specified!", file=sys.stderr)
                 return plotdata
         elif isinstance(setplot,str):
             # Assume this is the path to the required setplot module
@@ -1487,7 +1491,7 @@ def call_setplot(setplot, plotdata, verbose=True):
             raise Exception("Invalid setplot module specification.")
 
         if verbose:
-            print "Importing %s.setplot from %s." % (setplot_module_name,setplot_module_dir)
+            print("Importing %s.setplot from %s." % (setplot_module_name,setplot_module_dir))
 
         # Attempt to import whatever was handed to us and parsed above
         try:
@@ -1498,19 +1502,19 @@ def call_setplot(setplot, plotdata, verbose=True):
             if not isinstance(setplot,types.FunctionType):
                 raise ImportError("Failed importing %s.setplot" % setplot_module_name)
         except ImportError as e:
-            print >> sys.stderr, "WARNING: Failed to import %s.setplot from %s." \
-                                        % (setplot_module_name,setplot_module_dir)
-            print >> sys.stderr, "Exception and traceback:"
-            print >> sys.stderr, "="*80
-            print >> sys.stderr, "\t%s\n\n" % e
+            print("WARNING: Failed to import %s.setplot from %s." \
+                                        % (setplot_module_name,setplot_module_dir), file=sys.stderr)
+            print("Exception and traceback:", file=sys.stderr)
+            print("="*80, file=sys.stderr)
+            print("\t%s\n\n" % e, file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
-            print >> sys.stderr, "="*80
+            print("="*80, file=sys.stderr)
 
             # Not sure if this is the right place to be doing this, maybe
             # this should go higher up than this routine so it can check all
             # of the same attributes?
-            print "Would you like to use clawpack.visclaw.setplot_default() instead [Y/n]?"
-            use_default = raw_input()
+            print("Would you like to use clawpack.visclaw.setplot_default() instead [Y/n]?")
+            use_default = input()
             if (use_default == "") or ("Y" in use_default.capitalize()):
                 from clawpack.visclaw import setplot_default
                 setplot = setplot_default.setplot
@@ -1530,12 +1534,12 @@ def call_setplot(setplot, plotdata, verbose=True):
         plotdata = setplot(plotdata)
         if plotdata is None:
             # Simple warning if we did not get anything back from plotdata
-            print '*** Did you forget the "return plotdata" statement?'
+            print('*** Did you forget the "return plotdata" statement?')
             raise Exception("Plotdata was not set by given setplot function!")
         if verbose:
-            print 'Executed setplot successfully'
+            print('Executed setplot successfully')
     except:
-        print >> sys.stderr, '*** Error in call_setplot: Problem executing function setplot'
+        print('*** Error in call_setplot: Problem executing function setplot', file=sys.stderr)
         raise
 
     return plotdata
@@ -1590,7 +1594,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
             try:
                 q = var_2d(state.q, X_center, Y_center, t)
             except:
-                print '*** Error applying function plot_var = ',plot_var
+                print('*** Error applying function plot_var = ',plot_var)
                 traceback.print_exc()
                 return
 
@@ -1598,8 +1602,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
 
         if hasattr(reference,'states'):
             if len(reference.states) > 1:
-                print '*** Warning in errors_2d_vs_1d: reference solution'
-                print '*** has more than one patch -- only using patch[0]'
+                print('*** Warning in errors_2d_vs_1d: reference solution')
+                print('*** has more than one patch -- only using patch[0]')
             refstate = reference.states[0]
         else:
             refstate = reference   # assume this contains true solution or
@@ -1613,7 +1617,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
             try:
                 qref = var_1d(refstate.q, xref, t)
             except:
-                print '*** Error applying function var_1d'
+                print('*** Error applying function var_1d')
                 return
 
         qint1 = interp(xs1, xref, qref)
@@ -1646,12 +1650,12 @@ def set_show(plotdata):
         plotfigure._show = False
         if plotfigure.show:
             # Loop through all axes to make sure at least some item is showing
-            for plotaxes in plotfigure.plotaxes_dict.itervalues():
+            for plotaxes in six.itervalues(plotfigure.plotaxes_dict):
                 plotaxes._show = False
                 if plotaxes.show:
                     # Loop through plotitems checking each item to see if it
                     # should be shown
-                    for plotitem in plotaxes.plotitem_dict.itervalues():
+                    for plotitem in six.itervalues(plotaxes.plotitem_dict):
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True

@@ -2,6 +2,8 @@
 Tools for plotting data from gauges, gauge locations, etc.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os,sys,shutil,glob
 import string,re
 import time
@@ -13,20 +15,21 @@ import numpy as np
 import clawpack.clawutil.data as clawdata
 
 from clawpack.visclaw.frametools import set_show
+from six.moves import range
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
-    if not sys.modules.has_key('matplotlib'):
+    if 'matplotlib' not in sys.modules:
         try:
             import matplotlib
             matplotlib.use('Agg')  # Use an image backend
         except:
-            print "*** Error: problem importing matplotlib"
+            print("*** Error: problem importing matplotlib")
 
 try:
     import pylab
 except:
-    print "*** Error: problem importing pylab"
+    print("*** Error: problem importing pylab")
 
 # Gauge solution class
 class GaugeSolution(object):
@@ -128,8 +131,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     if verbose:  
         gaugesoln = plotdata.getgauge(gaugeno)
-        print '    Plotting gauge %s  at x = %s, y = %s ... '  \
-                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1])
+        print('    Plotting gauge %s  at x = %s, y = %s ... '  \
+                 % (gaugeno, gaugesoln.location[0], gaugesoln.location[1]))
 
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
@@ -138,13 +141,13 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except:
-        print '*** Error in plotgauge: plotdata missing plotfigure_dict'
-        print '*** This should not happen'
+        print('*** Error in plotgauge: plotdata missing plotfigure_dict')
+        print('*** This should not happen')
         return None
 
     if len(plotfigure_dict) == 0:
-        print '*** Warning in plotgauge: plotdata has empty plotfigure_dict'
-        print '*** Apparently no figures to plot'
+        print('*** Warning in plotgauge: plotdata has empty plotfigure_dict')
+        print('*** Apparently no figures to plot')
 
 
 
@@ -172,7 +175,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 output = beforegauge(current_data)
                 if output: current_data = output
             except:
-                print '*** Error in beforegauge ***'
+                print('*** Error in beforegauge ***')
                 raise
 
 
@@ -184,11 +187,11 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         gaugesoln = plotdata.getgauge(gaugeno)
         gaugeloc = gaugesoln.location
         if len(gaugeloc) == 2:
-            print '    Plotting Gauge %s  at x = %s, y = %s ... '  \
-                     % (gaugeno, gaugeloc[0], gaugeloc[1])
+            print('    Plotting Gauge %s  at x = %s, y = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1]))
         elif len(gaugeloc) == 3:
-            print '    Plotting Gauge %s  at x = %s, y = %s, z = %s ... '  \
-                     % (gaugeno, gaugeloc[0], gaugeloc[1], gaugeloc[2])
+            print('    Plotting Gauge %s  at x = %s, y = %s, z = %s ... '  \
+                     % (gaugeno, gaugeloc[0], gaugeloc[1], gaugeloc[2]))
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -213,7 +216,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         plotted_fignos.append(figno)
 
 
-        if not plotfigure.kwargs.has_key('facecolor'):
+        if 'facecolor' not in plotfigure.kwargs:
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'   
 
@@ -227,13 +230,13 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         try:
             plotaxes_dict = plotfigure.plotaxes_dict
         except:
-            print '*** Error in plotgauge: plotdata missing plotaxes_dict'
-            print '*** This should not happen'
+            print('*** Error in plotgauge: plotdata missing plotaxes_dict')
+            print('*** This should not happen')
             return  None
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
-            print '*** Warning in plotgauge: plotdata has empty plotaxes_dict'
-            print '*** Apparently no axes to plot in figno ',figno
+            print('*** Warning in plotgauge: plotdata has empty plotaxes_dict')
+            print('*** Apparently no axes to plot in figno ',figno)
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
@@ -271,9 +274,9 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                         output = plotgauge1(gaugesoln,plotitem,current_data)
                         if output: current_data = output
                         if verbose:  
-                                print '      Plotted  plotitem ', itemname
+                                print('      Plotted  plotitem ', itemname)
                     except:
-                        print '*** Error in plotgauge: problem calling plotgauge1'
+                        print('*** Error in plotgauge: problem calling plotgauge1')
                         traceback.print_exc()
                         return None
 
@@ -300,7 +303,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                     output = afteraxes(current_data)
                     if output: current_data = output
                 except:
-                    print '*** Error in afteraxes ***'
+                    print('*** Error in afteraxes ***')
                     raise
 
         if plotaxes.scaled:
@@ -336,7 +339,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 output = aftergauge(current_data)
                 if output: current_data = output
             except:
-                print '*** Error in aftergauge ***'
+                print('*** Error in aftergauge ***')
                 raise
 
 
@@ -347,7 +350,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         pylab.draw()
 
     if verbose:
-        print '    Done with plotgauge for gauge %i' % (gaugeno)
+        print('    Done with plotgauge for gauge %i' % (gaugeno))
 
     
     # print the figure(s) to file(s) if requested:
@@ -454,8 +457,8 @@ def read_setgauges(outdir):
     try:
         import clawpack.amrclaw.data as amrclaw
     except ImportError as e:
-        print "You must have AMRClaw installed to plot gauges."
-        print "continuing..."
+        print("You must have AMRClaw installed to plot gauges.")
+        print("continuing...")
         return None
 
     setgauges = amrclaw.GaugeData()
@@ -490,7 +493,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
         return
 
     if len(setgauges.gauges) == 0:
-        print "*** plot_gauge_locations: No gauges specified in gauges.data"
+        print("*** plot_gauge_locations: No gauges specified in gauges.data")
         return
 
     if gaugenos=='all':
@@ -514,7 +517,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
                 yn = yn + yoffset
                 text(xn,yn,'  %s' % gauge[0], fontsize=fontsize)
         except:
-            print "*** plot_gauge_locations: warning: did not find x,y data for gauge ",gauge[0]
+            print("*** plot_gauge_locations: warning: did not find x,y data for gauge ",gauge[0])
 
 
 #------------------------------------------------------------------------
@@ -545,7 +548,7 @@ def printfig(fname='',gaugeno='', figno='', format='png', plotdir='.', \
     pylab.figure(figno)
     if plotdir != '.':
        fname = os.path.join(plotdir,fname)
-    if verbose:  print '    Saving plot to file ', fname
+    if verbose:  print('    Saving plot to file ', fname)
     pylab.savefig(fname)
 
 
@@ -576,12 +579,12 @@ def printgauges(plotdata=None, verbose=True):
     from clawpack.visclaw import plotpages
 
 
-    if not sys.modules.has_key('matplotlib'):
-        print '*** Error: matplotlib not found, no plots will be done'
+    if 'matplotlib' not in sys.modules:
+        print('*** Error: matplotlib not found, no plots will be done')
         return plotdata
         
     if not isinstance(plotdata,ClawPlotData):
-        print '*** Error, plotdata must be an object of type ClawPlotData'
+        print('*** Error, plotdata must be an object of type ClawPlotData')
         return plotdata
 
     plotdata._mode = 'printframes'
@@ -604,8 +607,8 @@ def printgauges(plotdata=None, verbose=True):
         overwrite = plotdata.overwrite # ok to overwrite?
         msgfile = plotdata.msgfile     # where to write error messages
     except:
-        print '*** Error in printframes: plotdata missing attribute'
-        print '  *** plotdata = ',plotdata
+        print('*** Error in printframes: plotdata missing attribute')
+        print('  *** plotdata = ',plotdata)
         return plotdata
 
     if fignos == 'all':
@@ -653,8 +656,8 @@ def printgauges(plotdata=None, verbose=True):
     try:
         os.chdir(rundir)
     except:
-        print '*** Error: cannot move to run directory ',rundir
-        print 'rootdir = ',rootdir
+        print('*** Error: cannot move to run directory ',rundir)
+        print('rootdir = ',rootdir)
         return plotdata
 
 
@@ -666,7 +669,7 @@ def printgauges(plotdata=None, verbose=True):
     try:
         plotpages.cd_plotdir(plotdata)
     except:
-        print "*** Error, aborting plotframes"
+        print("*** Error, aborting plotframes")
         return plotdata
 
 
@@ -678,8 +681,8 @@ def printgauges(plotdata=None, verbose=True):
             os.remove(file)
     else:
         if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
+            print("*** Remove frame*.png and frame*.html and try again,")
+            print("  or use overwrite=True in call to printframes")
             return plotdata
 
     
@@ -689,7 +692,7 @@ def printgauges(plotdata=None, verbose=True):
     try:
         os.chdir(outdir)
     except:
-        print '*** Error printframes: cannot move to outdir = ',outdir
+        print('*** Error printframes: cannot move to outdir = ',outdir)
         return plotdata
 
 
@@ -705,7 +708,7 @@ def printgauges(plotdata=None, verbose=True):
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
     
     if len(fortfile) == 0:
-        print '*** No fort.q files found in directory ', os.getcwd()
+        print('*** No fort.q files found in directory ', os.getcwd())
         return plotdata
     
     # Discard frames that are not from latest run, based on
@@ -714,9 +717,9 @@ def printgauges(plotdata=None, verbose=True):
 
     numframes = len(framenos)
 
-    print "Will plot %i frames numbered:" % numframes, framenos
-    print 'Will make %i figure(s) for each frame, numbered: ' \
-          % len(fignos_each_frame), fignos_each_frame
+    print("Will plot %i frames numbered:" % numframes, framenos)
+    print('Will make %i figure(s) for each frame, numbered: ' \
+          % len(fignos_each_frame), fignos_each_frame)
 
     #fignames = {}
     #for figname in plotdata._fignames:
@@ -749,15 +752,15 @@ def printgauges(plotdata=None, verbose=True):
     # -----------------------------------------
 
     if not plotdata.printfigs:
-        print "Using previously printed figure files"
+        print("Using previously printed figure files")
     else:
-        print "Now making png files for all figures..."
+        print("Now making png files for all figures...")
         for frameno in framenos:
             plotframe(frameno, plotdata, verbose)
-            print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
+            print('Frame %i at time t = %s' % (frameno, frametimes[frameno]))
         for gaugeno in gaugenos:
             plotgauge(gaugeno, plotdata, verbose)
-            print 'Gauge %i ' % gaugeno
+            print('Gauge %i ' % gaugeno)
 
 
     if plotdata.latex:
@@ -768,14 +771,14 @@ def printgauges(plotdata=None, verbose=True):
     #-------
     
     if plotdata.gif_movie:
-        print 'Making gif movies.  This may take some time....'
+        print('Making gif movies.  This may take some time....')
         for figno in fignos_each_frame:
             try:
                 os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
                    % (figno,figno))
-                print '    Created moviefig%s.gif' % figno
+                print('    Created moviefig%s.gif' % figno)
             except:
-                print '*** Error creating moviefig%s.gif' % figno
+                print('*** Error creating moviefig%s.gif' % figno)
     
     os.chdir(rootdir)
 
@@ -820,14 +823,14 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
             setgauges1 = read_setgauges(outdir1)
             setgauges2 = read_setgauges(outdir2)
         except:
-            print '*** could not read gauges.data from one of the outdirs'
+            print('*** could not read gauges.data from one of the outdirs')
             return
         gaugenos = setgauges1.gauge_numbers
         if setgauges2.gauge_numbers != gaugenos:
-            print '*** warning -- outdirs have different sets of gauges'
+            print('*** warning -- outdirs have different sets of gauges')
 
         if len(gaugenos)==0:
-            print "*** No gauges found in gauges.data"
+            print("*** No gauges found in gauges.data")
             return
 
     plotdata1 = ClawPlotData()
@@ -847,16 +850,16 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
 
         dt = abs(t1-t2).max()
         if verbose:
-            print  "Max difference in t[:] at gauge %s is %g" % (gaugeno,dt)
+            print("Max difference in t[:] at gauge %s is %g" % (gaugeno,dt))
         matches = matches and (dt <= tol)
 
         if q_components == 'all':
-            q_components = range(q1.shape[0])
+            q_components = list(range(q1.shape[0]))
 
         for m in q_components:
             dq = abs(q1[m,:]-q2[m,:]).max()
             if verbose:
-                print  "Max difference in q[%s] at gauge %s is %g" % (m,gaugeno,dq)
+                print("Max difference in q[%s] at gauge %s is %g" % (m,gaugeno,dq))
             matches = matches and (dq <= tol)
 
         if plot:

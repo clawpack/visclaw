@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 import os
 import warnings
 import random
 import cStringIO
 from matplotlib.animation import writers, FileMovieWriter
 import random
+from six.moves import range
 
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), 'icons')

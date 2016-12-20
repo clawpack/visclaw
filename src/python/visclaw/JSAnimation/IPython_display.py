@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .html_writer import HTMLWriter
 from matplotlib.animation import Animation
 import matplotlib.pyplot as plt

@@ -5,6 +5,7 @@ Simple convenience script for setting up and running an interactive plotting
 sesssion.
 """
 
+from __future__ import absolute_import
 import sys
 import clawpack.visclaw.Iplotclaw as Iplotclaw
 

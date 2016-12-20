@@ -27,6 +27,7 @@ See also the test function below, which can be run via:
 """
 
 
+from __future__ import absolute_import
 def make_getgauge(outdir='_output'):
     """
     Create function getgauge that will grab one set of gauge data
