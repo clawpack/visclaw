@@ -157,6 +157,7 @@ def JSAnimate_images(images, figsize=(10,6), dpi=None):
     anim = animation.FuncAnimation(fig, animate, init_func=init,
                           frames=len(images), interval=200, blit=True)
 
+    plt.close(fig)
     return anim
 
 
