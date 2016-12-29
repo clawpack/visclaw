@@ -6,7 +6,7 @@ Three types of animations are supported:
  - using the ipywidget interact to create a figure with a slider bar, 
  - using JSAnimation to create Javascript code that loops over a set of 
    images and adds controls to play as an animation.
- - creation of mp4 files using ffmpeg.
+ - creation of mp4 files using ffmpeg (provided this package is installed).
 
 The set of images to combine in an animation can be specified as a
 list of images, a list of `matplotlib` figures, or a directory of
@@ -214,6 +214,10 @@ def make_mp4(anim, file_name='anim.mp4',
     installed.
     """
     import os
+
+    if not animation.writers.is_available('ffmpeg'):
+        print("** ffmpeg must be installed to create mp4 file")
+        return
 
     if os.path.splitext(file_name)[1] != '.mp4':
         print("*** Might not work if file extension is not .mp4")
