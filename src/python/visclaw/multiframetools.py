@@ -151,12 +151,12 @@ def plot_multiframes(plotdata, verbose=False):
             # set axes limits:
             if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                 try:
-		    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                 except:
                     pass  # let axis be set automatically
             if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
                 try:
-		    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
                 except:
                     pass  # let axis be set automatically
 
@@ -179,7 +179,7 @@ def plot_multiframes(plotdata, verbose=False):
             # assume it's a function
             try:
                 output = afterframe(current_data)
-		if output: current_data = output
+                if output: current_data = output
             except:
                 print('*** Error in afterframe ***')
                 raise
