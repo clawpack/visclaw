@@ -73,7 +73,7 @@ end;
 v = get(p,'Vertices');
 userdata.cartCoords = v;
 
-if (mappedgrid == 1 | manifold == 1)
+if (mappedgrid == 1 || manifold == 1)
   if (mappedgrid == 1)
     if (nargin('mapc2p') == 2)
       [v(:,1),v(:,2)] = mapc2p(v(:,1),v(:,2));

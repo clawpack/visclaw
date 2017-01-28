@@ -30,11 +30,11 @@ while (1)
   if (mappedgrid == 1 | manifold == 1)
     if (mappedgrid == 1)
       if (nargin('mapc2p') == 2)
-	[xdata,ydata] = mapc2p(xdata,ydata);
+          [xdata,ydata] = mapc2p(xdata,ydata);
       else
-	[xdata, ydata, zdata] = mapc2p(xdata,ydata,zdata);
-      end;
-    end;
+          [xdata, ydata, zdata] = mapc2p(xdata,ydata,zdata);
+      end
+    end
     if (manifold == 1)
       creatingclines = 1;  % flag for mapc2m to indicate contour lines
                            % are being generated: may want to shift off
@@ -43,8 +43,8 @@ while (1)
       set_blocknumber(blockno);
       [xdata, ydata, zdata] = mapc2m(xdata,ydata);
       creatingclines = 0;
-    end;
-  end;
+    end
+  end
   udata.phys_vertices = [xdata', ydata', zdata'];
 
   h(line_cnt) = line('XData',xdata,'YData',ydata,'ZData',zdata,'Color','k');
@@ -53,8 +53,9 @@ while (1)
   set(h(line_cnt),'UserData',udata);
   st_idx = st_idx + next_length + 1;
   if (st_idx > length(c))
-    return;
-  end;
-end;
+    return
+  end
+end
 
-set_clines(h);
+% Does this ever get called?
+% set_clines(h);

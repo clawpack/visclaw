@@ -12,11 +12,11 @@ vis_levels = get_levelvis(slice);
 % Now, level vis_level(l+1) should mask vis_level(l)
 
 for l = 1:length(vis_levels),
-  level = vis_levels(l);
-  pvecl = slice{level};
-  reset_level(pvecl);
-  if (l < length(vis_levels))
-    pvecu = slice{vis_levels(l+1)};
-    mask_patches2(pvecl,pvecu);
-  end;
-end;
+    level = vis_levels(l);
+    pvecl = slice{level};
+    reset_level(pvecl);
+    if (l < length(vis_levels))
+        pvecu = slice{vis_levels(l+1)};
+        mask_patches2(pvecl,pvecu);
+    end
+end
