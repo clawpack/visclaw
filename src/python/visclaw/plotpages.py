@@ -974,12 +974,15 @@ def plotclaw2kml(plotdata):
             l = f.readline()
 
         # read line containing number of gauges
-        l = f.readline()
+        ldata = f.readline()
+        l = int(np.fromstring(ldata.strip(),sep=' ')[0])
 
         # Read the data lines containing gauge information
         gauges = []
-        for g in f.readlines():
-            gauges.append(np.fromstring(g.strip(),sep=' '))
+        # for g in f.readlines():
+        for g in range(0,l):
+            g = f.readline()
+            gauges.append(np.fromstring(g.strip(),sep=' ')[0:5])
 
         # Location of gauges PNG files (stored under <file>.kmz/images
         basehref = "<base href=\"%s\"/>" % os.path.join('..','..','images','')  # need trailing "/"
@@ -1010,7 +1013,8 @@ def plotclaw2kml(plotdata):
             KML.BalloonStyle(bstyle),
             id="gauge_style"))
 
-        # Loop over all gauges
+        # Loop over all gauges.  Note that we only loop over array data i the gauge and skip
+        # Display, etc.
         for gnum,gauge in enumerate(gauges):
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
