@@ -19,6 +19,7 @@ from matplotlib import pyplot as plt
 import six
 from six.moves import range
 
+import gaugetools
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
 if clawdir is not None:
@@ -968,22 +969,11 @@ def plotclaw2kml(plotdata):
     print("KML ===> Creating file %s" % gauge_kml_file)
 
     try:
-        f = open(os.path.join(plotdata.outdir,"gauges.data"),'r')
+        setgauges = gaugetools.read_setgauges(plotdata.outdir)
     except:
         print("     File gauges.data not found.")
     else:
-        # Read past comments;  last 'l' is blank line
-        l = f.readline()
-        while (l.startswith('#')):
-            l = f.readline()
-
-        # read line containing number of gauges
-        l = f.readline()
-
-        # Read the data lines containing gauge information
-        gauges = []
-        for g in f.readlines():
-            gauges.append(np.fromstring(g.strip(),sep=' '))
+        gauges = setgauges.gauges
 
         # Location of gauges PNG files (stored under <file>.kmz/images
         basehref = "<base href=\"%s\"/>" % os.path.join('..','..','images','')  # need trailing "/"
