@@ -1464,8 +1464,11 @@ def call_setplot(setplot, plotdata, verbose=True):
     """
     import types
     # "reload" is only available from a module in Python 3.
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
-        from importlib import reload
+    if sys.version_info[0] >= 3:
+        if sys.version_info[1] >= 4:
+            from importlib import reload
+        else:
+            from imp import reload
 
     # This is a bit of a hack to make sure that we still handle the
     # setplot == None case, we may want to deprecate this and require
