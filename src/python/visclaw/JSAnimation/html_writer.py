@@ -25,7 +25,7 @@ class _Icons(object):
     def _load_base64(self, filename):
         data = open(os.path.join(self.icon_dir, filename), 'rb').read()
         return 'data:image/{0};base64,{1}'.format(self.extension,
-                                        base64.b64encode(data))
+                                        base64.b64encode(data).decode())
 
 PREV_INCLUDE = """
 {add_html}
@@ -244,7 +244,7 @@ def _embedded_frames(frame_list, frame_format):
     embedded = "\n"
     for i, frame_data in enumerate(frame_list):
         embedded += template.format(i, frame_format,
-                                    frame_data.replace(b'\n', b'\\\n'))
+                                    frame_data.replace('\n', '\\\n'))
     return embedded
 
 
@@ -311,7 +311,7 @@ class HTMLWriter(FileMovieWriter):
             self.fig.savefig(f, format=self.frame_format,
                              dpi=self.dpi, **savefig_kwargs)
             f.seek(0)
-            b = base64.b64encode(f.read())
+            b = base64.b64encode(f.getvalue()).decode()
             self._saved_frames.append(b)
         #else:
             #return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
