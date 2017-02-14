@@ -2,11 +2,11 @@ from __future__ import absolute_import
 import os
 import warnings
 import random
-import cStringIO
+from io import StringIO, BytesIO
 from matplotlib.animation import writers, FileMovieWriter
 import random
 from six.moves import range
-
+import base64
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), 'icons')
 
@@ -25,7 +25,7 @@ class _Icons(object):
     def _load_base64(self, filename):
         data = open(os.path.join(self.icon_dir, filename), 'rb').read()
         return 'data:image/{0};base64,{1}'.format(self.extension,
-                                                  data.encode('base64'))
+                                        base64.b64encode(data).decode())
 
 PREV_INCLUDE = """
 {add_html}
@@ -307,11 +307,12 @@ class HTMLWriter(FileMovieWriter):
     def grab_frame(self, **savefig_kwargs):
         if self.embed_frames:
             suffix = '.' + self.frame_format
-            f = cStringIO.StringIO()
+            f = BytesIO()
             self.fig.savefig(f, format=self.frame_format,
                              dpi=self.dpi, **savefig_kwargs)
-            f.reset()
-            self._saved_frames.append(f.read().encode('base64'))
+            f.seek(0)
+            b = base64.b64encode(f.getvalue()).decode()
+            self._saved_frames.append(b)
         #else:
             #return super(HTMLWriter, self).grab_frame(**savefig_kwargs)
 
