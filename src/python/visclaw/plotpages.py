@@ -1804,7 +1804,7 @@ def massage_frames_data(plot_pages_data):
     allfigsfile = {}
     #print '    Making png and html files for %i frames:' % numframes, framenos
     for frameno in framenos:
-        framef = string.zfill(frameno,4)
+        framef = str(frameno).zfill(4)
         try:
             ftime = frametimes[frameno]
         except:
@@ -1817,7 +1817,7 @@ def massage_frames_data(plot_pages_data):
         else:
             ftimef = '%12.5e' % ftime
         frametimef[frameno] = ftimef
-        framef = string.zfill(frameno,4)
+        framef = str(frameno).zfill(4)
         for figno in fignos:
             pngfile[frameno,figno] = '%s%sfig%s.png'  % (prefix,framef,figno)
             htmlfile[frameno,figno] = '%s%sfig%s.html' % (prefix,framef,figno)
@@ -2688,7 +2688,7 @@ def massage_gauges_data(plot_pages_data):
     htmlfile = {}
     allfigsfile = {}
     for gaugeno in gaugenos:
-        gaugef = string.zfill(gaugeno,4)
+        gaugef = str(gaugeno).zfill(4)
         for figno in fignos:
             pngfile[gaugeno,figno] = '%s%sfig%s.png'  % (prefix,gaugef,figno)
             htmlfile[gaugeno,figno] = '%s%sfig%s.html' % (prefix,gaugef,figno)
