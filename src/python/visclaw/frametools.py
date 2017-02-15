@@ -23,7 +23,6 @@ if sys.version_info[0] >= 3:
 
 import clawpack.clawutil.data as clawdata
 from clawpack.visclaw.data import ClawPlotData
-from clawpack.visclaw import plotpages
 from clawpack.visclaw import setplot_default
 from clawpack.pyclaw import Solution
 
@@ -1059,6 +1058,7 @@ def printframes(plotdata=None, verbose=True):
 
     If plotdata.setplot is a function then this function will be used.
     """
+    from clawpack.visclaw import plotpages
 
     if 'matplotlib' not in sys.modules:
         print('*** Error: matplotlib not found, no plots will be done')
