@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 import six
 from six.moves import range
 
-import gaugetools
+from clawpack.visclaw import gaugetools
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
 if clawdir is not None:

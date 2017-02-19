@@ -5,14 +5,33 @@ Module frametools for plotting frames of time-dependent data.
 
 from __future__ import absolute_import
 from __future__ import print_function
-import os,sys
+import os
+import sys
 import traceback
-import numpy as np
-import matplotlib.pyplot as plt
+import glob
+import time
+import types
 
-import clawpack.clawutil.data as clawdata
 import six
 from six.moves import input
+# "reload" is only available from a module in Python 3.
+if sys.version_info[0] >= 3:
+    if sys.version_info[1] >= 4:
+        from importlib import reload
+    else:
+        from imp import reload
+
+import clawpack.clawutil.data as clawdata
+from clawpack.visclaw.data import ClawPlotData
+from clawpack.visclaw import setplot_default
+from clawpack.pyclaw import Solution
+
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy import ma
+from clawpack.visclaw import colormaps
+from matplotlib.colors import Normalize
+
 
 
 #==============================================================================
@@ -33,7 +52,6 @@ def plotframe(frameno, plotdata, verbose=False, simple=False, refresh=False):
 
     if simple:
         plotfun = plotdata.setplot
-        from clawpack.pyclaw import Solution
         sol = Solution(frameno,path=plotdata.outdir,file_format=plotdata.format)
         plotfun(sol)
         return
@@ -272,7 +290,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                             show_this_level = amr_data_show[j]
                         else:
                             show_this_level = True
-                        #import pdb; pdb.set_trace()
 
                         if plotitem._show and show_this_level:
                             if num_dim == 1:
@@ -621,10 +638,6 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     """
 
-    import numpy as np
-    from numpy import ma
-    from clawpack.visclaw import colormaps
-
     plotdata = plotitem._plotdata
 
     state = framesoln.states[stateno]
@@ -734,7 +747,6 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 pp['imshow_cmin'] = np.min(var)
             if pp['imshow_cmax'] in ['auto',None]:
                 pp['imshow_cmax'] = np.max(var)
-            from matplotlib.colors import Normalize
             color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
@@ -1046,12 +1058,7 @@ def printframes(plotdata=None, verbose=True):
 
     If plotdata.setplot is a function then this function will be used.
     """
-
-    import glob
-    from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import plotpages
-
-
 
     if 'matplotlib' not in sys.modules:
         print('*** Error: matplotlib not found, no plots will be done')
@@ -1160,7 +1167,6 @@ def printframes(plotdata=None, verbose=True):
     fortfile = {}
     frametimes = {}
 
-    import glob
     for file in glob.glob('fort.q*'):
         frameno = int(file[6:])
         fortfile[frameno] = file
@@ -1393,8 +1399,6 @@ def only_most_recent(framenos,outdir='.',verbose=True):
     Returns the filtered list.
     """
 
-    import glob,time,os
-
     startdir = os.getcwd()
     if outdir != '.':
         try:
@@ -1462,14 +1466,6 @@ def call_setplot(setplot, plotdata, verbose=True):
     If setplot is a string, setplot function is in module named by string.
     Otherwise assume setplot is a function.
     """
-    import types
-    # "reload" is only available from a module in Python 3.
-    if sys.version_info[0] >= 3:
-        if sys.version_info[1] >= 4:
-            from importlib import reload
-        else:
-            from imp import reload
-
     # This is a bit of a hack to make sure that we still handle the
     # setplot == None case, we may want to deprecate this and require
     # an argument here
@@ -1522,7 +1518,6 @@ def call_setplot(setplot, plotdata, verbose=True):
             print("Would you like to use clawpack.visclaw.setplot_default() instead [Y/n]?")
             use_default = input()
             if (use_default == "") or ("Y" in use_default.capitalize()):
-                from clawpack.visclaw import setplot_default
                 setplot = setplot_default.setplot
             else:
                 sys.exit(1)
@@ -1580,8 +1575,6 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
           xs, qs = map_2d_to_1d(xcenter, ycenter, q)
     """
 
-    from numpy import interp
-
     t = solution.t
     xs = {}
     qs = {}
@@ -1626,7 +1619,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
                 print('*** Error applying function var_1d')
                 return
 
-        qint1 = interp(xs1, xref, qref)
+        qint1 = np.interp(xs1, xref, qref)
 
         xs[stateno] = xs1
         qs[stateno] = qs1

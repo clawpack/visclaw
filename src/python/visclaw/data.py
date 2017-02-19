@@ -12,7 +12,6 @@ import numpy as np
 import re
 import logging
 import clawpack.clawutil.data as clawdata
-from . import gaugetools
 import time
 
 import clawpack.pyclaw.controller
