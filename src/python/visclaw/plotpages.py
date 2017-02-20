@@ -1386,7 +1386,7 @@ def plotclaw2kml(plotdata):
         f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
     except:
         # Nothing terrible happens;  we just set maxlevels to some large value
-        maxlevels = 10
+        maxlevels = 20
     else:
         # read past comments - last line is blank
         a = f.readline()
@@ -1421,8 +1421,16 @@ def plotclaw2kml(plotdata):
     level_files = []
     doc_levels = []
     styles = []
-    for i in range(0,maxlevels):
-        level_file_name = "level_" + str(i+1).rjust(2,'0')
+    if plotdata.format is 'forestclaw':
+        mxl = int(maxlevels+1)
+    else:
+        mxl = int(maxlevels)
+
+    for i in range(0,mxl):
+        if plotdata.format is 'forestclaw':
+            level_file_name = "level_" + str(i).rjust(2,'0')
+        else:
+            level_file_name = "level_" + str(i+1).rjust(2,'0')
         level_files.append(level_file_name)
 
         # KML Document for each level
@@ -1439,10 +1447,10 @@ def plotclaw2kml(plotdata):
 
     # Create individual level files in subdirectories
 
-    doc_frames = [[0 for j in range(numframes)] for i in range(maxlevels)]
+    doc_frames = [[0 for j in range(numframes)] for i in range(mxl)]
     for j in range(0,numframes):
         frameno = framenos[j]
-        for i in range(0,maxlevels):
+        for i in range(0,mxl):
             frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             if i == 0:
                 vis = 0  # Don't show first level
@@ -1487,6 +1495,10 @@ def plotclaw2kml(plotdata):
                 ylower = patch.dimensions[1].lower
                 yupper = patch.dimensions[1].upper
                 level = patch.level
+                if level == 0:
+                    print("level is 0")
+                    sys.exit(1)
+
                 if plotdata.kml_map_topo_to_latlong is not None:
                     xlower,ylower = plotdata.kml_map_topo_to_latlong(xlower,ylower)
                     xupper,yupper = plotdata.kml_map_topo_to_latlong(xupper,yupper)
@@ -1535,7 +1547,12 @@ def plotclaw2kml(plotdata):
 
                 p.append(deepcopy(r))
 
-                doc_frames[level-1][j].Document.append(deepcopy(p))
+                if plotdata.format is 'forestclaw':
+                    # Levels start at 0
+                    doc_frames[level][j].Document.append(deepcopy(p))
+                else:
+                    doc_frames[level-1][j].Document.append(deepcopy(p))
+
 
     if maxlevel_real > maxlevels:
         raise IOError("KML ==> plotclaw2kml : (plotpages.py) Maximum number of "
