@@ -1,9 +1,9 @@
 """
 Interactive animations in IPython notebooks using matplotlib and JSAnimation.
 """
-
-
 from __future__ import absolute_import
+
+
 def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     """
         frame_list may be:
@@ -17,6 +17,10 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     from clawpack.pyclaw import Controller
     import numpy as np
 
+    figsize = kargs.get('figsize', (10,6))
+    ylim = kargs.get('ylim', None)
+    xlim = kargs.get('xlim', None)
+
     if isinstance(frame_list,Controller):
         frame_list = frame_list.frames
 
@@ -24,16 +28,23 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     ndim = len(frame.q.shape)-1
 
     if ndim == 1:
-        fig = plt.figure(figsize=(10,6))
+        fig = plt.figure(figsize=figsize)
         ax = plt.axes()
         im, = ax.plot([], [],lw=2)
-        
+
         xc = frame.state.grid.p_centers[0]
-        ax.set_xlim(xc[0],xc[-1])
-        ymax = max([np.max(f.q[ivar,:]) for f in frame_list])
-        ymin = min([np.min(f.q[ivar,:]) for f in frame_list])
-        ydiff = ymax-ymin
-        ax.set_ylim(ymin-ydiff/10.,ymax+ydiff/10.)
+        if xlim is None:
+            ax.set_xlim(xc[0],xc[-1])
+        else:
+            ax.set_xlim(xlim)
+
+        if ylim is None:
+            ymax = max([np.max(f.q[ivar,:]) for f in frame_list])
+            ymin = min([np.min(f.q[ivar,:]) for f in frame_list])
+            ydiff = ymax-ymin
+            ax.set_ylim(ymin-ydiff/10.,ymax+ydiff/10.)
+        else:
+            ax.set_ylim(ylim)
 
         ax.set_xlabel('x')
         if varname is not None:
@@ -43,9 +54,8 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
         fig = plt.figure(figsize=(4,4))
         xc, yc = frame.state.grid.p_centers
         im = plt.imshow(frame.q[ivar,:,:].T,
-                extent = [xc.min(), xc.max(), yc.min(), yc.max()], 
-                interpolation='nearest',origin='lower')
-
+                        extent=[xc.min(), xc.max(), yc.min(), yc.max()],
+                        interpolation='nearest',origin='lower')
 
     def fplot(frame_number):
         frame = frame_list[frame_number]
