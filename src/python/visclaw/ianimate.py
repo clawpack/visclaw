@@ -56,6 +56,8 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
         im = plt.imshow(frame.q[ivar,:,:].T,
                         extent=[xc.min(), xc.max(), yc.min(), yc.max()],
                         interpolation='nearest',origin='lower')
+        if xlim: plt.xlim(xlim)
+        if ylim: plt.ylim(ylim)
 
     def fplot(frame_number):
         frame = frame_list[frame_number]
