@@ -191,7 +191,7 @@ def plots2html(plot_pages_data):
           <title>EagleClaw Plot Index</title>
           <head>
           <link type="text/css" rel="stylesheet"
-                href="http://localhost:50005/eagleclaw/eagleclaw.css">
+                href="http:g//localhost:50005/eagleclaw/eagleclaw.css">
           </head>
           <eagle1>EagleClaw -- Plot Index</eagle1>
           <eagle2>Easy Access Graphical Laboratory for Exploring Conservation
@@ -717,7 +717,7 @@ def plotclaw2kml(plotdata):
         KML.open(1))
 
     # set all other figures to off.
-    fig_vis = 1
+    # fig_vis = 1
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
@@ -730,6 +730,11 @@ def plotclaw2kml(plotdata):
             continue
 
         fig_dir = "fig" + str(figno)
+
+        if plotfigure.kml_show_figure:
+            fig_vis = 1
+        else:
+            fig_vis = 0
 
         shutil.rmtree(fig_dir,True)
         os.mkdir(fig_dir)
@@ -893,8 +898,8 @@ def plotclaw2kml(plotdata):
                 KML.Link(
                     KML.href(lstr))))
 
-        fig_vis = 0   # All figures referenced after the first one will not be shown
-                      # when first loading GE.
+        # fig_vis = 0   # All figures referenced after the first one will not be shown
+                        # when first loading GE.
 
 
         # -------------- add colorbar image file -----------------
