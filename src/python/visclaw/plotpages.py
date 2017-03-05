@@ -598,6 +598,11 @@ def plotclaw2kml(plotdata):
     from copy import deepcopy
     from clawpack.geoclaw import kmltools
 
+    if plotdata.format is 'forestclaw':
+        level_base = 0
+    else:
+        level_base = 1
+
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
@@ -1401,7 +1406,7 @@ def plotclaw2kml(plotdata):
         # read line containing max number of levels
         a = f.readline()
         ainfo = np.fromstring(a.strip(),sep=' ')
-        maxlevels = int(ainfo[0])  # Hopefully, got this right
+        maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
 
     # set _outdirs attribute to be list of all outdirs for all items
     plotdata.set_outdirs()
@@ -1426,16 +1431,10 @@ def plotclaw2kml(plotdata):
     level_files = []
     doc_levels = []
     styles = []
-    if plotdata.format is 'forestclaw':
-        mxl = int(maxlevels+1)
-    else:
-        mxl = int(maxlevels)
 
-    for i in range(0,mxl):
-        if plotdata.format is 'forestclaw':
-            level_file_name = "level_" + str(i).rjust(2,'0')
-        else:
-            level_file_name = "level_" + str(i+1).rjust(2,'0')
+    # Assume that if we are using ForestClaw, that we have set maxlevels correctly
+    for i in range(0,maxlevels+1-level_base):
+        level_file_name = "level_" + str(i+level_base).rjust(2,'0')
         level_files.append(level_file_name)
 
         # KML Document for each level
@@ -1452,10 +1451,14 @@ def plotclaw2kml(plotdata):
 
     # Create individual level files in subdirectories
 
-    doc_frames = [[0 for j in range(numframes)] for i in range(mxl)]
+    try:
+        doc_frames = [[0 for j in range(numframes)] for i in range(0,maxlevels+1-level_base)]
+    except:
+        import pdb
+        pdb.set_trace()
     for j in range(0,numframes):
         frameno = framenos[j]
-        for i in range(0,mxl):
+        for i in range(0,maxlevels+1-level_base):
             frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             if i == 0:
                 vis = 0  # Don't show first level
@@ -1477,7 +1480,6 @@ def plotclaw2kml(plotdata):
 
     print("     Re-reading output files to get patch information")
     print(" ")
-    maxlevel_real = 0
     for j in range(0,numframes):
         frameno = framenos[j]
 
@@ -1500,16 +1502,10 @@ def plotclaw2kml(plotdata):
                 ylower = patch.dimensions[1].lower
                 yupper = patch.dimensions[1].upper
                 level = patch.level
-                if level == 0:
-                    print("level is 0")
-                    sys.exit(1)
 
                 if plotdata.kml_map_topo_to_latlong is not None:
                     xlower,ylower = plotdata.kml_map_topo_to_latlong(xlower,ylower)
                     xupper,yupper = plotdata.kml_map_topo_to_latlong(xupper,yupper)
-
-                # maxlevel_real should start at 0 so it can be used for indexing
-                maxlevel_real = max(level,maxlevel_real)
 
                 lv = []
                 if xlower > 180:
@@ -1552,19 +1548,15 @@ def plotclaw2kml(plotdata):
 
                 p.append(deepcopy(r))
 
-                if plotdata.format is 'forestclaw':
-                    # Levels start at 0
-                    doc_frames[level][j].Document.append(deepcopy(p))
-                else:
-                    doc_frames[level-1][j].Document.append(deepcopy(p))
+                try:
+                    doc_frames[level-level_base][j].Document.append(deepcopy(p))
+                except:
+                    import pdb
+                    pdb.set_trace()
 
-
-    if maxlevel_real > maxlevels:
-        raise IOError("KML ==> plotclaw2kml : (plotpages.py) Maximum number of "
-                      "levels exceeded;  increase maxlevels")
 
     # Create directories for each level.
-    for i in range(0,maxlevel_real):
+    for i in range(0,maxlevels+1-level_base):
         # Directory for storing levels for each time step
         shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
         os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
@@ -1572,7 +1564,7 @@ def plotclaw2kml(plotdata):
 
     # Print out individual frame files for each element
     for j in range(0,numframes):
-        for i in range(0,maxlevel_real):
+        for i in range(0,maxlevels+1-level_base):
             frameno = framenos[j]
             level_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             kml_frame_file = open(os.path.join(kml_dir,level_dir,
@@ -1583,7 +1575,7 @@ def plotclaw2kml(plotdata):
             kml_frame_file.close()
 
     # Print out level files containing time stamps and references to frame files
-    for i in range(0,maxlevel_real):
+    for i in range(0,maxlevels+1-level_base):
         kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
         kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         kml_level_file.write(etree.tostring(etree.ElementTree(doc_levels[i]),
@@ -1592,9 +1584,9 @@ def plotclaw2kml(plotdata):
 
     # Folders in top level file 'levels.kml'
     doc_levels_top = KML.kml(KML.Document())
-    for i in range(0,maxlevel_real):
-        level_file_name = "level_" + str(i+1).rjust(2,'0')
-        f = KML.Folder(KML.name("Level " + str(i+1)))
+    for i in range(0,maxlevels+1-level_base):
+        level_file_name = "level_" + str(i+level_base).rjust(2,'0')
+        f = KML.Folder(KML.name("Level " + str(i+level_base)))
         f.append(KML.NetworkLink(
             KML.name("Frames"),
             KML.Link(
