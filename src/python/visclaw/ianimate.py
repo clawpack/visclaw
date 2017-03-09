@@ -20,6 +20,7 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     figsize = kargs.get('figsize', (10,6))
     ylim = kargs.get('ylim', None)
     xlim = kargs.get('xlim', None)
+    cmap = kargs.get('cmap', plt.cm.RdYlBu)
 
     if isinstance(frame_list,Controller):
         frame_list = frame_list.frames
@@ -55,7 +56,7 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
         xc, yc = frame.state.grid.p_centers
         im = plt.imshow(frame.q[ivar,:,:].T,
                         extent=[xc.min(), xc.max(), yc.min(), yc.max()],
-                        interpolation='nearest',origin='lower')
+                        interpolation='nearest',origin='lower',cmap=cmap)
         if xlim: plt.xlim(xlim)
         if ylim: plt.ylim(ylim)
 
