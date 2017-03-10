@@ -179,7 +179,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
             axescmd = 'plotaxes._handle = plt.%s' % axescmd
             exec(axescmd)
-            plt.hold(True)
 
             current_data.plotaxes = plotaxes
             current_data.plotfigure = plotaxes._plotfigure
@@ -547,8 +546,6 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     # The plot commands using matplotlib:
 
-    plt.hold(True)
-
     if pp['color']:
         pp['kwargs']['color'] = pp['color']
 
@@ -698,8 +695,6 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         X_center, Y_center = xc_centers, yc_centers
         X_edge, Y_edge = xc_edges, yc_edges
 
-    plt.hold(True)
-
     if ma.isMaskedArray(var):
         # If var is a masked array: plotting should work ok unless all
         # values are masked, in which case pcolor complains and there's
@@ -789,8 +784,6 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         elif pp['patch_bgcolor'] is not 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
-        plt.hold(True)
-
 
         if pp['plot_type'] == '2d_contour':
             # create the contour command:

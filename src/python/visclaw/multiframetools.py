@@ -108,7 +108,6 @@ def plot_multiframes(plotdata, verbose=False):
             axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
             axescmd = 'plotaxes._handle = pylab.%s' % axescmd
             exec(axescmd)
-            pylab.hold(True)
 
             # loop over plotitems on these axes:
             # ----------------------------------
