@@ -609,9 +609,11 @@ def plotclaw2kml(plotdata):
         print("KML ===> Error, aborting plotclaw2kml (cannot create plot directory")
         raise
 
-    if plotdata.gauges_fignos is not None:
-        plotdata = massage_gauges_data(plotdata)
-        gauge_pngfile = plotdata._gauge_pngfile
+    gaugenos = plotdata.gauges_gaugenos
+    if gaugenos is not None:
+        if plotdata.gauges_fignos is not None:
+            plotdata = massage_gauges_data(plotdata)
+            gauge_pngfile = plotdata._gauge_pngfile
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
@@ -980,9 +982,12 @@ def plotclaw2kml(plotdata):
 
     try:
         setgauges = gaugetools.read_setgauges(plotdata.outdir)
+        have_gauges = True
     except:
         print("     File gauges.data not found.")
-    else:
+        have_gauges = False
+
+    if have_gauges and gaugenos is not None and len(gaugenos) > 0:
         gauges = setgauges.gauges
 
         # Location of gauges PNG files (stored under <file>.kmz/images
@@ -1036,7 +1041,7 @@ def plotclaw2kml(plotdata):
             # plotdata.gauges_fignos
             # Not clear how to get the figure number for each gauge.   Assume that
             # there is only one figure number for all gauges
-            figno = plotdata.gauges_fignos[0]
+            # If user has set 'gaugeno=[]', gauge files will not be added to the KML file. 
             figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
@@ -1074,10 +1079,14 @@ def plotclaw2kml(plotdata):
         kml_file.close()
 
     # -------------- add gauge image and KML files -----------------
+    if plotdata.gauges_fignos is not None:
+        gauge_vis = 0
+    else:
+        gauge_vis = 1
     doc.Document.append(
         KML.NetworkLink(
             KML.name("Gauges"),
-            KML.visibility(1),
+            KML.visibility(gauge_vis),
             KML.Link(KML.href(os.path.join(kml_dir,
                                            gauge_kml_file)))))
 
