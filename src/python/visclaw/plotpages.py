@@ -984,7 +984,7 @@ def plotclaw2kml(plotdata):
         print("     File gauges.data not found - this should not happen.")
         has_gauge_data = False
 
-    if have_gauges and gaugenos is not None and len(gaugenos) > 0:
+    if has_gauge_data and gaugenos is not None and len(gaugenos) > 0:
         gauges = setgauges.gauges
 
         # Location of gauges PNG files (stored under <file>.kmz/images
