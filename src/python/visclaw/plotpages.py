@@ -191,7 +191,7 @@ def plots2html(plot_pages_data):
           <title>EagleClaw Plot Index</title>
           <head>
           <link type="text/css" rel="stylesheet"
-                href="http:g//localhost:50005/eagleclaw/eagleclaw.css">
+                href="http://localhost:50005/eagleclaw/eagleclaw.css">
           </head>
           <eagle1>EagleClaw -- Plot Index</eagle1>
           <eagle2>Easy Access Graphical Laboratory for Exploring Conservation
@@ -723,9 +723,6 @@ def plotclaw2kml(plotdata):
         KML.name("Figures"),
         KML.open(1))
 
-    # set all other figures to off.
-    # fig_vis = 1
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -980,12 +977,12 @@ def plotclaw2kml(plotdata):
     print(" ")
     print("KML ===> Creating file %s" % gauge_kml_file)
 
+    has_gauge_data = True
     try:
         setgauges = gaugetools.read_setgauges(plotdata.outdir)
-        have_gauges = True
     except:
-        print("     File gauges.data not found.")
-        have_gauges = False
+        print("     File gauges.data not found - this should not happen.")
+        has_gauge_data = False
 
     if have_gauges and gaugenos is not None and len(gaugenos) > 0:
         gauges = setgauges.gauges
@@ -1460,11 +1457,7 @@ def plotclaw2kml(plotdata):
 
     # Create individual level files in subdirectories
 
-    try:
-        doc_frames = [[0 for j in range(numframes)] for i in range(0,maxlevels+1-level_base)]
-    except:
-        import pdb
-        pdb.set_trace()
+    doc_frames = [[0 for j in range(numframes)] for i in range(0,maxlevels+1-level_base)]
     for j in range(0,numframes):
         frameno = framenos[j]
         for i in range(0,maxlevels+1-level_base):
