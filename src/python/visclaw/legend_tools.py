@@ -6,7 +6,7 @@ To do fancier things with legends, see:
     http://matplotlib.org/users/legend_guide.html
 """
 
-def add_legend(labels,colors='k',linestyles='-',markers='',loc='best'):
+def add_legend(labels,colors='k',linestyles='-',markers='', **kwargs):
     """
     Add a legend to an existing plot with a specified set of line colors.
     Input:
@@ -21,7 +21,8 @@ def add_legend(labels,colors='k',linestyles='-',markers='',loc='best'):
         markers: list of strings of same length as labels,  
             or a single string used for all entries.
             Default is '', so no marker for any entry
-        loc: desired location
+        kwargs: keyword arguments to be passed to `plt.legend`, e.g.
+            `loc` or `fontsize`.
     There is one entry in the legend for each color/label.
     
     Useful for annotating an AMR plot when plots were made
@@ -51,5 +52,5 @@ def add_legend(labels,colors='k',linestyles='-',markers='',loc='best'):
                     label=labels[k])
           handles.append(handle)
               
-    plt.legend(handles=handles,loc=loc)
+    plt.legend(handles=handles,**kwargs)
     
