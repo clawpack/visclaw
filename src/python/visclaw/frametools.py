@@ -509,7 +509,8 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         xc_centers = None
         xc_edges = None
 
-    elif pp['plot_type'] in ['1d_plot', '1d_semilogy', '1d_fill_between', '1d_empty','1d_from_2d_data']:
+    elif pp['plot_type'] in ['1d_plot', '1d_semilogy', '1d_fill_between',
+            '1d_empty','1d_from_2d_data', '1d_pwconst']:
         var = get_var(state,pp['plot_var'],current_data)
         current_data.var = var
 
@@ -563,6 +564,19 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 pobj=plt.fill_between(p_centers,var,var2,pp['fill_where'],**pp['kwargs'])
             else:
                 pobj=plt.fill_between(p_centers,var,var2,**pp['kwargs'])
+
+        elif pp['plot_type'] == '1d_pwconst':
+
+            # should improve this to also work on mapped grid
+            xc_edges = patch.grid.c_nodes[0]
+            medges = len(xc_edges)
+            mcells = medges - 1  # number of grid cells
+            # double up points for pw constant plot
+            xc_edges2 = np.reshape(np.vstack((xc_edges,xc_edges)).T, 
+                (2*medges,))
+            xc_edges2 = xc_edges2[1:-1]  # discard first and last
+            var2 = np.reshape(np.vstack((var,var)).T, (2*mcells,))
+            pobj=plt.plot(xc_edges2,var2,pp['plotstyle'],**pp['kwargs'])
 
         elif pp['plot_type'] == '1d_gauge_trace':
 
