@@ -17,7 +17,10 @@ will call the plotclaw function from this module.
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import matplotlib
+from six.moves import range
 matplotlib.use('Agg') 
 
 import sys
@@ -83,7 +86,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                 plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
 
 
-            frames = [[] for n in xrange(plotdata.num_procs)]
+            frames = [[] for n in range(plotdata.num_procs)]
             framenos = frametools.only_most_recent(plotdata.print_framenos,
                                                    outdir)
 
@@ -96,7 +99,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
             # Create subprocesses to work on each
             plotclaw_cmd = "python %s" % __file__
             process_queue = []
-            for n in xrange(num_procs):
+            for n in range(num_procs):
                 plot_cmd = "%s %s %s %s" % (plotclaw_cmd, 
                                             outdir,
                                             plotdir, 
@@ -113,21 +116,21 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                         if process.poll() is not None:
                             process_queue.remove(process)
                     if verbose:
-                        print "Number of processes currently:",len(process_queue)
+                        print("Number of processes currently:",len(process_queue))
             
             # Stop child processes if interrupt was caught or something went 
             # wrong
             except KeyboardInterrupt:
-                print "ABORTING: A keyboard interrupt was caught.  All " + \
-                      "child processes will be terminated as well."
+                print("ABORTING: A keyboard interrupt was caught.  All " + \
+                      "child processes will be terminated as well.")
                 for process in process_queue:
                     process.terminate()
                 raise
 
             except:
-                print "ERROR: An error occurred while waiting for " + \
+                print("ERROR: An error occurred while waiting for " + \
                       "plotting processes to complete.  Aborting all " + \
-                      "child processes."
+                      "child processes.")
                 for process in process_queue:
                     process.terminate()
                 raise 

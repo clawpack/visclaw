@@ -2,12 +2,15 @@
 Useful things for plotting GeoClaw results.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import numpy
 import warnings
 
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
 from clawpack.geoclaw import topotools
+from six.moves import range
 
 
 # Colormaps from geoclaw
@@ -375,23 +378,23 @@ def plot_topo_file(topoplotdata):
         cellsize = float(lines[4].split()[0])
         NODATA_value = int(lines[5].split()[0])
 
-        print "Loading file ",fname
-        print "   nrows = %i, ncols = %i" % (nrows,ncols)
+        print("Loading file ",fname)
+        print("   nrows = %i, ncols = %i" % (nrows,ncols))
         topo = pylab.loadtxt(fname,skiprows=6,dtype=float)
-        print "   Done loading"
+        print("   Done loading")
 
         if 0:
             topo = []
             for i in range(nrows):
                 topo.append(pylab.array(lines[6+i],))
-            print '+++ topo = ',topo
+            print('+++ topo = ',topo)
             topo = pylab.array(topo)
 
         topo = pylab.flipud(topo)
 
         x = pylab.linspace(xllcorner, xllcorner+ncols*cellsize, ncols)
         y = pylab.linspace(yllcorner, yllcorner+nrows*cellsize, nrows)
-        print "Shape of x, y, topo: ", x.shape, y.shape, topo.shape
+        print("Shape of x, y, topo: ", x.shape, y.shape, topo.shape)
 
     else:
         raise Exception("*** Only topotypes 1 and 3 supported so far")
@@ -401,7 +404,7 @@ def plot_topo_file(topoplotdata):
         topo = topo[slice(0,nrows,coarsen), slice(0,ncols,coarsen)]
         x = x[slice(0,ncols,coarsen)]
         y = y[slice(0,nrows,coarsen)]
-        print "Shapes after coarsening: ", x.shape, y.shape, topo.shape
+        print("Shapes after coarsening: ", x.shape, y.shape, topo.shape)
 
 
     if topotype < 0:

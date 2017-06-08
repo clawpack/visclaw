@@ -3,6 +3,7 @@
 Module with some miscellaneous useful tools.
 """
 
+from __future__ import absolute_import
 def plotbox(xy, kwargs={'color':'b', 'linewidth':2}):
     """
     Add a box around a region to an existing plot.

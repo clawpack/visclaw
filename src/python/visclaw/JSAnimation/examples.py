@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
 from JSAnimation import IPython_display
+from six.moves import zip
 
 def basic_animation(frames=100, interval=30):
     """Plot a basic sine wave with oscillating amplitude"""
@@ -30,8 +32,9 @@ def lorenz_animation(N_trajectories=20, rseed=1, frames=200, interval=30):
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib.colors import cnames
 
-    def lorentz_deriv((x, y, z), t0, sigma=10., beta=8./3, rho=28.0):
+    def lorentz_deriv(coords, t0, sigma=10., beta=8./3, rho=28.0):
         """Compute the time-derivative of a Lorentz system."""
+        (x, y, z) = coords
         return [sigma * (y - x), x * (rho - z) - y, x * y - beta * z]
 
     # Choose random starting points, uniformly distributed from -15 to 15

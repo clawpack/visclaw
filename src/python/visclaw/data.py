@@ -4,13 +4,14 @@ Plotting Data Module
 Contains the general class definition and the subclasses of the Clawpack
 data objects specific to plotting.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import copy
 import numpy as np
 import re
 import logging
 import clawpack.clawutil.data as clawdata
-import gaugetools
 import time
 
 import clawpack.pyclaw.controller
@@ -174,19 +175,19 @@ class ClawPlotData(clawdata.ClawData):
         all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
-            print '*** Warning, figure named %s has already been created' % name
+            print('*** Warning, figure named %s has already been created' % name)
         if (self._mode != 'iplotclaw') and (figno in self._fignos):
-            print '*** Warning, figure number %s has already been created' % figno
+            print('*** Warning, figure number %s has already been created' % figno)
         if figno is None:
             self._next_FIG += 1
             figno = self._next_FIG
         if name is None:
             name = "FIG%s" % figno
         if name in self._fignames:
-            print "*** Error in new_plotfigure: Figure name already used... ",name
+            print("*** Error in new_plotfigure: Figure name already used... ",name)
             raise Exception("Figure name already used")
         elif figno in self._fignos:
-            print "*** Error in new_plotfigure: Figure number already used... ",figno
+            print("*** Error in new_plotfigure: Figure number already used... ",figno)
             raise Exception("Figure number already used")
 
         self._fignames.append(name)
@@ -227,17 +228,17 @@ class ClawPlotData(clawdata.ClawData):
         outdir = os.path.abspath(outdir)
         key = (frameno, outdir)
 
-        if refresh or (not framesoln_dict.has_key(key)):
+        if refresh or (key not in framesoln_dict):
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
             if key != frameno:
-                print '    Reading  Frame %s at t = %g  from outdir = %s' \
-                    % (frameno,framesoln.t,outdir)
+                print('    Reading  Frame %s at t = %g  from outdir = %s' \
+                    % (frameno,framesoln.t,outdir))
             else:
-                print '    Reading  Frame %s at t = %g  ' \
-                    % (frameno,framesoln.t)
+                print('    Reading  Frame %s at t = %g  ' \
+                    % (frameno,framesoln.t))
         else:
             framesoln = self.framesoln_dict[key]
 
@@ -269,14 +270,14 @@ class ClawPlotData(clawdata.ClawData):
 
         if framenos=='all':
             self.framesoln_dict.clear()
-            print 'Cleared all frames'
+            print('Cleared all frames')
         else:
             for frameno in framenos:
                 xxx = self.plotdata.framesoln_dict.pop(frameno,None)
                 if xxx is None:
-                   print 'No frame data to clear for frame ',frameno
+                   print('No frame data to clear for frame ',frameno)
                 else:
-                   print 'Cleared data for frame ',frameno
+                   print('Cleared data for frame ',frameno)
 
 
     def getgauge(self, gauge_id, outdir=None, verbose=True):
@@ -306,7 +307,7 @@ class ClawPlotData(clawdata.ClawData):
 
         # Reread gauge data file
         key = (gauge_id, outdir)
-        if self.refresh_gauges or (not self.gaugesoln_dict.has_key(key)):
+        if self.refresh_gauges or (key not in self.gaugesoln_dict):
 
             try:
 
@@ -317,7 +318,7 @@ class ClawPlotData(clawdata.ClawData):
                                            gauge_id=gauge_id, path=outdir)
 
                 if verbose:
-                    print "Read in gauge %s." % gauge_id
+                    print("Read in gauge %s." % gauge_id)
 
             except Exception as e:
                 import warnings
@@ -334,8 +335,8 @@ class ClawPlotData(clawdata.ClawData):
     def printframes(self, verbose=True):
         #from clawpack.visclaw import frametools
         #frametools.printframes(self, verbose)
-        print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
-        print "*** for added capabilities."
+        print("*** printframes is deprecated.  Use plotpages.plotclaw_driver")
+        print("*** for added capabilities.")
         raise DeprecationWarning("The method 'printframes' is deprecated.")
 
     def fignos(self):
@@ -379,20 +380,20 @@ class ClawPlotData(clawdata.ClawData):
                 plotfigure = self.getfigure(fig)
                 if axesname in plotfigure._axesnames:
                     if found == True: # already found!
-                        print '*** Ambiguous... must specify figname'
-                        print '    try getaxes(axesname, figname)'
+                        print('*** Ambiguous... must specify figname')
+                        print('    try getaxes(axesname, figname)')
                         return None
                     figname = fig
                     found = True
         if not found:
-            print '*** No axes found with name = ',axesname
+            print('*** No axes found with name = ',axesname)
             return None
         try:
             plotfigure = self.getfigure(figname)
             plotaxes = plotfigure.plotaxes_dict[axesname]
         except:
-            print '*** Error accessing plotaxes[%s]' % axesname
-            print '*** figname = %s' % figname
+            print('*** Error accessing plotaxes[%s]' % axesname)
+            print('*** figname = %s' % figname)
             return None
         return plotaxes
 
@@ -409,8 +410,8 @@ class ClawPlotData(clawdata.ClawData):
                         plotaxes = self.getaxes(axesn,fign)
                         if itemname in plotaxes._itemnames:
                             if found == True: # already found!
-                                print '*** Ambiguous... must specify figname and/or axesname'
-                                print '    try getitem(itemname, axesname, figname)'
+                                print('*** Ambiguous... must specify figname and/or axesname')
+                                print('    try getitem(itemname, axesname, figname)')
                                 return None
                             axesname = axesn
                             figname = fign
@@ -420,8 +421,8 @@ class ClawPlotData(clawdata.ClawData):
                     plotaxes = self.getaxes(axesname,fign)
                     if itemname in plotaxes._itemnames:
                         if found == True: # already found!
-                            print '*** Ambiguous... must specify figname and/or axesname'
-                            print '    try getitem(itemname, axesname, figname)'
+                            print('*** Ambiguous... must specify figname and/or axesname')
+                            print('    try getitem(itemname, axesname, figname)')
                             return None
                         figname = fign
                         found = True
@@ -435,36 +436,36 @@ class ClawPlotData(clawdata.ClawData):
                 plotaxes = self.getaxes(axesn,figname)
                 if itemname in plotaxes._itemnames:
                     if found == True: # already found!
-                        print '*** Ambiguous... must specify axesname'
-                        print '    try getitem(itemname, axesname, figname)'
+                        print('*** Ambiguous... must specify axesname')
+                        print('    try getitem(itemname, axesname, figname)')
                         return None
                     axesname = axesn
                     found = True
 
         if not found:
-            print '*** No item found with name = ',itemname
+            print('*** No item found with name = ',itemname)
             return None
         try:
             plotaxes = self.getaxes(axesname,figname)
             plotitem = plotaxes.plotitem_dict[itemname]
         except:
-            print '*** Error accessing plotitem[%s]' % itemname
-            print '*** figname = ',figname
-            print '*** axesname = ',axesname
+            print('*** Error accessing plotitem[%s]' % itemname)
+            print('*** figname = ',figname)
+            print('*** axesname = ',axesname)
             return None
         return plotitem
 
 
     def showitems(self):
         fignames = self._fignames
-        print "\n\nCurrent plot figures, axes, and items:"
-        print "---------------------------------------"
+        print("\n\nCurrent plot figures, axes, and items:")
+        print("---------------------------------------")
         for figname in fignames:
             plotfigure = self.getfigure(figname)
             s =  "  figname = %s, figno = %s" % (figname, plotfigure.figno)
             if not plotfigure._show:
                 s = s + "  [Not showing]"
-            print s
+            print(s)
             axesnames = plotfigure._axesnames
             for axesname in axesnames:
                 plotaxes = self.getaxes(axesname,figname)
@@ -472,7 +473,7 @@ class ClawPlotData(clawdata.ClawData):
                        % (axesname, plotaxes.axescmd)
                 if not plotaxes._show:
                     s = s + "  [Not showing]"
-                print s
+                print(s)
                 for itemname in plotaxes._itemnames:
                     plotitem = self.getitem(itemname,axesname,figname)
                     plot_type = plotitem.plot_type
@@ -480,15 +481,15 @@ class ClawPlotData(clawdata.ClawData):
                           % (itemname,plot_type)
                     if not plotitem._show:
                         s = s + "  [Not showing]"
-                    print s
-            print " "
+                    print(s)
+            print(" ")
 
 
     def getq(self,frameno):
         solution = self.getframe(frameno)
         patches = solution.patches
         if len(patches) > 1:
-            print '*** Warning: more than 1 patch, q on patch[0] is returned'
+            print('*** Warning: more than 1 patch, q on patch[0] is returned')
         q = patches[0].q
         return q
 
@@ -499,7 +500,7 @@ class ClawPlotData(clawdata.ClawData):
         For figures not repeated each frame.
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
-            print '*** Warning, figure named %s has already been created' % name
+            print('*** Warning, figure named %s has already been created' % name)
 
         if name is None:
             if fname is None:
@@ -507,7 +508,7 @@ class ClawPlotData(clawdata.ClawData):
             else:
                 name = fname
         if name in self._otherfignames:
-            print "*** Error in new_otherfigure: Figure name already used... ",name
+            print("*** Error in new_otherfigure: Figure name already used... ",name)
             raise Exception("Figure name already used")
 
         self._otherfignames.append(name)
@@ -586,6 +587,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_tile_images',False)
         self.add_attribute('kml_colorbar',None)
         self.add_attribute('kml_use_for_initial_view',False)
+        self.add_attribute('kml_show_figure',False)
         self.add_attribute('kml_figsize',None)    # Figure size;  specify to get rid of aliasing
         self._next_AXES = 0
 
@@ -604,7 +606,7 @@ class ClawPlotFigure(clawdata.ClawData):
             self._next_AXES += 1
             name = "AXES%s" % self._next_AXES
         if name in self._axesnames:
-            print '*** Warning, axes named %s has already been created' % name
+            print('*** Warning, axes named %s has already been created' % name)
 
         if name not in self._axesnames:
             self._axesnames.append(name)
@@ -719,7 +721,7 @@ class ClawPlotItem(clawdata.ClawData):
         try:
             num_dim = int(plot_type[0])   # first character of plot_type should be num_dim
         except:
-            print '*** Error: could not determine num_dim from plot_type = ',plot_type
+            print('*** Error: could not determine num_dim from plot_type = ',plot_type)
 
         self.add_attribute('num_dim',num_dim)
         self.add_attribute('name',name)
@@ -730,7 +732,7 @@ class ClawPlotItem(clawdata.ClawData):
 
         self.add_attribute('plot_type',plot_type)
         self.add_attribute('plot_var',0)
-        self.add_attribute('plot_show',True)
+        self.add_attribute('data_show',True)
 
         self.add_attribute('MappedGrid',None)          # False to plot on comput. patch even
                                         # if _plotdata.mapc2p is not None.
@@ -756,7 +758,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('plotstyle','-')
             self.add_attribute('color',None)
             self.add_attribute('kwargs',{})
-            amr_attributes = """show color kwargs data_show""".split()
+            amr_attributes = """show color kwargs data_show plotstyle""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
@@ -849,7 +851,7 @@ class ClawPlotItem(clawdata.ClawData):
                     self.add_attribute('amr_quiver_%s' % a, [])
 
             else:
-                 print '*** Warning 2d plot type %s not recognized' % plot_type
+                 print('*** Warning 2d plot type %s not recognized' % plot_type)
 
         elif num_dim == 3:
             raise NotImplementedError('ClawPlotItem not yet set up for num_dim = 3')

@@ -12,9 +12,12 @@ for example, to get colors ranging from white to green.
 See matplotlib._cm for the data defining various maps.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import numpy
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+from six.moves import range
 
 #-------------------------
 def make_colormap(color_list):
@@ -38,7 +41,7 @@ def make_colormap(color_list):
 
 
 
-    z = numpy.sort(color_list.keys())
+    z = numpy.sort(list(color_list.keys()))
     n = len(z)
     z1 = min(z)
     zn = max(z)
@@ -122,7 +125,7 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5,
         for val in val_list:
             new_dict[key].append((val[0] * 0.5, val[1], val[2]))
 
-    if 'alpha' not in rhs_dict.keys():
+    if 'alpha' not in list(rhs_dict.keys()):
         new_dict['alpha'].append((0.0,1.0,1.0))
 
     # Add second colorbar
@@ -131,7 +134,7 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5,
         for val in val_list:
             new_dict[key].append(((val[0] + 1.0) * 0.5, val[1], val[2]))
 
-    if 'alpha' not in lhs_dict.keys():
+    if 'alpha' not in list(lhs_dict.keys()):
         new_dict['alpha'].append((1.0,1.0,1.0))
 
     N = 256
@@ -231,6 +234,6 @@ def make_amrcolors(nlevels=4):
         linecolors = linecolors[:nlevels]
         bgcolors = bgcolors[:nlevels]
     else:
-        print "*** Warning, suggest nlevels <= 16"
+        print("*** Warning, suggest nlevels <= 16")
 
     return (linecolors, bgcolors)

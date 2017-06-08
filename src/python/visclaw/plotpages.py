@@ -5,6 +5,8 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os, time, string, glob
 import sys
 from functools import wraps
@@ -14,7 +16,10 @@ from functools import wraps
 import numpy as np
 from matplotlib import image as Image
 from matplotlib import pyplot as plt
+import six
+from six.moves import range
 
+from clawpack.visclaw import gaugetools
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
 if clawdir is not None:
@@ -148,21 +153,21 @@ def plots2html(plot_pages_data):
     take a sequence of figure files and produce an html file to display them.
     """
 
-    print '\n-----------------------------------\n'
-    print '\nCreating html pages...\n'
+    print('\n-----------------------------------\n')
+    print('\nCreating html pages...\n')
     startdir = os.getcwd()
     ppd = plot_pages_data
     numitems = len(ppd.pageitem_list)   # number of page items (separate plots)
 
     if numitems == 0:
-        print '*** Warning: 0 plots to put in html file'
+        print('*** Warning: 0 plots to put in html file')
         return
 
     ppd =plot_pages_data
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
     except:
-        print "*** Error, aborting plots2html"
+        print("*** Error, aborting plots2html")
         raise
 
 
@@ -318,9 +323,9 @@ def print_html_pointers(path_to_html_index):
         # make the URL point to a local file:
         path_to_html_index = 'file://' + path_to_html_index
 
-    print "\n--------------------------------------------------------"
-    print "\nPoint your browser to:"
-    print "    %s" % path_to_html_index
+    print("\n--------------------------------------------------------")
+    print("\nPoint your browser to:")
+    print("    %s" % path_to_html_index)
 
     clawdir = os.getenv('CLAW','')
 
@@ -328,8 +333,8 @@ def print_html_pointers(path_to_html_index):
     #if clawdir in path_to_html_index:
     if False:
         path_to_html_index = path_to_html_index.replace(clawdir,'')
-        print "\nOr, if you have the Clawpack server running, point your browser to:"
-        print "    http://localhost:50005%s"  % path_to_html_index
+        print("\nOr, if you have the Clawpack server running, point your browser to:")
+        print("    http://localhost:50005%s"  % path_to_html_index)
 
 
 
@@ -466,23 +471,23 @@ def plots2latex(plot_pages_data):
     So far only works with time frames, not with gauges or other plots.
     """
 
-    print '\n-----------------------------------\n'
-    print '\nCreating latex file...\n'
+    print('\n-----------------------------------\n')
+    print('\nCreating latex file...\n')
     startdir = os.getcwd()
     ppd = plot_pages_data
     plotdir = ppd.plotdir
     numitems = len(ppd.pageitem_list)   # number of page items (separate plots)
 
     if numitems == 0:
-        print '*** Warning: 0 plots to put in latex file'
-        print 'No latex file generated'
+        print('*** Warning: 0 plots to put in latex file')
+        print('No latex file generated')
         return
 
 
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
     except:
-        print "*** Error, aborting plots2latex"
+        print("*** Error, aborting plots2latex")
         raise
 
 
@@ -546,17 +551,17 @@ def plots2latex(plot_pages_data):
         #latexfile.write('\\vskip 10pt \n')
     latexfile.write('\\end{document}\n')
     latexfile.close()
-    print "\nLatex file created:  "
-    print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file"
+    print("\nLatex file created:  ")
+    print("  %s/%s.tex" % (plotdir, ppd.latex_fname))
+    print("\nUse pdflatex to create pdf file")
 
     if ppd.latex_makepdf:
         try:
             os.system('pdflatex %s' % ppd.latex_fname)
-            print "\nSuccessfully created pdf file:  %s/%s.pdf" \
-                   % (plotdir, ppd.latex_fname)
+            print("\nSuccessfully created pdf file:  %s/%s.pdf" \
+                   % (plotdir, ppd.latex_fname))
         except:
-            print  '*** pdflatex command failed'
+            print('*** pdflatex command failed')
 
     os.chdir(startdir)
     # end of plots2latex
@@ -579,8 +584,8 @@ def plotclaw2kml(plotdata):
 
     """
 
-    print " "
-    print "KML ===> Creating file %s.kmz" % plotdata.kml_index_fname
+    print(" ")
+    print("KML ===> Creating file %s.kmz" % plotdata.kml_index_fname)
 
     startdir = os.getcwd()
 
@@ -593,15 +598,22 @@ def plotclaw2kml(plotdata):
     from copy import deepcopy
     from clawpack.geoclaw import kmltools
 
+    if plotdata.format is 'forestclaw':
+        level_base = 0
+    else:
+        level_base = 1
+
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "KML ===> Error, aborting plotclaw2kml (cannot create plot directory"
+        print("KML ===> Error, aborting plotclaw2kml (cannot create plot directory")
         raise
 
-    if plotdata.gauges_fignos is not None:
-        plotdata = massage_gauges_data(plotdata)
-        gauge_pngfile = plotdata._gauge_pngfile
+    gaugenos = plotdata.gauges_gaugenos
+    if gaugenos is not None:
+        if plotdata.gauges_fignos is not None:
+            plotdata = massage_gauges_data(plotdata)
+            gauge_pngfile = plotdata._gauge_pngfile
 
     creationtime = current_time()
     plotdata = massage_frames_data(plotdata)
@@ -711,9 +723,6 @@ def plotclaw2kml(plotdata):
         KML.name("Figures"),
         KML.open(1))
 
-    # set all other figures to off.
-    fig_vis = 1
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
@@ -725,6 +734,11 @@ def plotclaw2kml(plotdata):
             continue
 
         fig_dir = "fig" + str(figno)
+
+        if plotfigure.kml_show_figure:
+            fig_vis = 1
+        else:
+            fig_vis = 0
 
         shutil.rmtree(fig_dir,True)
         os.mkdir(fig_dir)
@@ -760,8 +774,8 @@ def plotclaw2kml(plotdata):
 
             # ------------------- create subdirs with images ----------------------
             if (not plotfigure.kml_tile_images):
-                print "KML ===> Adding %s.png to %s.kmz" \
-                    " file (no tiling)" % (fname_str,plotdata.kml_index_fname)
+                print("KML ===> Adding %s.png to %s.kmz" \
+                    " file (no tiling)" % (fname_str,plotdata.kml_index_fname))
 
                 # The 'etree'
                 doc_notile = KML.kml(KML.Document())
@@ -804,8 +818,8 @@ def plotclaw2kml(plotdata):
                 os.chdir("..")
 
             else:
-                print " "
-                print "KML ===> Tiling %s.png" % fname_str
+                print(" ")
+                print("KML ===> Tiling %s.png" % fname_str)
 
                 os.chdir(fig_dir)
                 pngfile = os.path.join("..","%s.png"% fname_str)
@@ -837,7 +851,7 @@ def plotclaw2kml(plotdata):
                 retval = retval or subprocess.call(arg_list)
 
                 if retval > 0:
-                    print "KML ===> gdal : something went wrong!\n"
+                    print("KML ===> gdal : something went wrong!\n")
                     sys.exit(1)
 
                 # Change back to top level directory before adding zipped files
@@ -888,15 +902,15 @@ def plotclaw2kml(plotdata):
                 KML.Link(
                     KML.href(lstr))))
 
-        fig_vis = 0   # All figures referenced after the first one will not be shown
-                      # when first loading GE.
+        # fig_vis = 0   # All figures referenced after the first one will not be shown
+                        # when first loading GE.
 
 
         # -------------- add colorbar image file -----------------
         # Build the colorbar.
         if plotfigure.kml_colorbar is not None:
-            print " "
-            print "KML ===> Building colorbar for figure %s" % plotfigure.name
+            print(" ")
+            print("KML ===> Building colorbar for figure %s" % plotfigure.name)
             cb_img = "images"
             cb_dir = os.path.join(fig_dir,cb_img)
             shutil.rmtree(cb_dir,True)
@@ -906,7 +920,7 @@ def plotclaw2kml(plotdata):
                 plotfigure.kml_colorbar(cb_filename)
                 shutil.move(cb_filename,cb_dir)
             except:
-                print "KML ===> Warning : Something went wrong when creating colorbar"
+                print("KML ===> Warning : Something went wrong when creating colorbar")
 
             # add link to KML file, even if colorbar didn't get created.
             cb_str = os.path.join(cb_img,cb_filename)
@@ -960,26 +974,18 @@ def plotclaw2kml(plotdata):
     # ------------------ Creating gauges.kml file -------------------------
     gauge_kml_file = "gauges.kml"
 
-    print " "
-    print "KML ===> Creating file %s" % gauge_kml_file
+    print(" ")
+    print("KML ===> Creating file %s" % gauge_kml_file)
 
+    has_gauge_data = True
     try:
-        f = open(os.path.join(plotdata.outdir,"gauges.data"),'r')
+        setgauges = gaugetools.read_setgauges(plotdata.outdir)
     except:
-        print "     File gauges.data not found."
-    else:
-        # Read past comments;  last 'l' is blank line
-        l = f.readline()
-        while (l.startswith('#')):
-            l = f.readline()
+        print("     File gauges.data not found - this should not happen.")
+        has_gauge_data = False
 
-        # read line containing number of gauges
-        l = f.readline()
-
-        # Read the data lines containing gauge information
-        gauges = []
-        for g in f.readlines():
-            gauges.append(np.fromstring(g.strip(),sep=' '))
+    if has_gauge_data and gaugenos is not None and len(gaugenos) > 0:
+        gauges = setgauges.gauges
 
         # Location of gauges PNG files (stored under <file>.kmz/images
         basehref = "<base href=\"%s\"/>" % os.path.join('..','..','images','')  # need trailing "/"
@@ -1026,13 +1032,13 @@ def plotclaw2kml(plotdata):
             else:
                 longitude = x1
 
-            print "Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
-                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+            print("Gauge %i: %10.6f  %10.6f  \n" % (gaugeno,x1,y1) \
+                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2))
 
             # plotdata.gauges_fignos
             # Not clear how to get the figure number for each gauge.   Assume that
             # there is only one figure number for all gauges
-            figno = plotdata.gauges_fignos[0]
+            # If user has set 'gaugeno=[]', gauge files will not be added to the KML file. 
             figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
@@ -1070,10 +1076,14 @@ def plotclaw2kml(plotdata):
         kml_file.close()
 
     # -------------- add gauge image and KML files -----------------
+    if plotdata.gauges_fignos is not None:
+        gauge_vis = 0
+    else:
+        gauge_vis = 1
     doc.Document.append(
         KML.NetworkLink(
             KML.name("Gauges"),
-            KML.visibility(1),
+            KML.visibility(gauge_vis),
             KML.Link(KML.href(os.path.join(kml_dir,
                                            gauge_kml_file)))))
 
@@ -1097,13 +1107,13 @@ def plotclaw2kml(plotdata):
     placemark_folder = []
 
     # Read claw.data to get computational domain
-    print " "
-    print "KML ===> Creating file %s" % region_kml_file
+    print(" ")
+    print("KML ===> Creating file %s" % region_kml_file)
     try:
         f = open(os.path.join(plotdata.outdir,"claw.data"),'r')
     except:
         # We don't have the dimensions of the full domain
-        print "     Cannot find claw.data. Region for the computational domain will not be created."
+        print("     Cannot find claw.data. Region for the computational domain will not be created.")
     else:
         # Read past comments;  last 'l' is blank line
         l = f.readline()
@@ -1140,8 +1150,8 @@ def plotclaw2kml(plotdata):
         domain_text =  KML.text("<![CDATA[%s]]>" % bcomp_domain)
 
 
-        print "Computational domain : %10.6f  %10.6f  %10.6f  %10.6f" \
-            % (x1,x2,y1,y2)
+        print("Computational domain : %10.6f  %10.6f  %10.6f  %10.6f" \
+            % (x1,x2,y1,y2))
         snippet_str = \
                   "x1 = %g, x2 = %g\n" % (x1,x2) + \
                   "y1 = %g, y2 = %g\n" % (y1,y2)
@@ -1206,12 +1216,12 @@ def plotclaw2kml(plotdata):
 
         placemark_folder.append(placemark)
 
-    print " "
+    print(" ")
     # Create regions for remaining regions specifed in regions.data
     try:
         f = open(os.path.join(plotdata.outdir,"regions.data"),'r')
     except:
-        print "     No regions.data file found."
+        print("     No regions.data file found.")
     else:
         # Read past comments;  last 'l' is blank line
         l = f.readline()
@@ -1255,11 +1265,11 @@ def plotclaw2kml(plotdata):
             t1,t2 = region[2:4]
             x1,x2,y1,y2 = region[4:]
 
-            print "Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
-                % (rnum,x1,x2,y1,y2)
-            print "           minlevel = %i,  maxlevel = %i" \
+            print("Region %i: %10.6f  %10.6f  %10.6f  %10.6f" \
+                % (rnum,x1,x2,y1,y2))
+            print("           minlevel = %i,  maxlevel = %i" \
                 % (minlevel,maxlevel) \
-                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2)
+                + "  t1 = %10.1f,  t2 = %10.1f" % (t1,t2))
 
             # get TimeSpan for region
             event_time = plotdata.kml_starttime
@@ -1385,14 +1395,14 @@ def plotclaw2kml(plotdata):
 
     # --------------- Create polygons for AMR patch borders --------------
     level_kml_file = "levels.kml"
-    print " "
-    print "KML ===> Creating file %s" % level_kml_file
+    print(" ")
+    print("KML ===> Creating file %s" % level_kml_file)
 
     try:
         f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
     except:
         # Nothing terrible happens;  we just set maxlevels to some large value
-        maxlevels = 10
+        maxlevels = 20
     else:
         # read past comments - last line is blank
         a = f.readline()
@@ -1402,7 +1412,7 @@ def plotclaw2kml(plotdata):
         # read line containing max number of levels
         a = f.readline()
         ainfo = np.fromstring(a.strip(),sep=' ')
-        maxlevels = int(ainfo[0])  # Hopefully, got this right
+        maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
 
     # set _outdirs attribute to be list of all outdirs for all items
     plotdata.set_outdirs()
@@ -1427,8 +1437,10 @@ def plotclaw2kml(plotdata):
     level_files = []
     doc_levels = []
     styles = []
-    for i in range(0,maxlevels):
-        level_file_name = "level_" + str(i+1).rjust(2,'0')
+
+    # Assume that if we are using ForestClaw, that we have set maxlevels correctly
+    for i in range(0,maxlevels+1-level_base):
+        level_file_name = "level_" + str(i+level_base).rjust(2,'0')
         level_files.append(level_file_name)
 
         # KML Document for each level
@@ -1445,10 +1457,10 @@ def plotclaw2kml(plotdata):
 
     # Create individual level files in subdirectories
 
-    doc_frames = [[0 for j in range(numframes)] for i in range(maxlevels)]
+    doc_frames = [[0 for j in range(numframes)] for i in range(0,maxlevels+1-level_base)]
     for j in range(0,numframes):
         frameno = framenos[j]
-        for i in range(0,maxlevels):
+        for i in range(0,maxlevels+1-level_base):
             frame_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             if i == 0:
                 vis = 0  # Don't show first level
@@ -1468,9 +1480,8 @@ def plotclaw2kml(plotdata):
             doc_frames[i][j] = KML.kml(KML.Document())
             doc_frames[i][j].Document.append(deepcopy(styles[i]))
 
-    print "     Re-reading output files to get patch information"
-    print " "
-    maxlevel_real = 0
+    print("     Re-reading output files to get patch information")
+    print(" ")
     for j in range(0,numframes):
         frameno = framenos[j]
 
@@ -1493,12 +1504,10 @@ def plotclaw2kml(plotdata):
                 ylower = patch.dimensions[1].lower
                 yupper = patch.dimensions[1].upper
                 level = patch.level
+
                 if plotdata.kml_map_topo_to_latlong is not None:
                     xlower,ylower = plotdata.kml_map_topo_to_latlong(xlower,ylower)
                     xupper,yupper = plotdata.kml_map_topo_to_latlong(xupper,yupper)
-
-                # maxlevel_real should start at 0 so it can be used for indexing
-                maxlevel_real = max(level,maxlevel_real)
 
                 lv = []
                 if xlower > 180:
@@ -1541,14 +1550,15 @@ def plotclaw2kml(plotdata):
 
                 p.append(deepcopy(r))
 
-                doc_frames[level-1][j].Document.append(deepcopy(p))
+                try:
+                    doc_frames[level-level_base][j].Document.append(deepcopy(p))
+                except:
+                    import pdb
+                    pdb.set_trace()
 
-    if maxlevel_real > maxlevels:
-        raise IOError("KML ==> plotclaw2kml : (plotpages.py) Maximum number of "
-                      "levels exceeded;  increase maxlevels")
 
     # Create directories for each level.
-    for i in range(0,maxlevel_real):
+    for i in range(0,maxlevels+1-level_base):
         # Directory for storing levels for each time step
         shutil.rmtree(os.path.join(kml_dir,level_dir,level_files[i]),True)
         os.mkdir(os.path.join(kml_dir,level_dir,level_files[i]))
@@ -1556,7 +1566,7 @@ def plotclaw2kml(plotdata):
 
     # Print out individual frame files for each element
     for j in range(0,numframes):
-        for i in range(0,maxlevel_real):
+        for i in range(0,maxlevels+1-level_base):
             frameno = framenos[j]
             level_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             kml_frame_file = open(os.path.join(kml_dir,level_dir,
@@ -1567,7 +1577,7 @@ def plotclaw2kml(plotdata):
             kml_frame_file.close()
 
     # Print out level files containing time stamps and references to frame files
-    for i in range(0,maxlevel_real):
+    for i in range(0,maxlevels+1-level_base):
         kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
         kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         kml_level_file.write(etree.tostring(etree.ElementTree(doc_levels[i]),
@@ -1576,9 +1586,9 @@ def plotclaw2kml(plotdata):
 
     # Folders in top level file 'levels.kml'
     doc_levels_top = KML.kml(KML.Document())
-    for i in range(0,maxlevel_real):
-        level_file_name = "level_" + str(i+1).rjust(2,'0')
-        f = KML.Folder(KML.name("Level " + str(i+1)))
+    for i in range(0,maxlevels+1-level_base):
+        level_file_name = "level_" + str(i+level_base).rjust(2,'0')
+        f = KML.Folder(KML.name("Level " + str(i+level_base)))
         f.append(KML.NetworkLink(
             KML.name("Frames"),
             KML.Link(
@@ -1607,8 +1617,8 @@ def plotclaw2kml(plotdata):
 
     if plotdata.kml_user_files.__len__ > 0:
         for f in plotdata.kml_user_files:
-            print " "
-            print "KML ===> Adding user KML file %s" % f[0]
+            print(" ")
+            print("KML ===> Adding user KML file %s" % f[0])
             fname = f[0].partition('.')[0]
             if f[1]:
                 vis = 1
@@ -1653,8 +1663,8 @@ def plotclaw2kml(plotdata):
     zip.close()
 
     if plotdata.kml_publish is not None:
-        print " "
-        print "KML ===> Creating file %s.kml" % plotdata.kml_index_fname
+        print(" ")
+        print("KML ===> Creating file %s.kml" % plotdata.kml_index_fname)
         # Create a KML file that can be used to link to a remote server
         update_time = 5    # minutes
         doc = KML.kml(KML.Document(
@@ -1677,11 +1687,11 @@ def plotclaw2kml(plotdata):
         file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         file.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
         file.close()
-        print " "
+        print(" ")
 
-    print "KML ===> Done creating files for Google Earth.  Open " \
-        "%s.kmz in the Google Earth browser" % plotdata.kml_index_fname
-    print " "
+    print("KML ===> Done creating files for Google Earth.  Open " \
+        "%s.kmz in the Google Earth browser" % plotdata.kml_index_fname)
+    print(" ")
     os.chdir(startdir)
 
 #   end of plotclaw2kml
@@ -1693,32 +1703,32 @@ def cd_with_mkdir(newdir, overwrite=False, verbose=True):
 
     newdir = os.path.abspath(newdir)
     if os.path.isfile(newdir):
-        print "*** Error in cd_with_mkdir: directory specified is a file"
+        print("*** Error in cd_with_mkdir: directory specified is a file")
         raise
     elif (os.path.isdir(newdir) & overwrite):
         if verbose:
-            print "Directory '%s' " % newdir
-            print "    already exists, files may be overwritten "
+            print("Directory '%s' " % newdir)
+            print("    already exists, files may be overwritten ")
     elif (os.path.isdir(newdir) & (not overwrite)):
-        print "*** Error in cd_with_mkdir"
-        print "Directory already exists:\n  ",newdir
-        print "Remove directory with \n '  rm -r %s' " % newdir
-        print "  and try again, or set overwrite=True "
+        print("*** Error in cd_with_mkdir")
+        print("Directory already exists:\n  ",newdir)
+        print("Remove directory with \n '  rm -r %s' " % newdir)
+        print("  and try again, or set overwrite=True ")
         raise
     else:
         try:
             os.mkdir(newdir)
             if verbose:
-                print "Created directory:\n   ", newdir
+                print("Created directory:\n   ", newdir)
         except:
-            print "*** Error in cd_with_mkdir"
-            print "Cannot make directory: \n  ",newdir
+            print("*** Error in cd_with_mkdir")
+            print("Cannot make directory: \n  ",newdir)
             raise
     try:
         os.chdir(newdir)
     except:
-        print "*** Error in cd_with_mkdir"
-        print "Cannot change directory to \n  ",newdir
+        print("*** Error in cd_with_mkdir")
+        print("Cannot change directory to \n  ",newdir)
 
 
 #======================================================================
@@ -1727,30 +1737,30 @@ def cd_plotdir(plotdir, overwrite):
 
     verbose = False
     if os.path.isfile(plotdir):
-        print "*** Error in cd_plotdir: plotdir specified is a file"
+        print("*** Error in cd_plotdir: plotdir specified is a file")
         raise
     elif (os.path.isdir(plotdir) & overwrite):
         if verbose:
-            print "Directory '%s' " % plotdir
-            print "    already exists, files may be overwritten "
+            print("Directory '%s' " % plotdir)
+            print("    already exists, files may be overwritten ")
     elif (os.path.isdir(plotdir) & (not overwrite)):
-        print "Directory '%s'" % plotdir
-        print "  already exists"
-        print "Remove directory with \n '  rm -r %s' " % plotdir
-        print "  and try again, or set overwrite=True "
-        print "*** Error in cd_plotdir"
+        print("Directory '%s'" % plotdir)
+        print("  already exists")
+        print("Remove directory with \n '  rm -r %s' " % plotdir)
+        print("  and try again, or set overwrite=True ")
+        print("*** Error in cd_plotdir")
         raise
     else:
         try:
             os.mkdir(plotdir)
         except:
-            print "Cannot make directory ",plotdir
-            print  "*** Error in cd_plotdir"
+            print("Cannot make directory ",plotdir)
+            print("*** Error in cd_plotdir")
             raise
     try:
         os.chdir(plotdir)
     except:
-        print "*** Error trying to cd to ",plotdir
+        print("*** Error trying to cd to ",plotdir)
 
 
 #=====================================
@@ -1765,7 +1775,7 @@ def massage_frames_data(plot_pages_data):
         fignames = ppd.timeframes_fignames
         prefix = getattr(ppd, 'timeframes_prefix', 'frame')
     except:
-        print '*** Error: timeframes not set properly'
+        print('*** Error: timeframes not set properly')
         return
 
     startdir = os.getcwd()
@@ -1792,7 +1802,7 @@ def massage_frames_data(plot_pages_data):
 
     allframesfile = {}
     for figno in fignos:
-        if not fignames.has_key(figno):
+        if figno not in fignames:
             fignames[figno] = 'Solution'
         allframesfile[figno] = '%s_allframesfig%s.html'  % (prefix,figno)
 
@@ -1800,9 +1810,9 @@ def massage_frames_data(plot_pages_data):
     numfigs = len(fignos)
 
     if len(framenos) == 0:
-        print '*** Warning: 0 frames to print'
+        print('*** Warning: 0 frames to print')
     if len(fignos) == 0:
-        print '*** Warning: 0 figures to print each frame'
+        print('*** Warning: 0 figures to print each frame')
 
     pngfile = {}
     htmlfile = {}
@@ -1810,7 +1820,7 @@ def massage_frames_data(plot_pages_data):
     allfigsfile = {}
     #print '    Making png and html files for %i frames:' % numframes, framenos
     for frameno in framenos:
-        framef = string.zfill(frameno,4)
+        framef = str(frameno).zfill(4)
         try:
             ftime = frametimes[frameno]
         except:
@@ -1823,7 +1833,7 @@ def massage_frames_data(plot_pages_data):
         else:
             ftimef = '%12.5e' % ftime
         frametimef[frameno] = ftimef
-        framef = string.zfill(frameno,4)
+        framef = str(frameno).zfill(4)
         for figno in fignos:
             pngfile[frameno,figno] = '%s%sfig%s.png'  % (prefix,framef,figno)
             htmlfile[frameno,figno] = '%s%sfig%s.html' % (prefix,framef,figno)
@@ -1857,8 +1867,8 @@ def timeframes2latex(plot_pages_data):
                              files are named  ('frame' by default).
     """
 
-    print '\n-----------------------------------\n'
-    print 'Creating latex file...'
+    print('\n-----------------------------------\n')
+    print('Creating latex file...')
 
     startdir = os.getcwd()
 
@@ -1866,7 +1876,7 @@ def timeframes2latex(plot_pages_data):
     try:
         cd_with_mkdir(ppd.plotdir, ppd.overwrite, ppd.verbose)
     except:
-        print "*** Error, aborting timeframes2latex"
+        print("*** Error, aborting timeframes2latex")
         raise
 
     creationtime = current_time()
@@ -1922,12 +1932,12 @@ def timeframes2latex(plot_pages_data):
     if figsperline == 'all':
         figsperline = len(fignos)
     if (figsperline < len(fignos)) & (framesperline > 1):
-        print '*** Incompatible layout: resetting framesperline to 1'
+        print('*** Incompatible layout: resetting framesperline to 1')
         framesperline = 1
     totalperline = framesperline * figsperline
     if totalperline < 1:
-        print '*** Warning: 0 figures per line requested in latex file'
-        print 'No latex file generated due to format error'
+        print('*** Warning: 0 figures per line requested in latex file')
+        print('No latex file generated due to format error')
         return
 
     # width each plot must be:
@@ -1956,16 +1966,16 @@ def timeframes2latex(plot_pages_data):
     latexfile.write('\\end{document}\n')
     latexfile.close()
 
-    print "\nLatex file created:  "
-    print "  %s/%s.tex" % (plotdir, ppd.latex_fname)
-    print "\nUse pdflatex to create pdf file"
+    print("\nLatex file created:  ")
+    print("  %s/%s.tex" % (plotdir, ppd.latex_fname))
+    print("\nUse pdflatex to create pdf file")
     if ppd.latex & ppd.latex_makepdf:
         try:
             os.system('pdflatex %s' % ppd.latex_fname)
         except:
-            print  '*** pdflatex command failed'
-        print "\nSuccessfully created pdf file:  %s/%s.pdf" \
-                % (plotdir, ppd.latex_fname)
+            print('*** pdflatex command failed')
+        print("\nSuccessfully created pdf file:  %s/%s.pdf" \
+                % (plotdir, ppd.latex_fname))
 
     os.chdir(startdir)
     # end of timeframes2latex
@@ -1978,7 +1988,7 @@ def test(makeplots = True):
     try:
         from pylab import linspace,clf,plot,title,savefig,mod
     except:
-        print '*** Error: could not import pylab'
+        print('*** Error: could not import pylab')
         return
 
     ppd = PlotPagesData()
@@ -2089,15 +2099,15 @@ def plotclaw2html(plotdata):
     """
 
 
-    print '\n-----------------------------------\n'
-    print '\nCreating html pages for figures...\n'
+    print('\n-----------------------------------\n')
+    print('\nCreating html pages for figures...\n')
 
     startdir = os.getcwd()
 
     try:
         cd_with_mkdir(plotdata.plotdir, plotdata.overwrite, plotdata.verbose)
     except:
-        print "*** Error, aborting plotclaw2html"
+        print("*** Error, aborting plotclaw2html")
         raise
 
     creationtime = current_time()
@@ -2248,23 +2258,23 @@ def plotclaw2html(plotdata):
     if len(plotdata.otherfigure_dict)>0:
         html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
         html.write('<p><ul>\n')
-        for name in plotdata.otherfigure_dict.iterkeys():
+        for name in six.iterkeys(plotdata.otherfigure_dict):
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
             makefig = otherfigure.makefig
             if makefig:
                 if type(makefig)==str:
                     try:
-                        exec(makefig) in globals(), locals()
+                        exec((makefig), globals(), locals())
                     except:
-                        print "*** Problem executing makefig "
-                        print "    for otherfigure ",name
+                        print("*** Problem executing makefig ")
+                        print("    for otherfigure ",name)
                 else:
                     try:
                         makefig(plotdata)
                     except:
-                        print "*** Problem executing makefig function"
-                        print "    for otherfigure ",name
+                        print("*** Problem executing makefig function")
+                        print("    for otherfigure ",name)
                         raise
 
             html.write('<p><li><a href="%s">%s</a>\n' %(fname,name))
@@ -2673,13 +2683,13 @@ def massage_gauges_data(plot_pages_data):
         fignames = ppd.gauges_fignames
         prefix = getattr(ppd, 'gauges_prefix', 'gauge')
     except:
-        print '*** Error: gauges not set properly'
+        print('*** Error: gauges not set properly')
         return
 
     startdir = os.getcwd()
 
     for figno in fignos:
-        if not fignames.has_key(figno):
+        if figno not in fignames:
             fignames[figno] = 'Solution'
 
     numgauges = len(gaugenos)
@@ -2694,7 +2704,7 @@ def massage_gauges_data(plot_pages_data):
     htmlfile = {}
     allfigsfile = {}
     for gaugeno in gaugenos:
-        gaugef = string.zfill(gaugeno,4)
+        gaugef = str(gaugeno).zfill(4)
         for figno in fignos:
             pngfile[gaugeno,figno] = '%s%sfig%s.png'  % (prefix,gaugef,figno)
             htmlfile[gaugeno,figno] = '%s%sfig%s.html' % (prefix,gaugef,figno)
@@ -2749,19 +2759,19 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         # all we need to do is make png's for some frames in this case:
         for frameno in plotdata.print_framenos:
             frametools.plotframe(frameno, plotdata, verbose)
-            print 'Creating png for Frame %i' % frameno
+            print('Creating png for Frame %i' % frameno)
         return
 
     plotdata.save_frames = False
 
     datadir = os.getcwd()  # assume data files in this directory
 
-    if not sys.modules.has_key('matplotlib'):
-        print '*** Error: matplotlib not found, no plots will be done'
+    if 'matplotlib' not in sys.modules:
+        print('*** Error: matplotlib not found, no plots will be done')
         return plotdata
 
     if not isinstance(plotdata,ClawPlotData):
-        print '*** Error, plotdata must be an object of type ClawPlotData'
+        print('*** Error, plotdata must be an object of type ClawPlotData')
         return plotdata
 
     plotdata._mode = 'printframes'
@@ -2785,8 +2795,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         msgfile = plotdata.msgfile     # where to write error messages
 
     except:
-        print '*** Error in printframes: plotdata missing attribute'
-        print '  *** plotdata = ',plotdata
+        print('*** Error in printframes: plotdata missing attribute')
+        print('  *** plotdata = ',plotdata)
         return plotdata
 
     if fignos == 'all':
@@ -2834,8 +2844,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     try:
         os.chdir(rundir)
     except:
-        print '*** Error: cannot move to run directory ',rundir
-        print 'rootdir = ',rootdir
+        print('*** Error: cannot move to run directory ',rundir)
+        print('rootdir = ',rootdir)
         return plotdata
 
 
@@ -2847,7 +2857,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     try:
         plotpages.cd_plotdir(plotdata.plotdir, plotdata.overwrite)
     except:
-        print "*** Error, aborting plotframes"
+        print("*** Error, aborting plotframes")
         return plotdata
 
 
@@ -2861,8 +2871,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 os.remove(file)
         else:
             if len(framefiles) > 1:
-                print "*** Remove frame*.png and frame*.html and try again,"
-                print "  or use overwrite=True in call to printframes"
+                print("*** Remove frame*.png and frame*.html and try again,")
+                print("  or use overwrite=True in call to printframes")
                 return plotdata
 
     if plotdata._parallel_todo=='initialize':
@@ -2872,7 +2882,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     try:
         os.chdir(outdir)
     except:
-        print '*** Error plotclaw_driver: cannot move to outdir = ',outdir
+        print('*** Error plotclaw_driver: cannot move to outdir = ',outdir)
         return plotdata
 
 
@@ -2896,7 +2906,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
 
     if len(fortfile) == 0:
-        print '*** No fort.q or claw.pkl files found in directory ', os.getcwd()
+        print('*** No fort.q or claw.pkl files found in directory ', os.getcwd())
         return plotdata
 
     # Discard frames that are not from latest run, based on
@@ -2905,9 +2915,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     numframes = len(framenos)
 
-    print "Will plot %i frames numbered:" % numframes, framenos
-    print 'Will make %i figure(s) for each frame, numbered: ' \
-          % len(fignos_each_frame), fignos_each_frame
+    print("Will plot %i frames numbered:" % numframes, framenos)
+    print('Will make %i figure(s) for each frame, numbered: ' \
+          % len(fignos_each_frame), fignos_each_frame)
 
     #fignames = {}
     #for figname in plotdata._fignames:
@@ -2951,11 +2961,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         # Only import if we need it:
         try:
             from matplotlib import animation
-            from JSAnimation import HTMLWriter
-            from JSAnimation.fix_jsmovies import fix_file
+            from .JSAnimation import HTMLWriter
+            from .JSAnimation.fix_jsmovies import fix_file
         except:
-            print "*** Warning: Your version of matplotlib may not support JSAnimation"
-            print "    Switching to 4.x style animation"
+            print("*** Warning: Your version of matplotlib may not support JSAnimation")
+            print("    Switching to 4.x style animation")
             plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
@@ -2969,27 +2979,27 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # -----------------------------------------
 
     if not plotdata.printfigs:
-        print "Using previously printed figure files"
+        print("Using previously printed figure files")
     else:
-        print "Now making png files for all figures..."
+        print("Now making png files for all figures...")
 
         if not _parallel:
             # don't create the png for frames when run in parallel
             # (unless plotdata._parallell_todo=='frames', handled earlier)
             for frameno in framenos:
                 frametools.plotframe(frameno, plotdata, verbose)
-                print 'Frame %i at time t = %s' % (frameno, frametimes[frameno])
+                print('Frame %i at time t = %s' % (frameno, frametimes[frameno]))
 
         gaugenos_input = tuple(gaugenos)
         gaugenos = []
         for gaugeno in gaugenos_input:
             try:
                 gaugetools.plotgauge(gaugeno, plotdata, verbose)
-                print 'Found data for Gauge %i ' % gaugeno
+                print('Found data for Gauge %i ' % gaugeno)
                 gaugenos.append(gaugeno)
             except:
-                print '*** Warning: Unable to plot Gauge %i' \
-                        % gaugeno
+                print('*** Warning: Unable to plot Gauge %i' \
+                        % gaugeno)
 
 
     if plotdata.latex:
@@ -3047,7 +3057,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                     add_html=pre_html, frame_width=500,file_names=filenames)
             fname = 'movieframe_allframesfig%s.html' % figno
             anim.save(fname, writer=myHTMLwriter)
-            print "Created JSAnimation for figure", figno
+            print("Created JSAnimation for figure", figno)
             fix_file(fname, verbose=False)
             # Clean up animation temporary files of the form frame0000.png
             myHTMLwriter.clear_temp = True
@@ -3058,14 +3068,14 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     #-----------
 
     if plotdata.gif_movie and (len(framenos) > 0):
-        print 'Making gif movies.  This may take some time....'
+        print('Making gif movies.  This may take some time....')
         for figno in fignos_each_frame:
             try:
                 os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
                    % (figno,figno))
-                print '    Created moviefig%s.gif' % figno
+                print('    Created moviefig%s.gif' % figno)
             except:
-                print '*** Error creating moviefig%s.gif' % figno
+                print('*** Error creating moviefig%s.gif' % figno)
 
     os.chdir(rootdir)
 
