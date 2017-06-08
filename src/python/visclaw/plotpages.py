@@ -1045,7 +1045,7 @@ def plotclaw2kml(plotdata):
 
             # ExtendedData is used in BalloonStyle.text() fields.
             placemark = KML.Placemark(
-                KML.name("Gauge %d" % gaugeno),
+                KML.name("%s %d" % (plotdata.kml_gauge_name,gaugeno)),
                 KML.Snippet(snippet_str),
                 KML.styleUrl(chr(35) + "gauge_style"),
                 KML.ExtendedData(

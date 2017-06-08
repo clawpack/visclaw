@@ -578,6 +578,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('plotaxes_dict', {})
         self.add_attribute('type',fig_type)   # = 'each_frame' or 'each_run' or 'each_gauge'
         self.add_attribute('use_for_kml',False)
+        self.add_attribute('kml_gauge_name','Gauge')
         self.add_attribute('kml_dpi',200)
         self.add_attribute('kml_xlimits',None)
         self.add_attribute('kml_ylimits',None)
