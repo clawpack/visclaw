@@ -22,6 +22,7 @@ if exist('NoQuery')
   end
 end
 
+query_quit = false;
 inp = 'k';
 while strcmp(inp,'k')
 
@@ -137,8 +138,8 @@ while strcmp(inp,'k')
 end % while strcmp
 
 if strcmp(inp,'q')
-    % quit now
-    break  % Breaks from while loop in plotclaw2
+    query_quit = true;
+    return  % Breaks from while loop in plotclaw2
 end
 
 
