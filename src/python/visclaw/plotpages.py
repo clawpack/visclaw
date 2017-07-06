@@ -724,6 +724,7 @@ def plotclaw2kml(plotdata):
         KML.open(1))
 
     for figname in plotdata._fignames:
+
         plotfigure = plotdata.plotfigure_dict[figname]
         figno = plotfigure.figno
 
@@ -1403,6 +1404,12 @@ def plotclaw2kml(plotdata):
     except:
         # Nothing terrible happens;  we just set maxlevels to some large value
         maxlevels = 20
+        for figname in plotdata._fignames:
+            plotfigure = plotdata.plotfigure_dict[figname]
+            if not plotfigure.use_for_kml:
+                continue
+            else:
+                maxlevels = plotfigure.kml_maxlevel        
     else:
         # read past comments - last line is blank
         a = f.readline()
@@ -1413,6 +1420,7 @@ def plotclaw2kml(plotdata):
         a = f.readline()
         ainfo = np.fromstring(a.strip(),sep=' ')
         maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
+
 
     # set _outdirs attribute to be list of all outdirs for all items
     plotdata.set_outdirs()
