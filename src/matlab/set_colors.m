@@ -103,7 +103,7 @@ switch  colormapping
         % Seed to use for random processor colormap.
         if (~isfield(pp,'pp_colormap'))
             s = pp.seed;
-            ppcm = multicolormap(npmax,s);
+            ppcm = ppcolors(npmax,s);
         else
             ppcm = pp.pp_colormap;
             if (size(ppcm,1) ~= pp.npmax)
