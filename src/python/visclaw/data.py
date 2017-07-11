@@ -229,7 +229,23 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if refresh or (key not in framesoln_dict):
-            framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
+
+            if self.format in [None,'ascii','binary']:
+                # check to see if outdir has a fort.b file for this frame
+                # if so assume binary output, otherwise assume ascii:
+                fortb = 'fort.b' + str(frameno).zfill(4)
+                if os.path.isfile(os.path.join(outdir,fortb)):
+                    file_format = 'binary'
+                else:
+                    file_format = 'ascii'
+                #print('+++ file_format appears to be %s' % file_format)
+            else:
+                # to allow other formats...
+                file_format = self.format
+    
+
+            framesoln = solution.Solution(frameno,path=outdir,
+                            file_format=file_format)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
