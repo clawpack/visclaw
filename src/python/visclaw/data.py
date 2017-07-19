@@ -49,7 +49,7 @@ class ClawPlotData(clawdata.ClawData):
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
-            self.add_attribute('format','ascii')
+            self.add_attribute('format',None)
 
         # This should eventually replace all need for recording the above
         # information
@@ -230,9 +230,10 @@ class ClawPlotData(clawdata.ClawData):
 
         if refresh or (key not in framesoln_dict):
 
-            if self.format in [None,'ascii','binary']:
+            if self.format == None:
                 # check to see if outdir has a fort.b file for this frame
-                # if so assume binary output, otherwise assume ascii:
+                # if so assume binary output, otherwise assume ascii.
+                # (eventually auto-detect other formats?)
                 fortb = 'fort.b' + str(frameno).zfill(4)
                 if os.path.isfile(os.path.join(outdir,fortb)):
                     file_format = 'binary'
@@ -240,7 +241,7 @@ class ClawPlotData(clawdata.ClawData):
                     file_format = 'ascii'
                 #print('+++ file_format appears to be %s' % file_format)
             else:
-                # to allow other formats...
+                # if user specivied format
                 file_format = self.format
     
 

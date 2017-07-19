@@ -1681,9 +1681,10 @@ def load_frame(frameno, outdir='_output', format=None):
     Convenience function to load a frame of Clawpack output
     and return framesoln, a pyclaw.solution.Solution object.
     
-    format can be set for specific format such as 'netcdf', 
-    but if format in [None, 'ascii', 'binary'] then 
-    starting with commit 02e77f2b83, the format should be auto-detected.
+    format can be set for specific format such as 'netcdf'. 
+
+    If format is None, then starting with commit 02e77f2b83, 
+    the format should be auto-detected if it is either 'ascii' or 'binary'.
     """
 
     from clawpack.visclaw.data import ClawPlotData
