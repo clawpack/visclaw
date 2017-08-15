@@ -54,8 +54,8 @@ class ClawPlotData(clawdata.ClawData):
         # This should eventually replace all need for recording the above
         # information
         self.add_attribute('output_controller', None)
-        self.output_controller = clawpack.pyclaw.controller.OutputController(
-                                           self.outdir, file_format=self.format)
+        #self.output_controller = clawpack.pyclaw.controller.OutputController(
+                                           #self.outdir, file_format=self.format)
 
 
         self.add_attribute('plotdir',os.getcwd())      # directory for plots *.png, *.html
