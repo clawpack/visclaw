@@ -233,8 +233,15 @@ class Iplotclaw(Iplot):
         print('plotgauge n  : plot figure for gauge number n, if found')
         print('plotgauge all: loop through plots of all gauges')
         print('plotgauge    : loop through plots of all gauges')
+
+    def do_list(self, rest):
+        frame_list = self.plotdata.getframe_list(self.plotdata.outdir)
+        for frameno_t in frame_list:
+            print('Frame number %i at time t = %g' % frameno_t)
         
-        
+    def help_list(self):
+        print('print a list of frames and corresponding times from outdir')
+
     # Convenience functions for examining solution or making additional
     # plots from the ipython command line:
     # -----------------------------------------------------------------
