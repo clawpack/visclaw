@@ -245,6 +245,41 @@ class ClawPlotData(clawdata.ClawData):
         return framesoln
 
 
+    def getframe_time(self,frameno,outdir=None):
+        """
+        Attempt to read only the time of this frame, not the full solution.
+        This works if there is a fort.t file containing the time, as there is if
+        the output format is 'ascii' or 'binary'.
+        If that approach fails it loads the full solution and returns the time.
+        """
+        import os
+        if outdir is None:
+            outdir = self.outdir
+        outdir = os.path.abspath(outdir)
+        fname = 'fort.t%s' % str(frameno).zfill(4)
+        fname = os.path.join(outdir, fname)
+        try:
+            # assumes fort.t file exists and contains t on first line:
+            first_line = open(fname).readline()
+            t = float(first_line.split()[0])
+        except:
+            t = self.getframe(frameno, outdir).t
+        return t
+
+    def getframe_list(self, outdir=None):
+        import os
+        import glob
+        if outdir is None:
+            outdir = self.outdir
+        outdir = os.path.abspath(outdir)
+        fortt_list = glob.glob(os.path.join(outdir,'fort.t*'))
+        framenos = [int(s[-4:]) for s in fortt_list]
+        frame_list = []
+        for frameno in framenos:
+            frame_list.append((frameno, self.getframe_time(frameno, outdir)))
+        return frame_list
+
+
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
