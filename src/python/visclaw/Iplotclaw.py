@@ -235,6 +235,7 @@ class Iplotclaw(Iplot):
         print('plotgauge    : loop through plots of all gauges')
 
     def do_list(self, rest):
+        print('Frames found in %s:' % self.plotdata.outdir)
         frame_list = self.plotdata.getframe_list(self.plotdata.outdir)
         for frameno_t in frame_list:
             print('Frame number %i at time t = %g' % frameno_t)
