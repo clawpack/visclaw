@@ -49,7 +49,7 @@ class ClawPlotData(clawdata.ClawData):
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
-            self.add_attribute('format','ascii')
+            self.add_attribute('format',None)
 
         # This should eventually replace all need for recording the above
         # information
@@ -229,6 +229,7 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if refresh or (key not in framesoln_dict):
+            print('+++ self.format = %s' % self.format)
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
