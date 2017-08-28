@@ -229,7 +229,6 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if refresh or (key not in framesoln_dict):
-            print('+++ self.format = %s' % self.format)
             framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
