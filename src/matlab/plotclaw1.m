@@ -92,7 +92,11 @@ while Frame <= MaxFrames
 
   Frame_old = Frame;
   queryframe;  % changes value of Frame
-
+  
+  if (query_quit)
+      break;
+  end
+  
   if (Frame ~= Frame_old | isempty(amrdata))
     [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag);
   end;
