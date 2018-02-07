@@ -94,12 +94,11 @@ while Frame <= MaxFrames
   if (query_quit)
       break;
   end
-
   if (Frame ~= Frame_old | isempty(amrdata))
     [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
 	outputprefix,readblocknumber);
-  end;
+  end
 
-  plotframe2;
+  plotframe2; 
 
 end % main loop on frames
