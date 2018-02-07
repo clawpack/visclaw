@@ -126,7 +126,7 @@ while strcmp(inp,'k')
             disp('hit <return> for information about this frame');
             pause
             infoframe3
-        end;
+        end
         inp = 'k';
     elseif isempty(inp)
         % go to next frame

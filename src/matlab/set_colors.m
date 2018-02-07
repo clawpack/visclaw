@@ -39,9 +39,9 @@ switch  colormapping
         % Fix q so that floor for indexing works.  This also clamps
         % values in [qlo-tol,qlo] to qlo, and values in [qhi,qhi+tol]
         % to qhi.
-        mfix = (uo.value_lower-uo.tol) <= q & q <= uo.value_lower;
+        mfix = (uo.value_lower-uo.tol_lower) <= q & q <= uo.value_lower;
         q(mfix) = uo.value_lower;
-        mfix = uo.value_upper <= q & q <= (uo.value_upper + uo.tol);
+        mfix = uo.value_upper <= q & q <= (uo.value_upper + uo.tol_upper);
         q(mfix) = uo.value_upper-1e-8; % So floor works
         
         % ----------------------------------------------------
@@ -60,10 +60,10 @@ switch  colormapping
         idx(m0) = cm_buff + floor(1 + slope*(nmax-1));
         
         % Set under shoots to 1 and over shoots to nmax+2
-        m_under = q <= uo.value_lower-uo.tol;
+        m_under = q <= uo.value_lower-uo.tol_lower;
         idx(m_under) = 1;   % first index in cm_extended
         
-        m_over = q >= (uo.value_upper + uo.tol);
+        m_over = q >= (uo.value_upper + uo.tol_upper);
         idx(m_over) = nmax + 2*cm_buff;   % last index of cm_extended
         
         m_leftover = ~(m0 | m_under | m_over);
