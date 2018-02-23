@@ -738,7 +738,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     if pp['plot_type'] == '2d_pcolor':
 
-        pcolor_cmd = "pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
+        pcolor_cmd = "plotitem._current_pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp['pcolor_cmap']"
 
         if pp['celledges_show']:
