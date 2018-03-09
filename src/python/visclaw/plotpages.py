@@ -638,12 +638,13 @@ def plotclaw2kml(plotdata):
     TS = []
     event_time = plotdata.kml_starttime
     tz = plotdata.kml_tz_offset
+    tscale = plotdata.kml_time_scale
 
     if numframes == 1:
         frameno = framenos[0]
         t1 = frametimes[frameno]
         t2 = t1 + 5  # Add time second so final figure shows up
-        sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
+        sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz,tscale=tscale)
 
         # To be used below
         TS.append(KML.TimeSpan(
@@ -656,13 +657,14 @@ def plotclaw2kml(plotdata):
             if i < numframes-1:
                 t2 = frametimes[framenos[i+1]]
             else:
-                # We could add 1 seconod at the end, or more time, depending on what
+                # We could add 1 second at the end, or more time, depending on what
                 # effect is desired. In any case, the time span can't be empty or the
                 # last figure won't show up.
                 dt = (frametimes[framenos[numframes-1]] - frametimes[framenos[0]])/numframes
                 t2 = t1 + dt   # Add enough time for looping through animations
+                print("Final time in Google Earth slider set to {:6.2f}".format(t2))
 
-            sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz)
+            sbegin, send = kmltools.kml_timespan(t1,t2,event_time,tz,tscale=tscale)
 
             TS.append(KML.TimeSpan(
                 KML.begin(sbegin),

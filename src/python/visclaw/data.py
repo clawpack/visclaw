@@ -95,6 +95,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('kml_name',"GeoClaw")
         self.add_attribute('kml_starttime',None)
         self.add_attribute('kml_tz_offset',None)
+        self.add_attribute('kml_time_scale',1.0) # Multiply by factor to get seconds
         self.add_attribute('kml_map_topo_to_latlong',None)
         self.add_attribute('kml_user_files',[])
 
