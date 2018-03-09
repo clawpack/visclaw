@@ -1377,10 +1377,11 @@ def plotclaw2kml(plotdata):
     kml_file = open(region_kml_file,'wt')
     kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-    kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
-    kml_text = kml_text.replace('&gt;'.encode(),'>'.encode())  # needed for CDATA blocks
-    kml_text = kml_text.replace('&lt;'.encode(),'<'.encode())
-    kml_file.write(kml_text.decode())
+    kml_text = etree.tostring(etree.ElementTree(doc_regions),
+                              pretty_print=True).decode()
+    kml_text = kml_text.replace('&gt;','>')  # needed for CDATA blocks
+    kml_text = kml_text.replace('&lt;','<')
+    kml_file.write(kml_text)
 
     kml_file.close()
 
