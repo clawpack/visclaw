@@ -810,10 +810,11 @@ def plotclaw2kml(plotdata):
 
                 # The actual file to be written <framename>/doc.kml
                 docfile = os.path.join(fname_str,'doc.kml')
-                docfile_notile = open(os.path.join(fname_str,'doc.kml'),'w')
+                docfile_notile = open(os.path.join(fname_str,'doc.kml'),'wt')
                 docfile_notile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                docfile_notile.write(etree.tostring(etree.ElementTree(doc_notile),
-                                                    pretty_print=True))
+                kml_text = etree.tostring(etree.ElementTree(doc_notile),
+                                                        pretty_print=True)
+                docfile_notile.write(kml_text.decode())
                 docfile_notile.close()
 
                 os.chdir("..")
@@ -935,14 +936,14 @@ def plotclaw2kml(plotdata):
             # -----  Done with colorbar ------
 
         # ------------------ done with fig<N>/doc.kml file ------------------
-        fig_file = open(os.path.join(fig_dir,"doc.kml"),'w')
+        fig_file = open(os.path.join(fig_dir,"doc.kml"),'wt')
         fig_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
         # In case we used CDATA in any snippets or descriptions.  For some reason
         # <tags> get converted to &gt;tags&lt;, which balloons don't translate.
-        kml_text = etree.tostring(etree.ElementTree(doc_fig),pretty_print=True)
-        kml_text = kml_text.replace("&gt;",">")
-        kml_text = kml_text.replace("&lt;","<")
+        kml_text = etree.tostring(etree.ElementTree(doc_fig),pretty_print=True).decode()
+        kml_text = kml_text.replace('&gt;','>')
+        kml_text = kml_text.replace('&lt;','<')
         fig_file.write(kml_text)
         fig_file.close()
         # Done with fig<n>/doc.kml file
@@ -1039,7 +1040,7 @@ def plotclaw2kml(plotdata):
             # plotdata.gauges_fignos
             # Not clear how to get the figure number for each gauge.   Assume that
             # there is only one figure number for all gauges
-            # If user has set 'gaugeno=[]', gauge files will not be added to the KML file. 
+            # If user has set 'gaugeno=[]', gauge files will not be added to the KMLfile. 
             figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
@@ -1066,12 +1067,13 @@ def plotclaw2kml(plotdata):
 
             doc_gauges.Document.append(placemark)
 
-        kml_file = open(gauge_kml_file,'w')
+        kml_file = open(gauge_kml_file,'wt')
         kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-        kml_text = etree.tostring(etree.ElementTree(doc_gauges),pretty_print=True)
-        kml_text = kml_text.replace("&gt;",">")   # Needed for CDATA blocks
-        kml_text = kml_text.replace("&lt;","<")
+        kml_text = etree.tostring(etree.ElementTree(doc_gauges),
+                                  pretty_print=True).decode()
+        kml_text = kml_text.replace('&gt;','>')   # Needed for CDATA blocks
+        kml_text = kml_text.replace('&lt;','<')
 
         kml_file.write(kml_text)
         kml_file.close()
@@ -1372,13 +1374,13 @@ def plotclaw2kml(plotdata):
     for p in placemark_folder:
         doc_regions.Document.append(p)
 
-    kml_file = open(region_kml_file,'w')
+    kml_file = open(region_kml_file,'wt')
     kml_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
     kml_text = etree.tostring(etree.ElementTree(doc_regions),pretty_print=True)
-    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
-    kml_text = kml_text.replace("&lt;","<")
-    kml_file.write(kml_text)
+    kml_text = kml_text.replace('&gt;'.encode(),'>'.encode())  # needed for CDATA blocks
+    kml_text = kml_text.replace('&lt;'.encode(),'<'.encode())
+    kml_file.write(kml_text.decode())
 
     kml_file.close()
 
@@ -1578,18 +1580,20 @@ def plotclaw2kml(plotdata):
             frameno = framenos[j]
             level_file_name = level_files[i] + "_" + str(frameno).rjust(4,'0') + ".kml"
             kml_frame_file = open(os.path.join(kml_dir,level_dir,
-                                               level_files[i],level_file_name),'w')
+                                               level_files[i],level_file_name),'wt')
             kml_frame_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            kml_frame_file.write(etree.tostring(etree.ElementTree(doc_frames[i][j]),
-                                                pretty_print=True))
+            kml_text = etree.tostring(etree.ElementTree(doc_frames[i][j]),
+                                                pretty_print=True)
+            kml_frame_file.write(kml_text.decode())
             kml_frame_file.close()
 
     # Print out level files containing time stamps and references to frame files
     for i in range(0,maxlevels+1-level_base):
         kml_level_file = open(os.path.join(kml_dir,level_dir,level_files[i]+".kml"),'w')
         kml_level_file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        kml_level_file.write(etree.tostring(etree.ElementTree(doc_levels[i]),
-                                            pretty_print=True))
+        kml_text = etree.tostring(etree.ElementTree(doc_levels[i]),
+                                                pretty_print=True)
+        kml_level_file.write(kml_text.decode())
         kml_level_file.close()
 
     # Folders in top level file 'levels.kml'
@@ -1604,10 +1608,11 @@ def plotclaw2kml(plotdata):
 
         doc_levels_top.Document.append(f)
 
-    kml_levels = open(os.path.join(kml_dir,level_kml_file),'w')
+    kml_levels = open(os.path.join(kml_dir,level_kml_file),'wt')
     kml_levels.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-    kml_levels.write(etree.tostring(etree.ElementTree(doc_levels_top),
-                                    pretty_print=True))
+    kml_text = etree.tostring(etree.ElementTree(doc_levels_top),
+                                    pretty_print=True).decode()
+    kml_levels.write(kml_text)
     kml_levels.close()
 
     # Add to top level KML file
@@ -1623,7 +1628,7 @@ def plotclaw2kml(plotdata):
     shutil.rmtree(user_dir,True)
     os.mkdir(user_dir)
 
-    if plotdata.kml_user_files.__len__ > 0:
+    if len(plotdata.kml_user_files) > 0:
         for f in plotdata.kml_user_files:
             print(" ")
             print("KML ===> Adding user KML file %s" % f[0])
@@ -1653,12 +1658,12 @@ def plotclaw2kml(plotdata):
 
     # ----------- Write doc.kml file --------------------
     # Top level KML file
-    docfile = open("doc.kml",'w')
+    docfile = open("doc.kml",'wt')
     docfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-    kml_text = etree.tostring(etree.ElementTree(doc),pretty_print=True)
-    kml_text = kml_text.replace("&gt;",">")  # needed for CDATA blocks
-    kml_text = kml_text.replace("&lt;","<")
+    kml_text = etree.tostring(etree.ElementTree(doc),pretty_print=True).decode()
+    kml_text = kml_text.replace('&gt;','>')  # needed for CDATA blocks
+    kml_text = kml_text.replace('&lt;','<')
     docfile.write(kml_text)
 
     #docfile.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
@@ -1691,9 +1696,10 @@ def plotclaw2kml(plotdata):
                     KML.refreshMode("onInterval"),
                              KML.refreshInterval(update_time*60)))))
 
-        file = open(plotdata.kml_index_fname + ".kml",'w')
+        file = open(plotdata.kml_index_fname + ".kml",'wt')
         file.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-        file.write(etree.tostring(etree.ElementTree(doc),pretty_print=True))
+        kml_text = etree.tostring(etree.ElementTree(doc),pretty_print=True)
+        file.write(kml_text.decode())
         file.close()
         print(" ")
 
