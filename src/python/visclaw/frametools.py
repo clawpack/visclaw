@@ -203,6 +203,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
+                for itemname in plotaxes._itemnames:
+                    # initialize before loop in case all patches are masked:
+                    plotitem = plotaxes.plotitem_dict[itemname]
+                    plotitem._current_pobj = None
+
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
@@ -317,14 +322,20 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         pass
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = plt.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
-                        if plotitem.has_attribute('colorbar_tick_labels'):
-                            if plotitem.colorbar_tick_labels is not None:
-                                cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
-                        if plotitem.colorbar_label is not None:
-                            cbar.set_label(plotitem.colorbar_label)
+                        if pobj is not None:
+                            # Leaves off colorbar if all patches were masked,
+                            # which avoids errors in Python3 but changes the 
+                            # size of the main plot.  
+                            # colorbar stuff should be rewritten to use
+                            # colorbar.make_axes_gridspec ?
+                            cbar = plt.colorbar(pobj, \
+                                         shrink=plotitem.colorbar_shrink,\
+                                         ticks=plotitem.colorbar_ticks)
+                            if plotitem.has_attribute('colorbar_tick_labels'):
+                                if plotitem.colorbar_tick_labels is not None:
+                                    cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
+                            if plotitem.colorbar_label is not None:
+                                cbar.set_label(plotitem.colorbar_label)
                 except:
                     print("*** problem generating colorbar")
                     pass
@@ -728,25 +739,26 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     if pp['plot_type'] == '2d_pcolor':
 
-        pcolor_cmd = "pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
-                        cmap=pp['pcolor_cmap']"
+        # rewritten to put everything into kwargs rather than 
+        # constructing pcolor_cmd since exec works differently in
+        # Python3 than Python2 and anyway pobj was not gettting set.
 
+        kwargs = pp['kwargs']
+        kwargs['cmap'] = pp['pcolor_cmap']
         if pp['celledges_show']:
-            pcolor_cmd += ", edgecolors=pp['celledges_color']"
+            kwargs['edgecolors'] = pp['celledges_color']
         else:
-            pcolor_cmd += ", shading='flat'"
-
-        pcolor_cmd += ", **pp['kwargs'])"
-
+            # shading = 'flat' deprecated in Python3
+            kwargs['edgecolors'] = 'none'
+            
         if not var_all_masked:
-            exec(pcolor_cmd)
-
+            pobj = plt.pcolor(X_edge, Y_edge, var, **kwargs)
 
             if (pp['pcolor_cmin'] not in ['auto',None]) and \
                      (pp['pcolor_cmax'] not in ['auto',None]):
                 plt.clim(pp['pcolor_cmin'], pp['pcolor_cmax'])
         else:
-            #print '*** Not doing pcolor on totally masked array'
+            #print('*** Not doing pcolor on totally masked array')
             pass
 
     elif pp['plot_type'] == '2d_imshow':
