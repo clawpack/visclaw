@@ -183,6 +183,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             current_data.plotaxes = plotaxes
             current_data.plotfigure = plotaxes._plotfigure
 
+            beforeaxes = getattr(plotaxes,'beforeaxes',None)
+            current_data = run_str_or_func(beforeaxes,current_data)
+                
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that

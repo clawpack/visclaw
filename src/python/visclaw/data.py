@@ -651,6 +651,7 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('title_with_t',True)  # creates title of form 'title at time t = ...'
         self.add_attribute('axescmd','subplot(1,1,1)')
 
+        self.add_attribute('beforeaxes',None)
         self.add_attribute('afteraxes',None)
         self.add_attribute('xlimits',None)
         self.add_attribute('ylimits',None)
