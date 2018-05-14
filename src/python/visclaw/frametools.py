@@ -320,9 +320,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         pass
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = plt.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
+                        
+                        cbar = plt.colorbar(pobj,
+                                     shrink=plotitem.colorbar_shrink,
+                                     ticks=plotitem.colorbar_ticks,
+                                     **plotitem.colorbar_kwargs)
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
                                 cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
