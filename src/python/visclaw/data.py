@@ -784,7 +784,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('patchedges_show',0)
             self.add_attribute('patchedges_color','k')
             self.add_attribute('add_colorbar',False)
-            self.add_attribute('colorbar_shrink',1.0)
+            self.add_attribute('colorbar_shrink',None)
             self.add_attribute('colorbar_label',None)
             self.add_attribute('colorbar_ticks', None)
             self.add_attribute('colorbar_tick_labels',None)
