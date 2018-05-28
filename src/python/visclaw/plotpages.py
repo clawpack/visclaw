@@ -2982,16 +2982,19 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         except:
             print("*** Warning: Your version of matplotlib does not support\n"\
                   + "*** JSAnimation directly, version >= 2.2.0 suggested")
-            try:
-                # test if matplotlib supports local JSAnimation:
-                # this option is deprecated but here for backward compatibility
-                from .JSAnimation import HTMLWriter
-                from .JSAnimation.fix_jsmovies import fix_file
-                plotdata.html_movie = "JSAnimation_local"
-            except:
-                print("*** Warning: Your version of matplotlib does not support local JSAnimation")
-                print("*** Switching to 4.x style animation")
-                plotdata.html_movie = "4.x"
+            plotdata.html_movie = 'JSAnimation_local'
+            
+    if plotdata.html_movie == "JSAnimation_local":
+        try:
+            # test if matplotlib supports local JSAnimation:
+            # this option is deprecated but here for backward compatibility
+            from matplotlib import animation
+            from .JSAnimation import HTMLWriter
+            from .JSAnimation.fix_jsmovies import fix_file
+        except:
+            print("*** Warning: Your version of matplotlib does not support local JSAnimation")
+            print("*** Switching to 4.x style animation")
+            plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
 
