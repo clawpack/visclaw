@@ -2981,7 +2981,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             junk = animation.FuncAnimation.to_jshtml
         except:
             print("*** Warning: Your version of matplotlib does not support\n"\
-                  + "*** JSAnimation directly, version >= 2.2.0 suggested")
+                  + "*** JSAnimation directly, version >= 2.1.0 suggested")
             plotdata.html_movie = 'JSAnimation_local'
             
     if plotdata.html_movie == "JSAnimation_local":
@@ -3074,7 +3074,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     elif (plotdata.html_movie == "JSAnimation_local") and (len(framenos) > 0):
         
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
-        # Deprecated now that JSAnimation is in matplotlib version >= 2.2.0
+        # Deprecated now that JSAnimation is in matplotlib version >= 2.1.0
         # but many users may not have this yet.
 
         class myHTMLWriter(HTMLWriter):
