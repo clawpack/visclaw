@@ -14,7 +14,7 @@ import os
 # Location of timing.csv files:
 outdir = '_output'
 
-make_pngs = True  # print plots?
+make_pngs = False  # print plots?
 
 def make_png(fname):
     savefig(fname)
@@ -93,7 +93,7 @@ for j in range(nlevels):
 plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
 xlim(xlimits)
 ylim(0, 1.1*sum_cells_over_levels[-1])
-title('Cells updated on each level')
+title('Cumulative cells updated on each level')
 xlabel('Simulation time (%s)' % simtime_units)
 ylabel('Grid cell updates')
 legend(loc='upper left')
@@ -124,7 +124,7 @@ fill_between(time/simtime_factor, total_cpu/comptime_factor,
 plot(time/simtime_factor, total_cpu/comptime_factor, 'k', lw=3, label='Total CPU')
 xlim(xlimits)
 ylim(ylimits)
-title('CPU time on each level')
+title('Cumulative CPU time on each level')
 xlabel('Simulation time (%s)' % simtime_units)
 ylabel('CPU time (%s)' % comptime_units)
 legend(loc='upper left')
@@ -152,7 +152,7 @@ fill_between(time/simtime_factor, total_wall/comptime_factor,
              color=colors[0],
              label='Overhead')
 plot(time/simtime_factor, total_wall/comptime_factor, 'k', lw=3, label='Total Wall')
-title('Wall time on each level')
+title('Cumulative wall time on each level')
 xlabel('Simulation time (%s)' % simtime_units)
 ylabel('CPU time (%s)' % comptime_units)
 legend(loc='upper left')
@@ -161,4 +161,106 @@ ylim(ylimits)
 
 if make_pngs:
     make_png('WallTime.png')
+
+
+# d cells / dt:
+
+figure(32)
+clf()
+dc_max = 0
+dca = cells[1:,:] - cells[:-1,:]
+for n in range(1,ntimes):
+    dt = (time[n] - time[n-1])
+    if dt == 0:
+        break
+    dcn = 0
+    for j in range(nlevels):
+        if dca[n-1,j] == 0:
+            break
+        tt = array([time[n-1],time[n]])/simtime_factor
+        #last_dc = last_dc + dc
+        dc = (cells[n,j] - cells[n-1,j]) / dt
+        plot(tt, [dcn+dc, dcn+dc], 'k')
+        if n == 1:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1],
+                         label='Level %s' % (j+1))
+        else:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1])
+        dcn = dcn + dc
+                         
+    plot([time[n-1],time[n-1]], [0,dcn], 'k')
+    plot([time[n],time[n]], [0,dcn], 'k')
+    dc_max = max(dc_max, dcn)
+
+                         
+#plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+xlim(xlimits)
+ylim(0, 1.2*dc_max)
+title('Average Cells updated / sim time')
+xlabel('Simulation time (%s)' % simtime_units)
+ylabel('cell updates / sim time')
+legend(loc='upper left')
+
+if make_pngs:
+    make_png('dCellUpdates.png')
+
+
+# d cpu_time / dt:
+
+figure(34)
+clf()
+dc_max = 0
+dca = cpu[1:,:] - cpu[:-1,:]
+for n in range(1,ntimes):
+    dt = (time[n] - time[n-1])
+    if dt == 0:
+        break
+    dcn = 0
+    for j in range(nlevels):
+        if dca[n-1,j] == 0:
+            break
+        tt = array([time[n-1],time[n]])/simtime_factor
+        #last_dc = last_dc + dc
+        dc = (cpu[n,j] - cpu[n-1,j]) / dt
+        plot(tt, [dcn+dc, dcn+dc], 'k')
+        if n == 1:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1],
+                         label='Level %s' % (j+1))
+        else:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1])
+        dcn = dcn + dc
+                         
+
+    
+    if n == 1:
+        kwargs_label = {'label': 'Overhead'}
+    else:
+        kwargs_label = {}
+    dtot = (total_cpu[n]-total_cpu[n-1]) / dt 
+    plot(tt, [dtot,dtot], 'k')
+    fill_between(tt, [dcn,dcn], [dtot,dtot], 
+                 color=colors[0], alpha=1, edgecolors='k', **kwargs_label)
+
+    plot([time[n-1],time[n-1]], [0,dtot], 'k')
+    plot([time[n],time[n]], [0,dtot], 'k')
+    
+    dc_max = max(dc_max, dtot)
+     
+    #plot(time/simtime_factor, total_cpu/comptime_factor, 'k', lw=3, label='Total CPU')
+
+                         
+#plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+xlim(xlimits)
+ylim(0, 1.2*dc_max)
+title('CPU time / simulation time')
+xlabel('Simulation time (%s)' % simtime_units)
+ylabel('CPU time / sim time')
+legend(loc='upper left')
+
+if make_pngs:
+    make_png('dCellUpdates.png')
 
