@@ -1,11 +1,10 @@
 """
 Plot timing info found in timing.csv file.
-Requires modified valout function to print this info.
+Requires modified valout function from Clawpack 5.5.0 to print this info.
 
-This should be turned into a callable function with default colors, etc.
-
+This might eventually be turned into a more general utility function in visclaw.
+For now, copy this file and modify it for your needs.
 """
-
 
 from __future__ import print_function
 from pylab import *
@@ -24,9 +23,30 @@ def make_png(fname):
 # set desired units for simulation time and computer time,
 # based on length of run:
 
-simtime_units = 'seconds'
-comptime_units = 'seconds'
+# set units and scaling factors for Simulation time t (simtime), 
+# CPU/Wall time (comptime), and for number of cells updated.
+# units is used for text in plots, factor is used for scaling values read in
+# if None, then no units appear in plots, and/or no scaling is done.
 
+# computer time is recorded in seconds so this is the natural units:
+comptime_units = 'seconds'
+if comptime_units == 'seconds':
+    comptime_factor = 1
+elif comptime_units == 'minutes':
+    comptime_factor = 60.
+elif comptime_units == 'hours':
+    comptime_factor = 3600.
+else:
+    comptime_factor = 1
+
+# for applications where t in the PDE is dimensionless, use this:
+simtime_units = 'dimensionless'
+simtime_factor = 1
+
+# for GeoClaw or other applications where the simulation time is in
+# seconds, set simtime_units to 'seconds', 'minutes' or 'hours' depending
+# on time scale of simulation and use this:
+#simtime_units = 'seconds'
 if simtime_units == 'seconds':
     simtime_factor = 1
 elif simtime_units == 'minutes':
@@ -34,14 +54,28 @@ elif simtime_units == 'minutes':
 elif simtime_units == 'hours':
     simtime_factor = 3600.
 
-if comptime_units == 'seconds':
-    comptime_factor = 1
-elif comptime_units == 'minutes':
-    comptime_factor = 60.
-elif comptime_units == 'hours':
-    comptime_factor = 3600.
+# if the time units in the application are different, set simtime_units
+# and simtime_factor appropriately.
+    
+# Some useful units for cell updates:
+#cell_units = None # for raw cell count
+cell_units = 'millions'
+
+if cell_units == 'millions':
+    cell_factor = 1e6
+elif cell_units == 'billions':
+    cell_factor = 1e9
+elif cell_units == 'trillions':
+    cell_factor = 1e12
+else:
+    cell_factor = 1
 
 
+# define colors, with colors[0] used for overhead, colors[j] for level j >= 1
+colors = ['y'] + 3*['r','g','m','c','b']  # allow <= 15 levels
+
+
+# Read in timing states from output directory:
 timing_stats_file = os.path.join(outdir, 'timing.csv')
 timing_stats = loadtxt(timing_stats_file, skiprows=1, delimiter=',')
 ntimes = timing_stats.shape[0]
@@ -55,28 +89,20 @@ cpu = zeros((ntimes, nlevels))
 cells = zeros((ntimes, nlevels))
 
 for j in range(ntimes):
-    time[j] = timing_stats[j,0]
-    total_wall[j] = timing_stats[j,1]
-    total_cpu[j] = timing_stats[j,2]
+    time[j] = timing_stats[j,0] / simtime_factor
+    total_wall[j] = timing_stats[j,1] / comptime_factor
+    total_cpu[j] = timing_stats[j,2] / comptime_factor
     for level in range(nlevels):
-        wtime[j, level] = timing_stats[j,3*level + 3]
-        cpu[j, level] = timing_stats[j,3*level + 4]
-        cells[j, level] = timing_stats[j,3*level + 5]
+        wtime[j, level] = timing_stats[j,3*level + 3] / comptime_factor
+        cpu[j, level] = timing_stats[j,3*level + 4] / comptime_factor
+        cells[j, level] = timing_stats[j,3*level + 5] / cell_factor
     
-xlimits = [time.min()/simtime_factor, time.max()/simtime_factor]
-ylimits = [0, 1.1*total_cpu.max()/comptime_factor]
-
-# define colors
-#R = linspace(0.2,1,nlevels)
-#B = linspace(1,0.2,nlevels)
-#G = 0.2*ones(nlevels)
-#RGB = vstack((R,G,B)).T
-
-# define colors, with colors[0] used for overhead, colors[j] for level j >= 1
-colors = ['y'] + 3*['r','g','m','c','b']  # allow lots of levels
+xlimits = [time.min(), time.max()]
+ylimits_comptime = [0, 1.1*total_cpu.max()]
+ylimits_cells = [0, 1.1*sum(cells[-1,:])]
 
 
-figure(22)
+figure(21)
 clf()
 sum_cells_over_levels = zeros(ntimes)
 for j in range(nlevels):
@@ -85,24 +111,29 @@ for j in range(nlevels):
     #plot(time/3600, cells[:,j], label='Level %s' % (j+1))
     last_sum_cells = sum_cells_over_levels.copy()
     sum_cells_over_levels += cells[:,j]
-    plot(time/simtime_factor, sum_cells_over_levels, 'k')
-    fill_between(time/simtime_factor, last_sum_cells, sum_cells_over_levels, 
+    plot(time, sum_cells_over_levels, 'k')
+    fill_between(time, last_sum_cells, sum_cells_over_levels, 
                  color=colors[j+1],
                  label='Level %s' % (j+1))
 
-plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+plot(time, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
 xlim(xlimits)
-ylim(0, 1.1*sum_cells_over_levels[-1])
+#ylim(0, 1.1*sum_cells_over_levels[-1])
+ylim(ylimits_cells)
 title('Cumulative cells updated on each level')
-xlabel('Simulation time (%s)' % simtime_units)
-ylabel('Grid cell updates')
+xlabel('Simulation time t (%s)' % simtime_units)
+if cell_units is None:
+    ylabel('Grid cells updated')
+else:
+    ylabel('Grid cells updated (%s)' % cell_units)
+
 legend(loc='upper left')
 
 if make_pngs:
     make_png('CellUpdates.png')
 
 
-figure(24)
+figure(22)
 clf()
 sum_cpu_over_levels = zeros(ntimes)
 for j in range(nlevels):
@@ -111,21 +142,17 @@ for j in range(nlevels):
     #plot(time/3600, cpu[:,j], label='Level %s' % (j+1))
     last_sum_cpu = sum_cpu_over_levels.copy()
     sum_cpu_over_levels += cpu[:,j]
-    fill_between(time/simtime_factor, last_sum_cpu/comptime_factor, 
-                 sum_cpu_over_levels/comptime_factor, 
-                 color=colors[j+1],
+    fill_between(time, last_sum_cpu, sum_cpu_over_levels, color=colors[j+1],
                  label='Level %s' % (j+1))
-    plot(time/simtime_factor, sum_cpu_over_levels/comptime_factor, 'k')
+    plot(time, sum_cpu_over_levels, 'k')
 
-fill_between(time/simtime_factor, total_cpu/comptime_factor, 
-             sum_cpu_over_levels/comptime_factor, 
-             color=colors[0],
+fill_between(time, total_cpu,sum_cpu_over_levels,color=colors[0],
              label='Overhead')
-plot(time/simtime_factor, total_cpu/comptime_factor, 'k', lw=3, label='Total CPU')
+plot(time, total_cpu, 'k', lw=3, label='Total CPU')
 xlim(xlimits)
-ylim(ylimits)
+ylim(ylimits_comptime)
 title('Cumulative CPU time on each level')
-xlabel('Simulation time (%s)' % simtime_units)
+xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('CPU time (%s)' % comptime_units)
 legend(loc='upper left')
 
@@ -133,7 +160,7 @@ if make_pngs:
     make_png('CPUtime.png')
 
 
-figure(25)
+figure(23)
 clf()
 sum_wtime_over_levels = zeros(ntimes)
 for j in range(nlevels):
@@ -141,23 +168,21 @@ for j in range(nlevels):
         break
     last_sum_wtime = sum_wtime_over_levels.copy()
     sum_wtime_over_levels += wtime[:,j]
-    fill_between(time/simtime_factor, last_sum_wtime/comptime_factor,
-                 sum_wtime_over_levels/comptime_factor, 
-                 color=colors[j+1],
+    fill_between(time, last_sum_wtime,
+sum_wtime_over_levels, 
+color=colors[j+1],
                  label='Level %s' % (j+1))
-    plot(time/simtime_factor, sum_wtime_over_levels/comptime_factor, 'k')
+    plot(time, sum_wtime_over_levels, 'k')
 
-fill_between(time/simtime_factor, total_wall/comptime_factor, 
-             sum_wtime_over_levels/comptime_factor, 
-             color=colors[0],
+fill_between(time, total_wall, sum_wtime_over_levels, color=colors[0],
              label='Overhead')
-plot(time/simtime_factor, total_wall/comptime_factor, 'k', lw=3, label='Total Wall')
+plot(time, total_wall, 'k', lw=3, label='Total Wall')
 title('Cumulative wall time on each level')
-xlabel('Simulation time (%s)' % simtime_units)
+xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('CPU time (%s)' % comptime_units)
 legend(loc='upper left')
 xlim(xlimits)
-ylim(ylimits)
+ylim(ylimits_comptime)
 
 if make_pngs:
     make_png('WallTime.png')
@@ -165,7 +190,7 @@ if make_pngs:
 
 # d cells / dt:
 
-figure(32)
+figure(31)
 clf()
 dc_max = 0
 dca = cells[1:,:] - cells[:-1,:]
@@ -177,7 +202,7 @@ for n in range(1,ntimes):
     for j in range(nlevels):
         if dca[n-1,j] == 0:
             break
-        tt = array([time[n-1],time[n]])/simtime_factor
+        tt = array([time[n-1],time[n]])
         #last_dc = last_dc + dc
         dc = (cells[n,j] - cells[n-1,j]) / dt
         plot(tt, [dcn+dc, dcn+dc], 'k')
@@ -195,21 +220,25 @@ for n in range(1,ntimes):
     dc_max = max(dc_max, dcn)
 
                          
-#plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
 xlim(xlimits)
 ylim(0, 1.2*dc_max)
-title('Average Cells updated / sim time')
-xlabel('Simulation time (%s)' % simtime_units)
+title('Average Cells updated / simulation time')
+xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('cell updates / sim time')
+if cell_units is None:
+    ylabel('Grid cells updated / sim time')
+else:
+    ylabel('Grid cells updated (%s) / sim time' % cell_units)
+
 legend(loc='upper left')
 
 if make_pngs:
     make_png('dCellUpdates.png')
 
 
-# d cpu_time / dt:
+# average cpu_time / dt:
 
-figure(34)
+figure(32)
 clf()
 dc_max = 0
 dca = cpu[1:,:] - cpu[:-1,:]
@@ -221,7 +250,7 @@ for n in range(1,ntimes):
     for j in range(nlevels):
         if dca[n-1,j] == 0:
             break
-        tt = array([time[n-1],time[n]])/simtime_factor
+        tt = array([time[n-1],time[n]])
         #last_dc = last_dc + dc
         dc = (cpu[n,j] - cpu[n-1,j]) / dt
         plot(tt, [dcn+dc, dcn+dc], 'k')
@@ -250,17 +279,75 @@ for n in range(1,ntimes):
     
     dc_max = max(dc_max, dtot)
      
-    #plot(time/simtime_factor, total_cpu/comptime_factor, 'k', lw=3, label='Total CPU')
+    #plot(time, total_cpu, 'k', lw=3, label='Total CPU')
 
                          
-#plot(time/simtime_factor, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+#plot(time, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
 xlim(xlimits)
-ylim(0, 1.2*dc_max)
+ylimits_avecomptime = [0, 1.2*dc_max]
+ylim(ylimits_avecomptime)
+
 title('CPU time / simulation time')
-xlabel('Simulation time (%s)' % simtime_units)
+xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('CPU time / sim time')
 legend(loc='upper left')
 
 if make_pngs:
     make_png('dCellUpdates.png')
 
+
+
+# average wall time / dt:
+
+figure(33)
+clf()
+dc_max = 0
+dca = wtime[1:,:] - wtime[:-1,:]
+for n in range(1,ntimes):
+    dt = (time[n] - time[n-1])
+    if dt == 0:
+        break
+    dcn = 0
+    for j in range(nlevels):
+        if dca[n-1,j] == 0:
+            break
+        tt = array([time[n-1],time[n]])
+        #last_dc = last_dc + dc
+        dc = (wtime[n,j] - wtime[n-1,j]) / dt
+        plot(tt, [dcn+dc, dcn+dc], 'k')
+        if n == 1:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1],
+                         label='Level %s' % (j+1))
+        else:
+            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                         color=colors[j+1])
+        dcn = dcn + dc
+                         
+
+    
+    if n == 1:
+        kwargs_label = {'label': 'Overhead'}
+    else:
+        kwargs_label = {}
+    dtot = (total_wall[n]-total_wall[n-1]) / dt 
+    plot(tt, [dtot,dtot], 'k')
+    fill_between(tt, [dcn,dcn], [dtot,dtot], 
+                 color=colors[0], alpha=1, edgecolors='k', **kwargs_label)
+
+    plot([time[n-1],time[n-1]], [0,dtot], 'k')
+    plot([time[n],time[n]], [0,dtot], 'k')
+    
+    dc_max = max(dc_max, dtot)
+
+                         
+xlim(xlimits)
+#ylim(0, 1.2*dc_max)
+ylim(ylimits_avecomptime)
+title('Wall time / simulation time')
+xlabel('Simulation time t (%s)' % simtime_units)
+ylabel('wtime time / sim time')
+legend(loc='upper left')
+
+if make_pngs:
+    make_png('dCellUpdates.png')
