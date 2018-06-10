@@ -130,7 +130,7 @@ else:
 legend(loc='upper left')
 
 if make_pngs:
-    make_png('CellUpdates.png')
+    make_png('CumCellUpdates.png')
 
 
 figure(22)
@@ -157,7 +157,7 @@ ylabel('CPU time (%s)' % comptime_units)
 legend(loc='upper left')
 
 if make_pngs:
-    make_png('CPUtime.png')
+    make_png('CumCPUtime.png')
 
 
 figure(23)
@@ -185,7 +185,7 @@ xlim(xlimits)
 ylim(ylimits_comptime)
 
 if make_pngs:
-    make_png('WallTime.png')
+    make_png('CumWallTime.png')
 
 
 # d cells / dt:
@@ -233,7 +233,7 @@ else:
 legend(loc='upper left')
 
 if make_pngs:
-    make_png('dCellUpdates.png')
+    make_png('AveCellUpdates.png')
 
 
 # average cpu_time / dt:
@@ -287,13 +287,13 @@ xlim(xlimits)
 ylimits_avecomptime = [0, 1.2*dc_max]
 ylim(ylimits_avecomptime)
 
-title('CPU time / simulation time')
+title('Average CPU time / simulation time')
 xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('CPU time / sim time')
 legend(loc='upper left')
 
 if make_pngs:
-    make_png('dCellUpdates.png')
+    make_png('AveCPUTime.png')
 
 
 
@@ -344,10 +344,10 @@ for n in range(1,ntimes):
 xlim(xlimits)
 #ylim(0, 1.2*dc_max)
 ylim(ylimits_avecomptime)
-title('Wall time / simulation time')
+title('Average Wall time / simulation time')
 xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('wtime time / sim time')
 legend(loc='upper left')
 
 if make_pngs:
-    make_png('dCellUpdates.png')
+    make_png('AveWallTime.png')
