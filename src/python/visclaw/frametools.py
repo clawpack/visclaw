@@ -976,7 +976,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     try:
         plotitem._current_pobj = pobj
     except NameError:
-        pass # if no plot was done
+        pass # if no pobj generated
 
 
     return current_data
