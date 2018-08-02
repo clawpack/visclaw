@@ -2,8 +2,24 @@
 Plot timing info found in timing.csv file.
 Requires modified valout function from Clawpack 5.5.0 to print this info.
 
-This might eventually be turned into a more general utility function in visclaw.
-For now, copy this file and modify it for your needs.
+To use:
+
+    - Run the Clawpack or GeoClaw code, and insure that the file `timing.csv`
+      was generated in the output directory `_output` (hard-wired below).
+
+    - Run this script in an IPython shell, Jupyter notebook, or via::
+
+         $ python $CLAW/visclaw/src/python/visclaw/plot_timing_stats.py
+
+    - If run from the command line, view the plots created as png files.
+
+This code should eventually be turned into a more general utility function with
+more options. For now, copy this file and modify it for your needs if necessary.
+
+Note: if you are doing a restart, the original `timing.csv` file will be
+overwritten.  So if you want to compute timings for the original plus the
+restarted runs together, you will have to save the original and 
+then combine the times appropriately. This script does not do that.
 """
 
 from __future__ import print_function
@@ -13,7 +29,7 @@ import os
 # Location of timing.csv files:
 outdir = '_output'
 
-make_pngs = False  # print plots?
+make_pngs = True  # print plots?
 
 def make_png(fname):
     savefig(fname)
