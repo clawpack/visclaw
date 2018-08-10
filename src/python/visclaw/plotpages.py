@@ -2975,14 +2975,25 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # ---------------------------------------
 
     if plotdata.html_movie == "JSAnimation":
-        # Only import if we need it:
         try:
+            # test if matplotlib supports to_jshtml:
+            from matplotlib import animation
+            junk = animation.FuncAnimation.to_jshtml
+        except:
+            print("*** Warning: Your version of matplotlib does not support\n"\
+                  + "*** JSAnimation directly, version >= 2.1.0 suggested")
+            plotdata.html_movie = 'JSAnimation_local'
+            
+    if plotdata.html_movie == "JSAnimation_local":
+        try:
+            # test if matplotlib supports local JSAnimation:
+            # this option is deprecated but here for backward compatibility
             from matplotlib import animation
             from .JSAnimation import HTMLWriter
             from .JSAnimation.fix_jsmovies import fix_file
         except:
-            print("*** Warning: Your version of matplotlib may not support JSAnimation")
-            print("    Switching to 4.x style animation")
+            print("*** Warning: Your version of matplotlib does not support local JSAnimation")
+            print("*** Switching to 4.x style animation")
             plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
@@ -3026,9 +3037,45 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
+
+    # Create Animations
+
     if (plotdata.html_movie == "JSAnimation") and (len(framenos) > 0):
 
+        for figno in fignos_each_frame:
+            fname = '*fig' + str(figno) + '.png'
+            filenames=sorted(glob.glob(fname))
+            fig = plt.figure()
+            im = plt.imshow(Image.imread(filenames[0]))
+            plt.axis('off')
+            def init():
+                im.set_data(Image.imread(filenames[0]))
+                return im,
+
+            def animate(i):
+                image=Image.imread(filenames[i])
+                im.set_data(image)
+                return im,
+
+            anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                          frames=len(filenames), blit=True)
+                                          
+            fname = 'movieframe_allframesfig%s.html' % figno
+
+            html_body = anim.to_jshtml(fps=10, embed_frames=True, 
+                                       default_mode='once')
+            html_file = open(fname,'w')
+            html_file.write("<html>\n <center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n")
+            html_file.write(html_body)
+            html_file.close()
+            print("Created JSAnimation for figure", figno)
+
+            
+    elif (plotdata.html_movie == "JSAnimation_local") and (len(framenos) > 0):
+        
         # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
+        # Deprecated now that JSAnimation is in matplotlib version >= 2.1.0
+        # but many users may not have this yet.
 
         class myHTMLWriter(HTMLWriter):
             """
@@ -3048,9 +3095,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 frame_fullname = self.file_names
                 return frame_fullname
 
-
-        # Create Animations
-
+        #set embed_frames=True to embed base64-encoded frames directly in the HTML
+        
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
@@ -3067,18 +3113,21 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
             anim = animation.FuncAnimation(fig, animate, init_func=init,
                                           frames=len(filenames), blit=True)
+                                          
+            fname = 'movieframe_allframesfig%s.html' % figno
 
-            #set embed_frames=True to embed base64-encoded frames directly in the HTML
             pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
             myHTMLwriter=myHTMLWriter(embed_frames=False, frame_dir=os.getcwd(), \
                     add_html=pre_html, frame_width=500,file_names=filenames)
-            fname = 'movieframe_allframesfig%s.html' % figno
             anim.save(fname, writer=myHTMLwriter)
             print("Created JSAnimation for figure", figno)
             fix_file(fname, verbose=False)
             # Clean up animation temporary files of the form frame0000.png
             myHTMLwriter.clear_temp = True
             myHTMLwriter.cleanup()
+            print("Created JSAnimation for figure", figno)
+
+                
 
     #-----------
     # gif movie:
