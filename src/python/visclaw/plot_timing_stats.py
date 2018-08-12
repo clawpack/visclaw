@@ -209,28 +209,25 @@ if make_pngs:
 figure(31)
 clf()
 dc_max = 0
-dca = cells[1:,:] - cells[:-1,:]
 for n in range(1,ntimes):
     dt = (time[n] - time[n-1])
+    tt = array([time[n-1],time[n]])
     if dt == 0:
-        break
+        continue
     dcn = 0
     for j in range(nlevels):
-        if dca[n-1,j] == 0:
-            break
-        tt = array([time[n-1],time[n]])
-        #last_dc = last_dc + dc
         dc = (cells[n,j] - cells[n-1,j]) / dt
-        plot(tt, [dcn+dc, dcn+dc], 'k')
-        if n == 1:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1],
-                         label='Level %s' % (j+1))
-        else:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1])
+        if dc >= 0:
+            plot(tt, [dcn+dc, dcn+dc], 'k')
+            if n == 1:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1],
+                             label='Level %s' % (j+1))
+            else:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1])
         dcn = dcn + dc
-                         
+
     plot([time[n-1],time[n-1]], [0,dcn], 'k')
     plot([time[n],time[n]], [0,dcn], 'k')
     dc_max = max(dc_max, dcn)
@@ -257,30 +254,25 @@ if make_pngs:
 figure(32)
 clf()
 dc_max = 0
-dca = cpu[1:,:] - cpu[:-1,:]
 for n in range(1,ntimes):
     dt = (time[n] - time[n-1])
+    tt = array([time[n-1],time[n]])
     if dt == 0:
-        break
+        continue
     dcn = 0
     for j in range(nlevels):
-        if dca[n-1,j] == 0:
-            break
-        tt = array([time[n-1],time[n]])
-        #last_dc = last_dc + dc
         dc = (cpu[n,j] - cpu[n-1,j]) / dt
-        plot(tt, [dcn+dc, dcn+dc], 'k')
-        if n == 1:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1],
-                         label='Level %s' % (j+1))
-        else:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1])
+        if dc >= 0:
+            plot(tt, [dcn+dc, dcn+dc], 'k')
+            if n == 1:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1],
+                             label='Level %s' % (j+1))
+            else:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1])
         dcn = dcn + dc
-                         
 
-    
     if n == 1:
         kwargs_label = {'label': 'Overhead'}
     else:
@@ -318,30 +310,26 @@ if make_pngs:
 figure(33)
 clf()
 dc_max = 0
-dca = wtime[1:,:] - wtime[:-1,:]
 for n in range(1,ntimes):
     dt = (time[n] - time[n-1])
+    tt = array([time[n-1],time[n]])
     if dt == 0:
-        break
+        continue
     dcn = 0
     for j in range(nlevels):
-        if dca[n-1,j] == 0:
-            break
-        tt = array([time[n-1],time[n]])
         #last_dc = last_dc + dc
         dc = (wtime[n,j] - wtime[n-1,j]) / dt
-        plot(tt, [dcn+dc, dcn+dc], 'k')
-        if n == 1:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1],
-                         label='Level %s' % (j+1))
-        else:
-            fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                         color=colors[j+1])
+        if dc >= 0:
+            plot(tt, [dcn+dc, dcn+dc], 'k')
+            if n == 1:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1],
+                             label='Level %s' % (j+1))
+            else:
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                             color=colors[j+1])
         dcn = dcn + dc
-                         
 
-    
     if n == 1:
         kwargs_label = {'label': 'Overhead'}
     else:
