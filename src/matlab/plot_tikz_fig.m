@@ -1,7 +1,7 @@
 function plot_tikz_fig(Frame,figsize,prefix,dpi)
 % PLOT_TIKZ_FIG prints figure for use with tikz
 %
-% PLOT_TIKZ_FIG(Frame,figsize,prefix) prints a figure with name
+% PLOT_TIKZ_FIG(Frame,figsize,prefix,dpi) prints a figure with name
 % '<prefix>.NNNN.png', where NNNN is the zero-padded frame number,
 % and 'prefix' is a string.   The figsize is used to size the figure
 % appropriately for a tikz mesh created with Latex.
@@ -13,6 +13,10 @@ function plot_tikz_fig(Frame,figsize,prefix,dpi)
 %
 % See also clawgraphics.
 
+
+    if nargin < 4
+        dpi = 72;
+    end
     dpi_test = dpi;    
     scaling_factor = 1;
     while dpi_test > 128
