@@ -1081,7 +1081,7 @@ def plotclaw2kml(plotdata):
         kml_file.close()
 
     # -------------- add gauge image and KML files -----------------
-    if plotdata.gauges_fignos is not None:
+    if plotdata.gauges_fignos is None:
         gauge_vis = 0
     else:
         gauge_vis = 1
