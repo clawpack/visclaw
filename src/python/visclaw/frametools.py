@@ -32,6 +32,11 @@ from numpy import ma
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
 
+from matplotlib import rcParams
+rcParams['font.family'] = 'serif'
+rcParams['font.size'] = 20
+
+
 
 
 #==============================================================================
@@ -320,6 +325,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         cbar = plt.colorbar(pobj, \
                                      shrink=plotitem.colorbar_shrink,\
                                      ticks=plotitem.colorbar_ticks)
+                        cbar.ax.tick_params(labelsize=18)
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
                                 cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
