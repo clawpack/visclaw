@@ -325,12 +325,6 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         pass
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-
-                        cbar = plt.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
-                        cbar.ax.tick_params(labelsize=18)
-
                         # set dictionary values for keywords explicitly set:
                         if plotitem.colorbar_shrink is not None:
                             plotitem.colorbar_kwargs['shrink'] = \
@@ -340,6 +334,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                                     plotitem.colorbar_ticks
 
                         cbar = plt.colorbar(pobj, **plotitem.colorbar_kwargs)
+                        cbar.ax.tick_params(labelsize=18)
 
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
