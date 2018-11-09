@@ -7,13 +7,13 @@ function uo = underover()
 %    Then, make a local copy of this file and supply values for the the
 %    following fields in the UO structure :
 %
-%             uo.color_under     the rgb triple used to color undershoots
-%             uo.color_over      the rgb triple used to color overshoots
-%             uo.color_nan       the color to use for NAN values
-%             uo.value_lower     lower value of exact solution
-%             uo.value_upper     upper value of exact solution
-%             uo.tol             tolerance for under/over shoots
-%             uo.colormap        colormap for values in [qlow-tol,qhi+tol];
+%             uo.color_under     % the rgb triple used to color undershoots
+%             uo.color_over      % the rgb triple used to color overshoots
+%             uo.color_nan       % the color to use for NAN values
+%             uo.value_lower     % lower value of exact solution
+%             uo.value_upper     % upper value of exact solution
+%             uo.tol             % tolerance for under/over shoots
+%             uo.colormap        % colormap for values in [qlow-tol,qhi+tol];
 %
 %    Values are considered in the overshoot/undershoot region if they satisfy
 %
