@@ -306,7 +306,7 @@ for ng = 1:ngrids,
     add_patch2slice(sdir,sval,snum,xcenter,ycenter,zcenter, ...
 	xedge,yedge,zedge,qmesh,level,cvalues,mappedgrid,manifold,...
 	maskflag,ng,blockno,colormapping);
-  end;  % end of plotting for PlotType == 3
+  end  % end of plotting for PlotType == 3
 
   if (PlotType == 4)
     % 1d Line plots

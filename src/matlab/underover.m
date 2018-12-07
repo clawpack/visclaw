@@ -57,4 +57,15 @@ function uo = underover()
 %    See also SETCOLORS, COLORBAR_UNDEROVER.
 %
 
-error('underover : No user supplied ''underover'';  see UNDEROVER');
+yrbcolormap;
+cm = colormap;
+uo = struct('color_under',[0 1 1],...  % cyan
+    'color_over',[1 0 1],...   % magenta
+    'color_nan',[1 1 1],...    % white
+    'value_lower',0, ...       % theoretical minimum
+    'value_upper',1,...        % theoretical maximum
+    'tol_lower', 1e-2,...
+    'tol_upper',1e-2,...
+    'colormap',cm);            % Colors for non under/over shoot values
+
+

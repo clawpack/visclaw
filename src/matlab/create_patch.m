@@ -49,7 +49,7 @@ userdata.manifold = manifold;
 [mv_names{1:3}] = get_xyzlike('mx','my','mz',sdir);
 [dv_names{1:3}] = get_xyzlike('dx','dy','dz',sdir);
 
-for i = 1:3,
+for i = 1:3
   userdata = setfield(userdata,(vc_names{i}),vc{i});
   userdata = setfield(userdata,(ve_names{i}), ve{i});
   userdata = setfield(userdata,(mv_names{i}),length(vc{i}));
@@ -57,16 +57,16 @@ for i = 1:3,
   % If we are doing a manifold, then dz==1.
   dv = ve{i}(2) - ve{i}(1);
   userdata = setfield(userdata,(dv_names{i}),(dv == 0) + dv*(dv ~= 0));
-end;
+end
 
 [vmin_names{1:3}] = get_xyzlike('xmin','ymin','zmin',sdir);
 [vmax_names{1:3}] = get_xyzlike('xmax','ymax','zmax',sdir);
 userdata = setfield(userdata,vmin_names{1},sval);
 userdata = setfield(userdata,vmax_names{1},sval);
-for i = 2:3,
+for i = 2:3
   userdata = setfield(userdata,(vmin_names{i}), ve{i}(1));
   userdata = setfield(userdata,(vmax_names{i}), ve{i}(end));
-end;
+end
 
 % Store Cartesian coodinates for use in mask_patches, and convert patch
 % vertices to physical coordinates.
@@ -97,7 +97,7 @@ userdata.contourLines = [];
 if (~isempty(contourlevels))
   c = contourc(yc_like,zc_like,qcm2,contourlevels);
   userdata.contourLines = create_clines(c,sval,sdir,mappedgrid,manifold,blockno);
-end;
+end
 
 % Mesh data for showing coarsened mesh later...
 % userdata.mesh = create_mesh(sdir,sval,xe,ye,ze,mappedgrid,manifold);
