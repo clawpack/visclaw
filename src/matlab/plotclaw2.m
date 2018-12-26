@@ -71,7 +71,7 @@ end
 % MAIN LOOP ON FRAMES:
 %=============================================
 
-if ~exist('MaxFrames')
+if ~exist('MaxFrames','var')
    disp('MaxFrames parameter not set... you may need to execute setplot2')
    return
 end

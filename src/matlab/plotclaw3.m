@@ -67,12 +67,13 @@ if strcmp(whichfile,'')
 % MAIN LOOP ON FRAMES:
 %=============================================
 
-if ~exist('MaxFrames')
+if ~exist('MaxFrames','var')
   disp('MaxFrames parameter not set... you may need to execute setplot3')
   return
 end
 
 set_value('frameinc','plot_interval',1);
+set_value('maxlevels','MaxLevels',6);
 set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
 set_value('outputprefix','plot_prefix','pltstate');
@@ -81,18 +82,22 @@ set_value('readblocknumber','ReadBlockNumber',0);
 clear amrdata;
 Frame = -frameinc;  % initialize frame counter
 while Frame <= MaxFrames
-
-  % pause for input from user to determine if we go to next frame,
-  % look at data, or skip around.  This may reset Frame counter.
-
-  old_Frame = Frame;
-  queryframe  % this changes value of Frame
-
-  if (old_Frame ~= Frame | isempty(amrdata))
-    [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
-	outputprefix,readblocknumber);
-  end;
-
-  plotframe3;
-
+    
+    % pause for input from user to determine if we go to next frame,
+    % look at data, or skip around.  This may reset Frame counter.
+    
+    old_Frame = Frame;
+    queryframe  % this changes value of Frame
+    
+    if (query_quit)
+        break;
+    end
+    
+    if (old_Frame ~= Frame || isempty(amrdata))
+        [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
+            outputprefix,readblocknumber);
+    end
+    
+    plotframe3;
+    
 end % main loop on frames
