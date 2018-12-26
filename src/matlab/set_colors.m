@@ -30,6 +30,12 @@ switch  colormapping
         cm_buff = 3;        % Number of buffer under/over color entries
         
         uo = underover();   % User-defined function
+        if ~isfield(uo,'tol_lower')
+            uo.tol_lower = uo.tol;
+        end
+        if ~isfield(uo,'tol_upper')
+            uo.tol_upper = uo.tol;
+        end
         
         nmax = length(uo.colormap);
         cm_extended = [kron(ones(cm_buff,1),uo.color_under(:)'); ...
