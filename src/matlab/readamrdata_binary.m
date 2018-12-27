@@ -21,7 +21,7 @@ fid = fopen(fname);
 t = fscanf(fid,'%g',1);        fscanf(fid,'%s',1);
 meqn = fscanf(fid,'%d',1);     fscanf(fid,'%s',1);
 ngrids = fscanf(fid,'%d',1);   fscanf(fid,'%s',1);
-naux = fscanf(fid,'%d',1);   fscanf(fid,'%s',1);
+fscanf(fid,'%d',1);   fscanf(fid,'%s',1);     % Read maux
 ndim = fscanf(fid,'%d',1);   fscanf(fid,'%s',1);
 mbc = fscanf(fid,'%d',1);   fscanf(fid,'%s',1);
 fclose(fid);
