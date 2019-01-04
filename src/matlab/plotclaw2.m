@@ -28,10 +28,11 @@
 
 clawdim = 2;
 
-disp(' ')
-disp('plotclaw2  plots 2d results from clawpack or amrclaw')
+fprintf('\n')
+fprintf('plotclaw2  plots 2d results from clawpack or amrclaw\n')
 
 set_value('NoQuery','NoQuery',0);
+set_value('maxlevels','MaxLevels',6);
 
 % set plotting parameters:
 whichfile = which('setplot2');
@@ -45,15 +46,15 @@ else
         end
     else
         inp = 'y';
-    end;
+    end
     inpd = findstr('y',lower(inp));
     if (inpd == 1)
         setplot2;
-        disp(['Executing m-script ' whichfile])
-        disp(' ')
+        fprintf('Executing m-script %s\n',whichfile)
+        fprintf('\n')
     end
 end
-disp(' ')
+fprintf('\n');
 
 % the file setprob.m can be used to set up any necessary physical parameters
 % or desired values of plotting parameters for this particular problem.

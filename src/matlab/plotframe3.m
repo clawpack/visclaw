@@ -30,16 +30,16 @@ if ~exist('amrdata','var')
 end
 
 if isempty(amrdata)
-    disp(' ')
-    disp(['Frame ',num2str(Frame),'(',outputflag,') does not exist ***']);
-    disp(' ')
+    fprintf('\n');
+    fprintf('Frame %d (%s) does not exist\n',Frame,outputflag);
+    fprint('\n');
     return;
 end
 
-disp(' ');
-disp(['Frame ',num2str(Frame),' at time t = ',num2str(t)]);
+fprintf('\n');
+fprintf('Frame %d at time t  %g\n', Frame, t);
 
-if exist('beforeframe','file')==2
+if exist('beforeframe','file')
     % make an m-file with this name for any other commands you
     % want executed before drawing each frame, for example
     % if you want to use axes to specify exactly where the
