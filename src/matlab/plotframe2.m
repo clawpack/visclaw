@@ -347,7 +347,7 @@ for ng = 1:ngrids
         h = surf(xpcenter,ypcenter,q);
     end
     
-    if exist('aftergrid','file') == 2
+    if exist('aftergrid','file')
         % make an m-file with this name for any other commands you
         % want executed at the end of drawing each grid
         aftergrid;
@@ -393,7 +393,7 @@ view(view_arg);
 
 afterframe_default;
 
-if exist('afterframe','file')==2
+if exist('afterframe','file')
     % make an m-file with this name for any other commands you
     % want executed at the end of drawing each frame
     % for example to change the axes, or add a curve for a

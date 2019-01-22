@@ -37,17 +37,17 @@ set_value('maxlevels','MaxLevels',6);
 % set plotting parameters:
 whichfile = which('setplot2');
 if strcmp(whichfile,'')
-    disp('*** No setplot2 file found')
+    fprintf('*** No setplot2 file found\n')
 else
     if (NoQuery == 0)
-        inp = input(['Execute setplot2 (default = yes)? '],'s');
+        inp = input('Execute setplot2 (default = yes)? ','s');
         if (isempty(inp))
             inp = 'y';
         end
     else
         inp = 'y';
     end
-    inpd = findstr('y',lower(inp));
+    inpd = strfind('y',lower(inp));
     if (inpd == 1)
         setplot2;
         fprintf('Executing m-script %s\n',whichfile)
@@ -63,9 +63,9 @@ whichfile = which('setprob');
 if strcmp(whichfile,'')
   %disp('*** No setprob file found')
 else
-  disp(['Executing m-script ' whichfile])
-  disp(' ')
-  setprob
+  fprintf('Executing m-script %s\n',whichfile)
+  fprintf('\n')
+  setprob();
 end
 
 %=============================================
@@ -73,7 +73,7 @@ end
 %=============================================
 
 if ~exist('MaxFrames','var')
-   disp('MaxFrames parameter not set... you may need to execute setplot2')
+   fprintf('MaxFrames parameter not set... you may need to execute setplot2\n')
    return
 end
 
@@ -95,9 +95,9 @@ while Frame <= MaxFrames
   if (query_quit)
       break;
   end
-  if (Frame ~= Frame_old | isempty(amrdata))
+  if (Frame ~= Frame_old || isempty(amrdata))
     [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
-	outputprefix,readblocknumber);
+	             outputprefix,readblocknumber);
   end
 
   plotframe2; 

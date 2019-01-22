@@ -35,7 +35,7 @@ fid = fopen(fname);
 fprintf('Reading data from %s ',fname);
 
 if dim == 1
-    amr_s = struct('gridno',[],'level',[],'blockno',[],'mx',[],'xlow',[],...
+    amr_s = struct('gridno',[],'level',[],'mx',[],'xlow',[],...
         'dx',[],'data',[]);
 elseif dim == 2
     amr_s = struct('gridno',[],'level',[],'blockno',[],...
@@ -95,7 +95,6 @@ for ng = 1:ngrids
     else
         amrdata.data = fscanf(fid,'%g',[meqn,amrdata.mx*amrdata.my*amrdata.mz]);
     end
-    amrdata.q = [];
     
     amr(ng) = amrdata;
     

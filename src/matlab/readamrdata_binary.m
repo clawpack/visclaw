@@ -33,10 +33,10 @@ end
 if ndim <= 2
     strip_ghost = true;
 else
-    strip_ghost = false;
+    strip_ghost = true;
 end
 
-% change the file name to read the q data:
+% change the file name to read the binary data:
 fname(length(dir) + 6) = 'q';
 if ~exist(fname,'file')
   amr = {};
@@ -45,10 +45,12 @@ if ~exist(fname,'file')
 end
 
 fid = fopen(fname);
-fprintf('Reading data from %s ',fname);
 
 fname_bin = fname;
 fname_bin(length(dir) + 6) = 'b';
+
+fprintf('Reading data from %s ',fname_bin);
+
 if ~exist(fname_bin,'file')
   amr = {};
   t = [];
@@ -163,7 +165,6 @@ for ng = 1:ngrids
       q = reshape(q1d,meqn,ntot);
       amrdata.data = q;
   end
-  amrdata.q = [];
   
   amr(ng) = amrdata;   
   
