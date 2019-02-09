@@ -404,7 +404,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     color = plotitem.color
     plotstyle = plotitem.plotstyle
 
-    t = gaugesoln.t
+    t = gaugesoln.t / plotaxes.time_scale
     if type(plot_var) is int:
         var = gaugesoln.q[plot_var,:]
     else:
@@ -420,7 +420,13 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
                  gaugesoln.id))
 
-    pylab.xlabel("time")
+    try:
+        time_label = plotaxes.time_label
+    except:
+        time_label = 'time'
+
+    if time_label is not None:
+        pylab.xlabel(time_label)
 
     if (plot_type in ['1d_plot']) and (plotstyle != ''):
         if color:

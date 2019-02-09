@@ -667,6 +667,9 @@ class ClawPlotAxes(clawdata.ClawData):
         self._next_ITEM = 0
         self.add_attribute('figno', self._plotfigure.figno)
 
+        self.add_attribute('time_label', 'time')  # for time axis in gauges
+        self.add_attribute('time_scale', 1)  # to rescale time (e.g. to hours)
+
     def new_plotitem(self, name=None, plot_type=None):
         # Create a new entry in self.plotitem_dict
 
