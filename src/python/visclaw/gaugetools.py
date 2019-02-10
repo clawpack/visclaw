@@ -404,7 +404,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     color = plotitem.color
     plotstyle = plotitem.plotstyle
 
-    t = gaugesoln.t / plotaxes.time_scale
+    t = gaugesoln.t * plotaxes.time_scale
     if type(plot_var) is int:
         var = gaugesoln.q[plot_var,:]
     else:

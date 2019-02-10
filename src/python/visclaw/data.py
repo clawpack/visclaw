@@ -669,7 +669,8 @@ class ClawPlotAxes(clawdata.ClawData):
 
         self.add_attribute('time_label', 'time')  # for time axis in gauges
         self.add_attribute('time_label_kwargs', {})  # kwargs for xlabel cmd
-        self.add_attribute('time_scale', 1)  # to rescale time (e.g. to hours)
+        self.add_attribute('time_scale', 1)  # multiplicative factor to rescale t
+                                             # e.g. 1/3600. from sec to hours
 
     def new_plotitem(self, name=None, plot_type=None):
         # Create a new entry in self.plotitem_dict
