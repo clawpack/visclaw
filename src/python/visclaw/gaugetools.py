@@ -280,10 +280,10 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # end of loop over plotitems
 
 
-        for itemname in plotaxes._itemnames:
-            plotitem = plotaxes.plotitem_dict[itemname]
-
         pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
+
+        if plotaxes.time_label is not None:
+            pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
 
 
         # call an afteraxes function if present:
@@ -415,13 +415,6 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     tmax = t.max()
     varmax = var.max()
 
-    # The plot commands using matplotlib:
-    # Need to debug why gaugesoln.number always 1 here
-    pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
-                 gaugesoln.id))
-
-    if plotaxes.time_label is not None:
-        pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
 
     if (plot_type in ['1d_plot']) and (plotstyle != ''):
         if color:
