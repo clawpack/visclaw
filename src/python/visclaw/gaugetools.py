@@ -420,13 +420,8 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
                  gaugesoln.id))
 
-    try:
-        time_label = plotaxes.time_label
-    except:
-        time_label = 'time'
-
-    if time_label is not None:
-        pylab.xlabel(time_label)
+    if plotaxes.time_label is not None:
+        pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
 
     if (plot_type in ['1d_plot']) and (plotstyle != ''):
         if color:
