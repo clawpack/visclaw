@@ -279,45 +279,45 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
             # end of loop over plotitems
 
-
-        pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
-
-        if plotaxes.time_label is not None:
-            pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
-
-
-        # call an afteraxes function if present:
-        afteraxes =  getattr(plotaxes, 'afteraxes', None)
-        if afteraxes:
-            if isinstance(afteraxes, str):
-                # a string to be executed
-                exec(afteraxes)
-            else:
-                # assume it's a function
+    
+            pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
+    
+            if plotaxes.time_label is not None:
+                pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
+    
+    
+            # call an afteraxes function if present:
+            afteraxes =  getattr(plotaxes, 'afteraxes', None)
+            if afteraxes:
+                if isinstance(afteraxes, str):
+                    # a string to be executed
+                    exec(afteraxes)
+                else:
+                    # assume it's a function
+                    try:
+                        current_data.add_attribute("plotaxes",plotaxes)
+                        current_data.add_attribute("plotfigure",plotaxes._plotfigure)
+                        output = afteraxes(current_data)
+                        if output: current_data = output
+                    except:
+                        print('*** Error in afteraxes ***')
+                        raise
+    
+            if plotaxes.scaled:
+                pylab.axis('scaled')
+    
+            # set axes limits:
+            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                 try:
-                    current_data.add_attribute("plotaxes",plotaxes)
-                    current_data.add_attribute("plotfigure",plotaxes._plotfigure)
-                    output = afteraxes(current_data)
-                    if output: current_data = output
+                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                 except:
-                    print('*** Error in afteraxes ***')
-                    raise
-
-        if plotaxes.scaled:
-            pylab.axis('scaled')
-
-        # set axes limits:
-        if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-            try:
-                pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-            except:
-                pass  # let axis be set automatically
-        if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-            try:
-                pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-            except:
-                pass  # let axis be set automatically
-
+                    pass  # let axis be set automatically
+            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
+                try:
+                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                except:
+                    pass  # let axis be set automatically
+    
 
             # end of loop over plotaxes
             
