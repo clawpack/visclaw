@@ -1,4 +1,4 @@
-function setopengl()
+function has_opengl = setopengl()
 
 % SETOPENGL sets the graphics renderer to OpenGL.
 %
@@ -9,7 +9,10 @@ function setopengl()
 %    it is suggested that it be used whenever possible.
 %
 %    SETOPENGL sets the 'Renderer' property of the current figure to
-%    'OpenGL'.
+%    'opengl'.
+%
+%    HAS_OPENGL = SETOPENGL() returns TRUE if the system has OpenGL and 
+%    FALSE otherwise;
 %
 %    Some graphics hardware may not support the OpenGL renderer, or may
 %    cause certain Matlab routines to crash. For this reason, the choice
@@ -19,14 +22,18 @@ function setopengl()
 
 rset = set(gcf,'Renderer');
 found_opengl = 0;
-for i = 1:length(rset),
+for i = 1:length(rset)
   if (strcmp(lower(rset(i)),'opengl'))
     found_opengl = 1;
   end
 end
 
 if (~found_opengl)
-  disp('*** Warning : The OpenGL renderer is not available on your system.');
+    disp('*** Warning : The OpenGL renderer is not available on your system.');
 else
-  set(gcf,'Renderer','opengl');
-end;
+    if (nargout == 0)
+        set(gcf,'Renderer','opengl');
+    else
+        has_opengl = found_opengl;
+    end
+end

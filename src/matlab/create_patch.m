@@ -4,8 +4,8 @@ function p = create_patch(xc,yc,zc,xe,ye,ze,qcm2,sdir,sval,...
 
 % Internal matlab routine for Clawpack graphics.
 
-[xe_like, ye_like, ze_like] = get_xyzlike(xe,ye,ze,sdir);
-[xc_like, yc_like, zc_like] = get_xyzlike(xc,yc,zc,sdir);
+[~, ye_like, ze_like] = get_xyzlike(xe,ye,ze,sdir);
+[~, yc_like, zc_like] = get_xyzlike(xc,yc,zc,sdir);
 
 % -----------x---------------------------------------
 % Create patch with q data
@@ -49,43 +49,51 @@ userdata.manifold = manifold;
 [mv_names{1:3}] = get_xyzlike('mx','my','mz',sdir);
 [dv_names{1:3}] = get_xyzlike('dx','dy','dz',sdir);
 
-for i = 1:3,
-  userdata = setfield(userdata,(vc_names{i}),vc{i});
-  userdata = setfield(userdata,(ve_names{i}), ve{i});
-  userdata = setfield(userdata,(mv_names{i}),length(vc{i}));
+for i = 1:3
+  % userdata = setfield(userdata,(vc_names{i}),vc{i});
+  % userdata = setfield(userdata,(ve_names{i}), ve{i});
+  % userdata = setfield(userdata,(mv_names{i}),length(vc{i}));
+  userdata.(vc_names{i}) = vc{i};
+  userdata.(ve_names{i}) = ve{i};
+  userdata.(mv_names{i}) = numel(vc{i});
 
   % If we are doing a manifold, then dz==1.
   dv = ve{i}(2) - ve{i}(1);
-  userdata = setfield(userdata,(dv_names{i}),(dv == 0) + dv*(dv ~= 0));
-end;
+  % userdata = setfield(userdata,(dv_names{i}),(dv == 0) + dv*(dv ~= 0));
+  userdata.(dv_names{i}) = (dv == 0) + dv*(dv ~= 0);  
+end
 
 [vmin_names{1:3}] = get_xyzlike('xmin','ymin','zmin',sdir);
 [vmax_names{1:3}] = get_xyzlike('xmax','ymax','zmax',sdir);
-userdata = setfield(userdata,vmin_names{1},sval);
-userdata = setfield(userdata,vmax_names{1},sval);
-for i = 2:3,
-  userdata = setfield(userdata,(vmin_names{i}), ve{i}(1));
-  userdata = setfield(userdata,(vmax_names{i}), ve{i}(end));
-end;
+% userdata = setfield(userdata,vmin_names{1},sval);
+% userdata = setfield(userdata,vmax_names{1},sval);
+userdata.(vmin_names{1}) = sval;
+userdata.(vmax_names{1}) = sval;
+for i = 2:3
+  %userdata = setfield(userdata,(vmin_names{i}), ve{i}(1));
+  %userdata = setfield(userdata,(vmax_names{i}), ve{i}(end));
+  userdata.(vmin_names{i}) = ve{i}(1);
+  userdata.(vmax_names{i}) = ve{i}(end);
+end
 
 % Store Cartesian coodinates for use in mask_patches, and convert patch
 % vertices to physical coordinates.
 v = get(p,'Vertices');
 userdata.cartCoords = v;
 
-if (mappedgrid == 1 | manifold == 1)
+if (mappedgrid == 1 || manifold == 1)
   if (mappedgrid == 1)
     if (nargin('mapc2p') == 2)
       [v(:,1),v(:,2)] = mapc2p(v(:,1),v(:,2));
     else
       [v(:,1),v(:,2),v(:,3)] = mapc2p(v(:,1),v(:,2),v(:,3));
-    end;
-  end;
+    end
+  end
   if (manifold == 1)
     [v(:,1),v(:,2), v(:,3)] = mapc2m(v(:,1),v(:,2));
-  end;
+  end
   set(p,'Vertices',v);
-end;
+end
 userdata.phys_vertices = v;
 
 % -------------------------------------------------------
@@ -97,7 +105,7 @@ userdata.contourLines = [];
 if (~isempty(contourlevels))
   c = contourc(yc_like,zc_like,qcm2,contourlevels);
   userdata.contourLines = create_clines(c,sval,sdir,mappedgrid,manifold,blockno);
-end;
+end
 
 % Mesh data for showing coarsened mesh later...
 % userdata.mesh = create_mesh(sdir,sval,xe,ye,ze,mappedgrid,manifold);
