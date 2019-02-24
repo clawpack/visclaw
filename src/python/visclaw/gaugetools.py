@@ -405,6 +405,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     plotstyle = plotitem.plotstyle
 
     t = gaugesoln.t * plotaxes.time_scale
+
     if type(plot_var) is int:
         var = gaugesoln.q[plot_var,:]
     else:
@@ -421,9 +422,6 @@ def plotgauge1(gaugesoln, plotitem, current_data):
             kwargs['color'] = color
 
         pobj = pylab.plot(t,var,plotstyle,**kwargs)
-        # plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)"  \
-        #               % plotstyle
-        # exec(plotcommand)
 
 
     elif plot_type == '1d_empty':
