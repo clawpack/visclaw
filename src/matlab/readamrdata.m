@@ -1,4 +1,5 @@
-function [amr,t] = readamrdata(dim,Frame,dir,outputflag,outputprefix,readblocknumber);
+function [amr,t] = readamrdata(dim,Frame,dir,outputflag, ...
+                               outputprefix,readblocknumber)
 
 % READAMRDATA reads amr data produced by Clawpack output routines.
 %
@@ -15,9 +16,15 @@ function [amr,t] = readamrdata(dim,Frame,dir,outputflag,outputprefix,readblocknu
 %
 %   [...] = READAMRDATA(...,FLAG) uses FLAG to determine what kind of data
 %   to read.  FLAG = 'ascii' means read the standard ascii output files
-%   fort.q00NN produced by Clawpack.  FLAG = 'hdf' will read HDF4 files
-%   produced by Clawpack.  FLAG='chombo' will read the HDF5 files produced
-%   by ChomboClaw.  The default option is FLAG='ascii'.
+%   fort.q00NN produced by Clawpack.  
+%    
+%   Possible values for FLAG : 
+%
+%         'ascii'       : Standard Clawpack output (fort.qXXXX files)
+%         'binary'      : Binary output (fort.qXXXX and fort.bXXXX files)
+%         'forestclaw'  : ForestClaw output (reads MPI rank, for example).
+%         'hdf'         : HDF 4 (deprecated and may not work).
+%         'chombo'      : Chombo output (deprecated and may not work).
 %
 %   The output argument AMRDATA is an array of structures whose fields are
 %   some or all of :
@@ -50,37 +57,41 @@ function [amr,t] = readamrdata(dim,Frame,dir,outputflag,outputprefix,readblocknu
 %              fprintf('Cells at level % d : %d\n',level,lvec(level));
 %           end;
 %
-%   See CLAWGRAPH, CHOMBOCLAW.
+%   See CLAWGRAPHICS.
 %
 
 if (nargin < 6)
-  readblocknumber = 0;
-  if (nargin < 5)
-    outputprefix = '';
-    if (nargin < 4)
-      outputflag = 'ascii';
-      if (nargin < 3)
-	dir = './';
-      end;
-    end;
-  end;
+    readblocknumber = 0;
+    if (nargin < 5)
+        outputprefix = '';
+        if (nargin < 4)
+            outputflag = 'ascii';
+            if (nargin < 3)
+                dir = './';
+            end
+        end
+    end
 end
 
 
 if (strcmp(dir(end),'/') == 0)
   dir = [dir, '/'];
-end;
+end
 
-if (strcmp(lower(outputflag),'ascii') == 1)
-  [amr,t] = readamrdata_ascii(dim,Frame,dir,readblocknumber);
-elseif (strcmp(lower(outputflag),'hdf') == 1)
-  [amr,t] = readamrdata_hdf(dim,Frame,dir);
-elseif (strcmp(lower(outputflag),'chombo') == 1)
-  [amr,t] = readamrdata_chombo(dim,Frame,dir,outputprefix);
-elseif (strcmp(lower(outputflag),'forestclaw') == 1)
-  [amr,t] = readamrdata_forestclaw(dim,Frame,dir);
-else
-  str = sprintf(['readamrdata : ''%s'' is not a valid OutputFlag. Use ',...
-	'flag = ''ascii'' or flag = ''hdf''.'],flag);
-  error(str);
+outflag = lower(outputflag);
+switch outflag
+    case 'ascii'
+        [amr,t] = readamrdata_ascii(dim,Frame,dir,readblocknumber);
+    case 'binary'
+        [amr,t] = readamrdata_binary(dim,Frame,dir,readblocknumber);
+    case 'forestclaw'
+        [amr,t] = readamrdata_forestclaw(dim,Frame,dir);
+    case 'hdf'
+        [amr,t] = readamrdata_hdf(dim,Frame,dir);
+    case 'chombo'
+        [amr,t] = readamrdata_chombo(dim,Frame,dir,outputprefix);
+    otherwise
+        error('readamrdata : ''%s'' is not a valid OutputFlag\n',flag);   
+end
+
 end

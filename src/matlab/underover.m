@@ -7,13 +7,13 @@ function uo = underover()
 %    Then, make a local copy of this file and supply values for the the
 %    following fields in the UO structure :
 %
-%             uo.color_under     the rgb triple used to color undershoots
-%             uo.color_over      the rgb triple used to color overshoots
-%             uo.color_nan       the color to use for NAN values
-%             uo.value_lower     lower value of exact solution
-%             uo.value_upper     upper value of exact solution
-%             uo.tol             tolerance for under/over shoots
-%             uo.colormap        colormap for values in [qlow-tol,qhi+tol];
+%             uo.color_under     % the rgb triple used to color undershoots
+%             uo.color_over      % the rgb triple used to color overshoots
+%             uo.color_nan       % the color to use for NAN values
+%             uo.value_lower     % lower value of exact solution
+%             uo.value_upper     % upper value of exact solution
+%             uo.tol             % tolerance for under/over shoots
+%             uo.colormap        % colormap for values in [qlow-tol,qhi+tol];
 %
 %    Values are considered in the overshoot/undershoot region if they satisfy
 %
@@ -57,4 +57,15 @@ function uo = underover()
 %    See also SETCOLORS, COLORBAR_UNDEROVER.
 %
 
-error('underover : No user supplied ''underover'';  see UNDEROVER');
+yrbcolormap;
+cm = colormap;
+uo = struct('color_under',[0 1 1],...  % cyan
+    'color_over',[1 0 1],...   % magenta
+    'color_nan',[1 1 1],...    % white
+    'value_lower',0, ...       % theoretical minimum
+    'value_upper',1,...        % theoretical maximum
+    'tol_lower', 1e-2,...
+    'tol_upper',1e-2,...
+    'colormap',cm);            % Colors for non under/over shoot values
+
+

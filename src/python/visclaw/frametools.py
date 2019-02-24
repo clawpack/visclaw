@@ -183,6 +183,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             current_data.plotaxes = plotaxes
             current_data.plotfigure = plotaxes._plotfigure
 
+            beforeaxes = getattr(plotaxes,'beforeaxes',None)
+            current_data = run_str_or_func(beforeaxes,current_data)
+                
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -317,9 +320,16 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         pass
                     elif plotitem.has_attribute('add_colorbar') and plotitem.add_colorbar:
                         pobj = plotitem._current_pobj # most recent plot object
-                        cbar = plt.colorbar(pobj, \
-                                     shrink=plotitem.colorbar_shrink,\
-                                     ticks=plotitem.colorbar_ticks)
+                        # set dictionary values for keywords explicitly set:
+                        if plotitem.colorbar_shrink is not None:
+                            plotitem.colorbar_kwargs['shrink'] = \
+                                    plotitem.colorbar_shrink
+                        if plotitem.colorbar_ticks is not None:
+                            plotitem.colorbar_kwargs['ticks'] = \
+                                    plotitem.colorbar_ticks
+
+                        cbar = plt.colorbar(pobj, **plotitem.colorbar_kwargs)
+
                         if plotitem.has_attribute('colorbar_tick_labels'):
                             if plotitem.colorbar_tick_labels is not None:
                                 cbar.ax.set_yticklabels(plotitem.colorbar_tick_labels)
@@ -728,7 +738,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
     if pp['plot_type'] == '2d_pcolor':
 
-        pcolor_cmd = "pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
+        pcolor_cmd = "plotitem._current_pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp['pcolor_cmap']"
 
         if pp['celledges_show']:
@@ -966,7 +976,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     try:
         plotitem._current_pobj = pobj
     except NameError:
-        pass # if no plot was done
+        pass # if no pobj generated
 
 
     return current_data

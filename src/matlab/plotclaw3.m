@@ -32,24 +32,24 @@ set_value('NoQuery','NoQuery',0);
 % set plotting parameters:
 whichfile = which('setplot3');
 if strcmp(whichfile,'')
-    disp('*** No setplot3 file found')
+    fprintf('*** No setplot3 file found\n');
 else
     if (NoQuery == 0)
-        inp = input(['Execute setplot3 (default = yes)? '],'s');
+        inp = input('Execute setplot3 (default = yes)? ','s');
         if (isempty(inp))
             inp = 'y';
         end
     else
         inp = 'y';
-    end;
-    inpd = findstr('y',lower(inp));
+    end
+    inpd = strfind('y',lower(inp));
     if (inpd == 1)
         setplot3;
-        disp(['Executing m-script ' whichfile])
-        disp(' ')
+        fprintf('Executing m-script %s\n',whichfile)
+        fprintf('\n')
     end
 end
-disp(' ')
+fprintf('\n');
 
 % the file setprob.m can be used to set up any necessary physical parameters
 % or desired values of plotting parameters for this particular problem.
@@ -57,22 +57,23 @@ disp(' ')
 whichfile = which('setprob');
 if strcmp(whichfile,'')
     %disp('*** No setprob file found')
-  else
-    disp(['Executing m-script ' whichfile])
-    disp(' ')
-    setprob
-  end
+else
+    fprintf('Executing m-script %s\n',whichfile);
+    fprintf('\n')
+    setprob;
+end
 
 %=============================================
 % MAIN LOOP ON FRAMES:
 %=============================================
 
-if ~exist('MaxFrames')
-  disp('MaxFrames parameter not set... you may need to execute setplot3')
-  return
+if ~exist('MaxFrames','var')
+    fprintf('MaxFrames parameter not set... you may need to execute setplot3\n');
+    return
 end
 
 set_value('frameinc','plot_interval',1);
+set_value('maxlevels','MaxLevels',6);
 set_value('outputdir','OutputDir','./');
 set_value('outputflag','OutputFlag','ascii');
 set_value('outputprefix','plot_prefix','pltstate');
@@ -81,18 +82,22 @@ set_value('readblocknumber','ReadBlockNumber',0);
 clear amrdata;
 Frame = -frameinc;  % initialize frame counter
 while Frame <= MaxFrames
-
-  % pause for input from user to determine if we go to next frame,
-  % look at data, or skip around.  This may reset Frame counter.
-
-  old_Frame = Frame;
-  queryframe  % this changes value of Frame
-
-  if (old_Frame ~= Frame | isempty(amrdata))
-    [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
-	outputprefix,readblocknumber);
-  end;
-
-  plotframe3;
-
+    
+    % pause for input from user to determine if we go to next frame,
+    % look at data, or skip around.  This may reset Frame counter.
+    
+    old_Frame = Frame;
+    queryframe  % this changes value of Frame
+    
+    if (query_quit)
+        break;
+    end
+    
+    if (old_Frame ~= Frame || isempty(amrdata))
+        [amrdata,t] = readamrdata(clawdim,Frame,outputdir,outputflag,...
+            outputprefix,readblocknumber);
+    end
+    
+    plotframe3;
+    
 end % main loop on frames
