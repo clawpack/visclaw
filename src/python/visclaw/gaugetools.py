@@ -88,7 +88,7 @@ class GaugeSolution(object):
     def __init__(self, number, location=None):
         
         warnings.warn("This version of GaugeSolution is deprecated, use the ",
-                      "class definition in clawpack.amrclaw.gauges instead.")
+                      "class definition in clawpack.pyclaw.gauges instead.")
 
         # Gauge descriptors
         self.number = number
@@ -860,3 +860,9 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
                 plt.title('q[%s] at gauge number %s' % (m,gaugeno))
         
     return matches       
+
+    
+                
+            
+            
+    
