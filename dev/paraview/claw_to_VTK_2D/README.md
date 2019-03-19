@@ -3,32 +3,34 @@
 An example, water\_depth.avi can be found at:
 https://github.com/xinshengqin/claw_to_vtk
 
-It shows an example of visualizing result of
-the GeoClaw case in $CLAW/geoclaw/examples/tsunami/bowl-radial, using Paraview.
+It shows an example of visualizing result of the GeoClaw case in $CLAW/geoclaw/examples/tsunami/bowl-radial with Paraview.
 
-## How to use:
+## Usage:
+    Run the python script convert_all_frames.py in a GeoClaw case directory:
+    python $CLAW/visclaw/dev/paraview/claw_to_VTK_2D/convert_all_frames.py [geoclaw output format] [geoclaw output directory] [starting frame number] [ending frame number] 
 
-###Example:
+    e.g.
+    python $CLAW/visclaw/dev/paraview/claw_to_VTK_2D/convert_all_frames.py binary _output 1 10 
+    will convert geoclaw output frame 1-10 in ./_output and output all VTK files in _output_vtk
 
-1. Put all these files to a local directory, e.g. $HOME/claw\_to\_vtk
+    You can then open Paraview and read *.vthb files in _output_vtk
 
-2. Set PATH environment variables to include that directory:
+## Tip:
+For 3D plots like the two examples in this directory, chile.png and bainbridge.png, one can do the following in Paraview.
 
-        export PATH=$PATH: $HOME/claw_to_vtk
+1. Open *.vthb in _output_vtk
 
-3. Change working directory to clawpack case:
+2. Add a mask to set \eta to 0 on dry land: 1) Add a "Calculator" filter and use "q_3*(q_0>0.001)" as criteria. This will create a new data variable. Assume we name it eta_new.
 
-        cd $CLAW/amrclaw/examples/acoustics_2d_radial
+3. Add a "CellDatatoPointData" filter to convert cell data to point data.
 
-4. Run clawpack case to get output from clawpack
+4. Add a "WarpByScalar" filter to extrude the 2D surface in z direction based on eta_new.
 
-5. Convert clawpack output to VTK format (will write VTK files in \_output\_vtk):
+5. Open *.vthb in _output_vtk again.
 
-        python convert_all_frames.py ascii _output 1 10 
+6. Add a "Calculator" filter based on new *.vthb files and use "q_3-q_0" as the formula. This computes topography as a new data variable. Let us name it B.
 
+7. Add a "CellDatatoPointData" filter to convert cell data to point data.
 
-6. Open paraview and read *.vthb files in \_output\_vtk
+8. Add a "WarpByScalar" filter to extrude the 2D surface in z direction based on B.
 
-
-
-    
