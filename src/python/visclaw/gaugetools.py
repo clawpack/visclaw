@@ -629,14 +629,14 @@ def printgauges(plotdata=None, verbose=True):
     rootdir = os.getcwd()
 
     # annoying fix needed when EPD is used for plotting under cygwin:
-    if rootdir[0:9] == 'C:\cygwin' and outdir[0:9] != 'C:\cygwin':
-        outdir = 'C:\cygwin' + outdir
+    if rootdir[0:9] == r'C:\cygwin' and outdir[0:9] != r'C:\cygwin':
+        outdir = r'C:\cygwin' + outdir
         plotdata.outdir = outdir
-    if rootdir[0:9] == 'C:\cygwin' and rundir[0:9] != 'C:\cygwin':
-        rundir = 'C:\cygwin' + rundir
+    if rootdir[0:9] == r'C:\cygwin' and rundir[0:9] != r'C:\cygwin':
+        rundir = r'C:\cygwin' + rundir
         plotdata.rundir = rundir
-    if rootdir[0:9] == 'C:\cygwin' and plotdir[0:9] != 'C:\cygwin':
-        plotdir = 'C:\cygwin' + plotdir
+    if rootdir[0:9] == r'C:\cygwin' and plotdir[0:9] != r'C:\cygwin':
+        plotdir = r'C:\cygwin' + plotdir
         plotdata.plotdir = plotdir
 
     try:
