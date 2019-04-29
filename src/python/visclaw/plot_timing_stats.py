@@ -88,7 +88,7 @@ else:
 
 
 # define colors, with colors[0] used for overhead, colors[j] for level j >= 1
-colors = ['y'] + 3*['r','g','m','c','b']  # allow <= 15 levels
+colors = ['y'] + 3*['r','g','m','c','b','orange','limegreen'] 
 
 
 # Read in timing states from output directory:
@@ -129,10 +129,10 @@ for j in range(nlevels):
     sum_cells_over_levels += cells[:,j]
     plot(time, sum_cells_over_levels, 'k')
     fill_between(time, last_sum_cells, sum_cells_over_levels, 
-                 color=colors[j+1],
+                 color=colors[j+1], edgecolor=None,
                  label='Level %s' % (j+1))
 
-plot(time, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+plot(time, sum_cells_over_levels, 'k', lw=1, label='Total Cells')
 xlim(xlimits)
 #ylim(0, 1.1*sum_cells_over_levels[-1])
 ylim(ylimits_cells)
@@ -159,12 +159,12 @@ for j in range(nlevels):
     last_sum_cpu = sum_cpu_over_levels.copy()
     sum_cpu_over_levels += cpu[:,j]
     fill_between(time, last_sum_cpu, sum_cpu_over_levels, color=colors[j+1],
-                 label='Level %s' % (j+1))
+                  edgecolor=None,label='Level %s' % (j+1))
     plot(time, sum_cpu_over_levels, 'k')
 
 fill_between(time, total_cpu,sum_cpu_over_levels,color=colors[0],
-             label='Overhead')
-plot(time, total_cpu, 'k', lw=3, label='Total CPU')
+              edgecolor=None,label='Overhead')
+plot(time, total_cpu, 'k', lw=1, label='Total CPU')
 xlim(xlimits)
 ylim(ylimits_comptime)
 title('Cumulative CPU time on each level')
@@ -185,14 +185,14 @@ for j in range(nlevels):
     last_sum_wtime = sum_wtime_over_levels.copy()
     sum_wtime_over_levels += wtime[:,j]
     fill_between(time, last_sum_wtime,
-sum_wtime_over_levels, 
-color=colors[j+1],
+                 sum_wtime_over_levels, 
+                 color=colors[j+1], edgecolor=None,
                  label='Level %s' % (j+1))
     plot(time, sum_wtime_over_levels, 'k')
 
 fill_between(time, total_wall, sum_wtime_over_levels, color=colors[0],
-             label='Overhead')
-plot(time, total_wall, 'k', lw=3, label='Total Wall')
+              edgecolor=None,label='Overhead')
+plot(time, total_wall, 'k', lw=1, label='Total Wall')
 title('Cumulative wall time on each level')
 xlabel('Simulation time t (%s)' % simtime_units)
 ylabel('CPU time (%s)' % comptime_units)
@@ -221,11 +221,11 @@ for n in range(1,ntimes):
             plot(tt, [dcn+dc, dcn+dc], 'k')
             if n == 1:
                 fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                             color=colors[j+1],
+                             color=colors[j+1], edgecolor=None,
                              label='Level %s' % (j+1))
             else:
                 fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                             color=colors[j+1])
+                              edgecolor=None,color=colors[j+1])
         dcn = dcn + dc
 
     plot([time[n-1],time[n-1]], [0,dcn], 'k')
@@ -266,11 +266,11 @@ for n in range(1,ntimes):
             plot(tt, [dcn+dc, dcn+dc], 'k')
             if n == 1:
                 fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                             color=colors[j+1],
+                             color=colors[j+1], edgecolor=None,
                              label='Level %s' % (j+1))
             else:
                 fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                             color=colors[j+1])
+                              edgecolor=None,color=colors[j+1])
         dcn = dcn + dc
 
     if n == 1:
@@ -280,17 +280,18 @@ for n in range(1,ntimes):
     dtot = (total_cpu[n]-total_cpu[n-1]) / dt 
     plot(tt, [dtot,dtot], 'k')
     fill_between(tt, [dcn,dcn], [dtot,dtot], 
-                 color=colors[0], alpha=1, edgecolors='k', **kwargs_label)
+                 color=colors[0],
+                 alpha=1, edgecolors='k', **kwargs_label)
 
     plot([time[n-1],time[n-1]], [0,dtot], 'k')
     plot([time[n],time[n]], [0,dtot], 'k')
     
     dc_max = max(dc_max, dtot)
      
-    #plot(time, total_cpu, 'k', lw=3, label='Total CPU')
+    #plot(time, total_cpu, 'k', lw=1, label='Total CPU')
 
                          
-#plot(time, sum_cells_over_levels, 'k', lw=3, label='Total Cells')
+#plot(time, sum_cells_over_levels, 'k', lw=1, label='Total Cells')
 xlim(xlimits)
 ylimits_avecomptime = [0, 1.2*dc_max]
 ylim(ylimits_avecomptime)
@@ -323,10 +324,10 @@ for n in range(1,ntimes):
             plot(tt, [dcn+dc, dcn+dc], 'k')
             if n == 1:
                 fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
-                             color=colors[j+1],
+                             color=colors[j+1], edgecolor=None,
                              label='Level %s' % (j+1))
             else:
-                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc],
+                fill_between(tt, [dcn,dcn], [dcn+dc,dcn+dc], edgecolor=None,
                              color=colors[j+1])
         dcn = dcn + dc
 
@@ -337,7 +338,8 @@ for n in range(1,ntimes):
     dtot = (total_wall[n]-total_wall[n-1]) / dt 
     plot(tt, [dtot,dtot], 'k')
     fill_between(tt, [dcn,dcn], [dtot,dtot], 
-                 color=colors[0], alpha=1, edgecolors='k', **kwargs_label)
+                 color=colors[0],
+                 alpha=1, edgecolors='k', **kwargs_label)
 
     plot([time[n-1],time[n-1]], [0,dtot], 'k')
     plot([time[n],time[n]], [0,dtot], 'k')
