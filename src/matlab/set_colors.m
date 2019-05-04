@@ -180,7 +180,7 @@ switch  colormapping
         
         if (sum(isnan(fv_idx)) > 0)
             error('setcolors : nans remain in index used for colormap');
-        end;
+        end
         
         % Hardwire colors for the patch
         % set(p,'FaceVertexCData',cm_extended(fv_idx,:));
