@@ -32,11 +32,14 @@ function plot_tikz_fig(Frame,figsize,prefix,dpi)
 
     fs = figsize(:)';
     axis off
-    hidepatchborders;
+    axis tight
+    % hidepatchborders;
     delete(get(gca,'title'));
+    set(gcf,'paperunits','inches');
     set(gcf,'papersize',fs);
     set(gca,'position',[0 0 1 1]);
     set(gcf,'paperposition',[0 0 fs]);
+    set(gcf,'GraphicsSmoothing','off')
     fname = sprintf('%s_%04d.png',prefix,Frame);
     
     % Match print resolution to computational resolution
@@ -46,4 +49,6 @@ function plot_tikz_fig(Frame,figsize,prefix,dpi)
     else
         print('-dpng',fname);
     end
+    %     img = imread(fname);
+%     imwrite(img,'plot.png','Xresolution',dpi,'Yresolution',dpi);
 end
