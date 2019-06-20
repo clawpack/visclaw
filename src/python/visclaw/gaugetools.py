@@ -86,7 +86,7 @@ class GaugeSolution(object):
     location = property(**location())
 
     def __init__(self, number, location=None):
-        
+
         warnings.warn("This version of GaugeSolution is deprecated, use the ",
                       "class definition in clawpack.amrclaw.gauges instead.")
 
@@ -114,7 +114,7 @@ class GaugeSolution(object):
         return output
 
     def __str__(self):
-        return ("Gauge %s: location = %s, t = [%s,%s]" % 
+        return ("Gauge %s: location = %s, t = [%s,%s]" %
                                     (self.number,self.location,self.t1,self.t2))
 
 
@@ -129,7 +129,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     """
 
-    if verbose:  
+    if verbose:
         gaugesoln = plotdata.getgauge(gaugeno)
         print('    Plotting gauge %s  at x = %s, y = %s ... '  \
                  % (gaugeno, gaugesoln.location[0], gaugesoln.location[1]))
@@ -137,7 +137,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
 
-        
+
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except:
@@ -160,7 +160,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     current_data.add_attribute('plotdata',plotdata)
     current_data.add_attribute('gaugeno',gaugeno)
 
-    # call beforegauge if present, which might define additional 
+    # call beforegauge if present, which might define additional
     # attributes in current_data or otherwise set up plotting for this
     # gauge.
 
@@ -182,7 +182,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     # iterate over each single plot that makes up this gauge:
     # -------------------------------------------------------
- 
+
     if plotdata._mode == 'iplotclaw':
         gaugesoln = plotdata.getgauge(gaugeno)
         gaugeloc = gaugesoln.location
@@ -200,13 +200,13 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     plotdata = set_show(plotdata)   # set _show attributes for which figures
                                     # and axes should be shown.
 
-    # loop over figures to appear for this gauge: 
+    # loop over figures to appear for this gauge:
     # -------------------------------------------
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if (not plotfigure._show) or (plotfigure.type != 'each_gauge'):
-            continue  # skip to next figure 
+             continue  # skip to next figure
 
         figno = plotfigure.figno
         if requested_fignos != 'all':
@@ -218,7 +218,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
         if 'facecolor' not in plotfigure.kwargs:
             # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'   
+            plotfigure.kwargs['facecolor'] = '#ffeebb'
 
         # create figure and set handle:
         plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
@@ -255,7 +255,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # ----------------
 
             for itemname in plotaxes._itemnames:
-                
+
                 plotitem = plotaxes.plotitem_dict[itemname]
                 outdir = plotitem.outdir
                 if outdir is None:
@@ -270,7 +270,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                     try:
                         output = plotgauge1(gaugesoln,plotitem,current_data)
                         if output: current_data = output
-                        if verbose:  
+                        if verbose:
                                 print('      Plotted  plotitem ', itemname)
                     except:
                         print('*** Error in plotgauge: problem calling plotgauge1')
@@ -320,7 +320,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
 
             # end of loop over plotaxes
-            
+
         # end of loop over plotfigures
 
 
@@ -349,7 +349,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if verbose:
         print('    Done with plotgauge for gauge %i' % (gaugeno))
 
-    
+
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
@@ -362,7 +362,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     # end of plotgauge
 
-    
+
 #==================================================================
 def plotgauge1(gaugesoln, plotitem, current_data):
 #==================================================================
@@ -392,8 +392,8 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  afterpatch  plotstyle color kwargs 
-             plot_var2 fill_where map_2d_to_1d 
+             plot_var  afterpatch  plotstyle color kwargs
+             plot_var2 fill_where map_2d_to_1d
              """.split()
 
     # No amr_ parameters for gauge data.
@@ -442,7 +442,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
         return None
 
     return current_data
-    
+
 def read_setgauges(outdir):
     """
     Read the info from gauges.data.
@@ -506,7 +506,7 @@ def plot_gauge_locations(plotdata, gaugenos='all', mapc2p=None, \
             if mapc2p:
                 xn,yn = mapc2p(xn,yn)
             plot([xn], [yn], format_string, markersize=markersize)
-            if add_labels: 
+            if add_labels:
                 xn = xn + xoffset
                 yn = yn + yoffset
                 text(xn,yn,'  %s' % gauge[0], fontsize=fontsize)
@@ -520,18 +520,18 @@ def printfig(fname='',gaugeno='', figno='', format='png', plotdir='.', \
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from gauge/fig.
-.  
+.
     If fname is nonempty it is used as the filename, with extension
     determined by format if it does not already have a valid extension.
 
     If fname=='' then save to file gauge000NfigJ.ext  where N is the gauge
     number gaugeno passed in, J is the figure number figno passed in,
-    and the extension ext is determined by format.  
+    and the extension ext is determined by format.
     If figno='' then the figJ part is omitted.
     """
 
     if fname == '':
-        fname = 'gauge' + str(gaugeno).rjust(4,'0') 
+        fname = 'gauge' + str(gaugeno).rjust(4,'0')
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
@@ -556,7 +556,7 @@ def printgauges(plotdata=None, verbose=True):
     between them.  These will all be in directorey plotdata.plotdir.
 
     The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.  
+    function setplot unless plotdata.setplot=False.
 
     If plotdata.setplot=True then it is assumed that the current directory
     contains a module setplot.py that defines this function.
@@ -576,7 +576,7 @@ def printgauges(plotdata=None, verbose=True):
     if 'matplotlib' not in sys.modules:
         print('*** Error: matplotlib not found, no plots will be done')
         return plotdata
-        
+
     if not isinstance(plotdata,ClawPlotData):
         print('*** Error, plotdata must be an object of type ClawPlotData')
         return plotdata
@@ -619,7 +619,7 @@ def printgauges(plotdata=None, verbose=True):
         if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
             fignos_to_show.append(figno)
     fignos = fignos_to_show
-        
+
     # figure out what type each figure is:
     fignos_each_frame = []
     fignos_each_gauge = []
@@ -632,7 +632,7 @@ def printgauges(plotdata=None, verbose=True):
             fignos_each_gauge.append(figno)
         if plotdata.plotfigure_dict[figname].type == 'each_run':
             fignos_each_run.append(figno)
-        
+
 
     rootdir = os.getcwd()
 
@@ -679,7 +679,7 @@ def printgauges(plotdata=None, verbose=True):
             print("  or use overwrite=True in call to printframes")
             return plotdata
 
-    
+
     # Create each of the figures
     #---------------------------
 
@@ -700,11 +700,11 @@ def printgauges(plotdata=None, verbose=True):
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-    
+
     if len(fortfile) == 0:
         print('*** No fort.q files found in directory ', os.getcwd())
         return plotdata
-    
+
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = only_most_recent(framenos, plotdata.outdir)
@@ -741,7 +741,7 @@ def printgauges(plotdata=None, verbose=True):
 
     if plotdata.html:
         plotpages.timeframes2html(plotdata)
-    
+
     # Make png files for all frames and gauges:
     # -----------------------------------------
 
@@ -759,11 +759,11 @@ def printgauges(plotdata=None, verbose=True):
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
-    
+
 
     # Movie:
     #-------
-    
+
     if plotdata.gif_movie:
         print('Making gif movies.  This may take some time....')
         for figno in fignos_each_frame:
@@ -773,7 +773,7 @@ def printgauges(plotdata=None, verbose=True):
                 print('    Created moviefig%s.gif' % figno)
             except:
                 print('*** Error creating moviefig%s.gif' % figno)
-    
+
     os.chdir(rootdir)
 
     # print out pointers to html index page:
@@ -810,7 +810,7 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
 
     from clawpack.visclaw.data import ClawPlotData
     from matplotlib import pyplot as plt
-    
+
     if gaugenos == 'all':
         # attempt to read from gauges.data:
         try:
@@ -866,5 +866,5 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
                 plt.plot(g2.t,g2.q[m,:],'r',label='outdir2')
                 plt.legend()
                 plt.title('q[%s] at gauge number %s' % (m,gaugeno))
-        
-    return matches       
+
+    return matches
