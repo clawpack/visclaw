@@ -17,23 +17,23 @@ function sliceloop(sdir)
 %
 %   While looping over frames, the user can enter 'x', 'y' or 'z' to loop
 %   over slices while in the frame loop.
-% 
+%
 %   See also SHOWSLICES, HIDESLICES, SETPLOT3, PLOTCLAW3.
 
 
 if (nargin == 0)
-  sdir = input(['Enter x, y, or z to specify direction over which to',...
-      ' loop : '],'s');
-end;
+    sdir = input(['Enter x, y, or z to specify direction over which to',...
+        ' loop : '],'s');
+end
 
 setviews;
 
 slices = get_slices(sdir);
 
-if (length(slices) == 0)
-  fprintf('sliceLoop : %sSliceCoords == []\n',sdir);
-  return;  % Nothing to loop over
-end;
+if isempty(slices)
+    fprintf('sliceLoop : %sSliceCoords == []\n',sdir);
+    return;  % Nothing to loop over
+end
 
 % First hide all slices in direction dir.
 hideslices(sdir);
@@ -42,29 +42,29 @@ notdone = 1;
 next_slice = 0;
 last_slice = 0;
 while (notdone)
-  s = input('SLICELOOP : Hit <return> for next slice, or f to return to Frame loop : ','s');
-
-  if (isempty(s))
-    next_slice = mod(next_slice+1,length(slices)+1);  
-%   elseif (strcmp(s,'j'))
-%     next_slice = input('Input slice number : ');
-%   elseif (strcmp(s,'k'))
-%     keyboard;
-  elseif (strcmp(s,'f'))
-    return;
-  end;
-  hideslices(sdir,last_slice);
-  fprintf('\n');
-  fprintf('Showing slice %d\n',next_slice);
-  showslices(sdir,next_slice);
-
-  last_slice = next_slice;
-
-  if exist('afterslice') == 2
-    % make an m-file with this name for any other commands you
-    % want executed at the end of drawing each slice, for example
-    % to print a gif file for use in making an animation of a sweep-through
-    afterslice;
-  end
-
-end;
+    s = input('SLICELOOP : Hit <return> for next slice, or f to return to Frame loop : ','s');
+    
+    if (isempty(s))
+        next_slice = mod(next_slice+1,length(slices)+1);
+        %   elseif (strcmp(s,'j'))
+        %     next_slice = input('Input slice number : ');
+        %   elseif (strcmp(s,'k'))
+        %     keyboard;
+    elseif (strcmp(s,'f'))
+        return;
+    end
+    hideslices(sdir,last_slice);
+    fprintf('\n');
+    fprintf('Showing slice %d\n',next_slice);
+    showslices(sdir,next_slice);
+    
+    last_slice = next_slice;
+    
+    if exist('afterslice', 'file')
+        % make an m-file with this name for any other commands you
+        % want executed at the end of drawing each slice, for example
+        % to print a gif file for use in making an animation of a sweep-through
+        afterslice;
+    end
+    
+end

@@ -1003,7 +1003,8 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None):
+             verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None,
+             bbox_inches='tight'):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1049,7 +1050,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         plt.savefig(fname, transparent=True, bbox_inches='tight', \
                       pad_inches=0,dpi=kml_dpi)
     else:
-        plt.savefig(fname)
+        plt.savefig(fname, bbox_inches=bbox_inches)
 
 
 #======================================================================

@@ -19,13 +19,13 @@ ds = min([udata.dx, udata.dy, udata.dz]);
 
 s = ds/2;
 if (s > min([udata.dx, udata.dy, udata.dz]))
-  error('mask_patch : s is too big for dx, dy, dz\n');
-end;
+    error('mask_patch : s is too big for dx, dy, dz\n');
+end
 
 vc = udata.cartCoords;
-[xdata_like,ydata_like, zdata_like]  = get_xyzlike(vc(:,1),vc(:,2), vc(:,3),sdir);
-[xlow_like, ylow_like, zlow_like]    = get_xyzlike(xlow,ylow,zlow,sdir);
-[xhigh_like, yhigh_like, zhigh_like] = get_xyzlike(xhigh,yhigh,zhigh,sdir);
+[~,ydata_like, zdata_like]  = get_xyzlike(vc(:,1),vc(:,2), vc(:,3),sdir);
+[~, ylow_like, zlow_like]    = get_xyzlike(xlow,ylow,zlow,sdir);
+[~, yhigh_like, zhigh_like] = get_xyzlike(xhigh,yhigh,zhigh,sdir);
 
 nan_mask = ydata_like > ylow_like+s & ydata_like < yhigh_like-s & ...
     zdata_like > zlow_like+s & zdata_like < zhigh_like-s;

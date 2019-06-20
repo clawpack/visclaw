@@ -30,6 +30,12 @@ switch  colormapping
         cm_buff = 3;        % Number of buffer under/over color entries
         
         uo = underover();   % User-defined function
+        if ~isfield(uo,'tol_lower')
+            uo.tol_lower = uo.tol;
+        end
+        if ~isfield(uo,'tol_upper')
+            uo.tol_upper = uo.tol;
+        end
         
         nmax = length(uo.colormap);
         cm_extended = [kron(ones(cm_buff,1),uo.color_under(:)'); ...
@@ -42,7 +48,7 @@ switch  colormapping
         mfix = (uo.value_lower-uo.tol_lower) <= q & q <= uo.value_lower;
         q(mfix) = uo.value_lower;
         mfix = uo.value_upper <= q & q <= (uo.value_upper + uo.tol_upper);
-        q(mfix) = uo.value_upper-1e-8; % So floor works
+        q(mfix) = uo.value_upper-0.0*uo.tol_upper; % So floor works
         
         % ----------------------------------------------------
         % Create index values in range [qlo,qhi] into
@@ -50,7 +56,7 @@ switch  colormapping
         % ----------------------------------------------------
         
         idx = 0*q + nan;     % This will replace the 'cdata' property
-        % in the patch handle 'p'.
+                             % in the patch handle 'p'.
         
         % Mask for values in the range [qlo, qhi].
         m0 = uo.value_lower <= q & q <= uo.value_upper;
@@ -60,13 +66,13 @@ switch  colormapping
         idx(m0) = cm_buff + floor(1 + slope*(nmax-1));
         
         % Set under shoots to 1 and over shoots to nmax+2
-        m_under = q <= uo.value_lower-uo.tol_lower;
+        m_under = q < (uo.value_lower-uo.tol_lower);
         idx(m_under) = 1;   % first index in cm_extended
         
-        m_over = q >= (uo.value_upper + uo.tol_upper);
+        m_over = q > (uo.value_upper + uo.tol_upper);
         idx(m_over) = nmax + 2*cm_buff;   % last index of cm_extended
         
-        m_leftover = ~(m0 | m_under | m_over);
+        m_leftover = ~m0 & ~m_under & ~m_over;
         idx(m_leftover) = -1;
         
         % -----------------------
@@ -87,7 +93,7 @@ switch  colormapping
         cm_extended = [cm_extended; color_nan];
 
         % Set index to last entry in the colormap.
-        fv_idx(fv_idx < 0) = length(cm_extended);
+        fv_idx(fv_idx < 0) = length(cm_extended);        
                 
         % Hardwire colors for the patch
         set(p,'FaceVertexCData',cm_extended(fv_idx,:));
