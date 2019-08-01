@@ -329,7 +329,7 @@ for ng = 1:ngrids
                 r = sqrt((xcm-x0).^2 + (ycm - y0).^2);
             end
             rvec = reshape(r,numel(r),1);
-            qvec = reshape(qmesh,nuel(r),1);
+            qvec = reshape(qmesh,numel(r),1);
         end
         
         add_line2plot(rvec,qvec,level,markerstyle{level},...

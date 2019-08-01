@@ -56,5 +56,3 @@ while (1)
         break;
     end
 end
-
-set_clines(h);
