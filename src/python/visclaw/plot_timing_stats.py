@@ -99,6 +99,7 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
         comptime_factor = 1
 
     simtime_units = units.get('simtime', 'dimensionless')
+    simtime_factor = units.get('simtime_factor', 'default')
 
     # for applications where t in the PDE is dimensionless, use this:
     #simtime_units = 'dimensionless'
@@ -106,29 +107,36 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
 
     # for GeoClaw or other applications where the simulation time is in
     # seconds, set simtime_units to 'seconds', 'minutes' or 'hours' depending
-    # on time scale of simulation and use this:
-    #simtime_units = 'seconds'
+    # on time scale of simulation.
 
+    # If the time units in the application are different, set simtime_units
+    # and simtime_factor appropriately.
+        
     if simtime_units == 'dimensionless':
         simtime_factor = 1
     if simtime_units == 'seconds':
-        simtime_factor = 1
+        if simtime_factor == 'default':
+            simtime_factor = 1
     elif simtime_units == 'minutes':
-        simtime_factor = 60.
+        if simtime_factor == 'default':
+            simtime_factor = 60.
     elif simtime_units == 'hours':
-        simtime_factor = 3600.
-    else:
-        simtime_units = 'dimensionless'
+        if simtime_factor == 'default':
+            simtime_factor = 3600.
+    elif simtime_factor == 'default':
+        print("*** warning, no default simtime_factor for units['simtime'] = %s" \
+              % simtime_units)
+        print("Using simtime_factor = 1")
         simtime_factor = 1
 
-    # if the time units in the application are different, set simtime_units
-    # and simtime_factor appropriately.
-        
-    # Some useful units for cell updates:
-    #cell_units = None # for raw cell count
-    cell_units = 'millions'
+    # Units for number of cell updates:
     cell_units = units.get('cell', 'millions')
+    cell_factor = units.get('cell_factor', 'default')
 
+    if cell_units == 'raw count':
+        cell_factor = 1
+    if cell_units == 'thousands':
+        cell_factor = 1e3
     if cell_units == 'millions':
         cell_factor = 1e6
     elif cell_units == 'billions':
@@ -136,8 +144,10 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
     elif cell_units == 'trillions':
         cell_factor = 1e12
     else:
-        cell_units = 'dimensionless'
-        cell_factor = 1
+        if cell_factor is 'default':
+            print("*** Warning, units['cell'] = %s has no default cell_factor, using 1" \
+             % cell_units)
+            cell_factor = 1
 
 
     # define colors, with colors[0] used for overhead, colors[j] for level j >= 1
@@ -437,7 +447,7 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
     ylim(0, 1.2*dc_max)
     title('Average cells updated per CPU time, between output frames')
     xlabel('Simulation time t (%s)' % simtime_units)
-    if cell_units is None:
+    if cell_units in [None,'raw count']:
         ylabel('Grid cells updated / CPU (%s)' % comptime_units)
     else:
         ylabel('Grid cells updated (%s) / CPU (%s)' % (cell_units,comptime_units))
