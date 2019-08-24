@@ -2,24 +2,22 @@
 Plot timing info found in timing.csv file.
 Requires modified valout function from Clawpack 5.5.0 to print this info.
 
-To use:
+To use, first run the Clawpack or GeoClaw code, and insure that the 
+file `timing.csv` was generated in the output directory.
+This file has one line for each output time giving the cumulative CPU and
+Wall time, both in total and broken down by levels.
 
-    - Run the Clawpack or GeoClaw code, and insure that the file `timing.csv`
-      was generated in the output directory `_output` (hard-wired below).
+If you execute this at the command line you can specify the output
+directory, e.g.
 
-    - Run this script in an IPython shell, Jupyter notebook, or via::
+    python plot_timing_stat.py _output
 
-         $ python $CLAW/visclaw/src/python/visclaw/plot_timing_stats.py
+and plots will be made with some default choices of units and png files
+placed in the output directory.
 
-    - If run from the command line, view the plots created as png files.
-
-This code should eventually be turned into a more general utility function with
-more options. For now, copy this file and modify it for your needs if necessary.
-
-Note: if you are doing a restart, the original `timing.csv` file will be
-overwritten.  So if you want to compute timings for the original plus the
-restarted runs together, you will have to save the original and 
-then combine the times appropriately. This script does not do that.
+For more control, import this module and call the function `make_plots`.
+This allows setting units and also redirecting the png files to the _plots
+directory and creating an html file to easily view them.
 """
 
 from __future__ import print_function
@@ -57,6 +55,65 @@ html_text2 = """
 def make_plots(outdir='_output', make_pngs=True, make_html=None, 
                plotdir=None, units={}):
 
+    """
+    `outdir` is the directory containing `timing.csv`.
+    Set `make_pngs` to `True` to create png files, 
+    By default, an html index will be made if `make_pngs == True` but
+    you can turn this off by setting `make_html` to `False`.
+    If `plotdir == None` then png file will be put in `outdir`.
+    
+    The `units` directory can be used to choose units for the plots:
+
+    units['comptime'] can be 'seconds', 'minutes', 'hours', or 'days'.
+        Since computer time (wall and CPU) is in seconds in the csv file,
+        changing these units will rescale by a factor of 60, 3600, or
+        24*3600 in the plots (for 'minutes', 'hours', or 'days' respectively).
+        The default is 'seconds' if you do not set this element of the 
+        dictionary.
+
+    units['simtime'] is the units used in the simulation.  
+        The default is 'nondimensional', which is appropriate if the PDE is 
+        non-dimensionalized or there are no specific units.
+
+    You can set units['simtime'] to an arbitrary string to be used in labels
+        on the axes, if this is the units of the simulation.  If you want to 
+        scale `t` by a multiplicative factor then you can also specify
+        units['simtime_factor'].  For example, if `t` in the PDE is
+        in nanoseconds but you ran out so long that you want to the units 
+        in the plots to be milliseconds, you could set:
+            units['simtime'] = 'milliseconds'
+            units['simtime_factor'] = 1e6
+        Then `t` will be divided by `1e6` before plotting.
+
+    Special case: Since many simulations use units in which `t` is in seconds 
+        (in particular, GeoClaw simulations): 
+
+        if units['simtime'] one of:
+             'seconds', 'minutes', 'hours', or 'days',
+        and if units['simtime_factor'] is not specified, 
+        then these factors default to:
+             1, 60, 3600, or 24*3600 respectively.
+        So if `t` in your PDE is in hours and you want to plot as such, 
+        you will have to over-ride this default with
+            units['simtime'] = 'hours'
+            units['simtime_factor'] = 1.
+
+    
+    units['cell'] is the units used in plotting the number of grid cells
+        updated between output frames, and the cumulative plot.
+
+        if units['cell'] == 'raw count' then number of cells is plotted
+        if units['cell'] is one of 'thousands', 'millions', 'billions', or
+            'trillions', then the number of cell updates is divided by the
+            appropriate factor (1e3, 1e6, 1e9, 1e12 resp.) before plotting.
+        if you want to use some other units, you can also explicitly set
+            units['cell_factor'] to the appropriate value.
+        The default is units['cell'] == 'millions', appropriate for many
+            smallish problems.
+        
+
+    """
+
     if make_pngs:
         if plotdir is None:
             plotdir = outdir
@@ -70,6 +127,7 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
 
     def make_png(fname):
         if make_pngs:
+            tight_layout() # since labels sometimes disappear
             fname = os.path.join(plotdir, fname)
             savefig(fname)
             #savefig(fname, bbox_inches='tight')
@@ -94,6 +152,8 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
         comptime_factor = 60.
     elif comptime_units == 'hours':
         comptime_factor = 3600.
+    elif comptime_units == 'days':
+        comptime_factor = 24*3600.
     else:
         comptime_units = 'dimensionless'
         comptime_factor = 1
@@ -101,17 +161,9 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
     simtime_units = units.get('simtime', 'dimensionless')
     simtime_factor = units.get('simtime_factor', 'default')
 
-    # for applications where t in the PDE is dimensionless, use this:
-    #simtime_units = 'dimensionless'
-    #simtime_factor = 1
+    # note: if units['simtime_factor'] is not specified it is set to 'default',
+    # which causes special case behavior below.
 
-    # for GeoClaw or other applications where the simulation time is in
-    # seconds, set simtime_units to 'seconds', 'minutes' or 'hours' depending
-    # on time scale of simulation.
-
-    # If the time units in the application are different, set simtime_units
-    # and simtime_factor appropriately.
-        
     if simtime_units == 'dimensionless':
         simtime_factor = 1
     if simtime_units == 'seconds':
@@ -123,6 +175,9 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
     elif simtime_units == 'hours':
         if simtime_factor == 'default':
             simtime_factor = 3600.
+    elif simtime_units == 'days':
+        if simtime_factor == 'default':
+            simtime_factor = 24*3600.
     elif simtime_factor == 'default':
         print("*** warning, no default simtime_factor for units['simtime'] = %s" \
               % simtime_units)
