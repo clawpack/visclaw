@@ -3034,7 +3034,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
             fig = plt.figure()
-            im = plt.imshow(Image.imread(filenames[0]))
+            # using 'nearest' gives slightly better resolution:
+            im = plt.imshow(Image.imread(filenames[0]), interpolation='nearest')
             plt.axis('off')  # suppress second axis around image
             def init():
                 im.set_data(Image.imread(filenames[0]))
@@ -3048,17 +3049,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             anim = animation.FuncAnimation(fig, animate, init_func=init,
                                           frames=len(filenames), blit=True)
 
+
             try:
-                # with matplotlib 3.x need to use anim.to_jshtml:
-                html_text = '<html>\n<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n' \
-                 + anim.to_jshtml() + '</html>\n'
-                 
-                fname = 'movieframe_allframesfig%s.html' % figno
-                open(fname, 'w').write(html_text)
-                print("Created anim.to_jshtml for figure ", figno)
-            except:
-                # with older matplotlib anim.to_jshtml doesn't exist
-                # revert to old approach:
+                # this original approach gives better resolution movies
+                # than using anim.to_jshtml, so try this first.  
+                # It might fail with newer matplotlib versions.
                 
                 # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
                 class myHTMLWriter(HTMLWriter):
@@ -3078,8 +3073,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                     def get_all_framenames(self):
                         frame_fullname = self.file_names
                         return frame_fullname
-
-                
+                        
                 #set embed_frames=True to embed base64-encoded frames directly in the HTML
                 pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
 
@@ -3096,6 +3090,18 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 # Clean up animation temporary files of the form frame0000.png
                 myHTMLwriter.clear_temp = True
                 myHTMLwriter.cleanup()
+
+            except:
+                # anim.to_jshtml should replace our JSAnimation code above,
+                # but we still need to figure out how to get full resolution of
+                # the reloaded png figures when using this:
+                html_text = '<html>\n<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n' \
+                 + anim.to_jshtml() + '</html>\n'
+                 
+                fname = 'movieframe_allframesfig%s.html' % figno
+                open(fname, 'w').write(html_text)
+                print("Created anim.to_jshtml for figure ", figno)
+                
 
     #-----------
     # gif movie:
