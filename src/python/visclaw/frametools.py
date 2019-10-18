@@ -544,7 +544,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     elif pp['MappedGrid']:
         p_centers = pp['mapc2p'](xc_centers[0])
     else:
-        p_centers = xc_centers
+        p_centers = xc_centers[0]
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
