@@ -185,7 +185,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
             beforeaxes = getattr(plotaxes,'beforeaxes',None)
             current_data = run_str_or_func(beforeaxes,current_data)
-                
+
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -534,6 +534,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         current_data.add_attribute('var2',var2)
 
     # Grid mapping:
+    xc_centers = patch.grid.c_centers
 
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
@@ -541,9 +542,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        p_centers = pp['mapc2p'](current_data.x)
+        p_centers = pp['mapc2p'](xc_centers[0])
     else:
-        p_centers = current_data.x
+        p_centers = xc_centers
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
@@ -582,7 +583,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
             medges = len(xc_edges)
             mcells = medges - 1  # number of grid cells
             # double up points for pw constant plot
-            xc_edges2 = np.reshape(np.vstack((xc_edges,xc_edges)).T, 
+            xc_edges2 = np.reshape(np.vstack((xc_edges,xc_edges)).T,
                 (2*medges,))
             xc_edges2 = xc_edges2[1:-1]  # discard first and last
             var2 = np.reshape(np.vstack((var,var)).T, (2*mcells,))
