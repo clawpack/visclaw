@@ -534,6 +534,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         current_data.add_attribute('var2',var2)
 
     # Grid mapping:
+    xc_centers = patch.grid.c_centers
 
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
@@ -541,9 +542,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        p_centers = pp['mapc2p'](current_data.x)
+        p_centers = pp['mapc2p'](xc_centers[0])
     else:
-        p_centers = current_data.x
+        p_centers = xc_centers[0]
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
@@ -1003,7 +1004,8 @@ def get_var(state, plot_var, current_data):
 
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
-             verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None):
+             verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None,
+             bbox_inches='tight'):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1049,7 +1051,7 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         plt.savefig(fname, transparent=True, bbox_inches='tight', \
                       pad_inches=0,dpi=kml_dpi)
     else:
-        plt.savefig(fname)
+        plt.savefig(fname, bbox_inches=bbox_inches)
 
 
 #======================================================================

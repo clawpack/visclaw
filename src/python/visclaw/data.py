@@ -87,6 +87,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_index_title','Plot Index')   # title at top of index page
         self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
         self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
+        self.add_attribute('html_movie_width', 500)    # width of movie
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
         self.add_attribute('kml',False)                # make kml plots and a kml file for figures
@@ -666,6 +667,12 @@ class ClawPlotAxes(clawdata.ClawData):
         self._handle = None
         self._next_ITEM = 0
         self.add_attribute('figno', self._plotfigure.figno)
+
+        # attributes for gauge plots
+        self.add_attribute('time_label', 'time')  # for time axis in gauges
+        self.add_attribute('time_label_kwargs', {})  # kwargs for xlabel cmd
+        self.add_attribute('time_scale', 1)  # multiplicative factor to rescale t
+                                             # e.g. 1/3600. from sec to hours
 
     def new_plotitem(self, name=None, plot_type=None):
         # Create a new entry in self.plotitem_dict

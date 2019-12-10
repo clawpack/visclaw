@@ -279,45 +279,45 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
             # end of loop over plotitems
 
-
-        for itemname in plotaxes._itemnames:
-            plotitem = plotaxes.plotitem_dict[itemname]
-
-        pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
-
-
-        # call an afteraxes function if present:
-        afteraxes =  getattr(plotaxes, 'afteraxes', None)
-        if afteraxes:
-            if isinstance(afteraxes, str):
-                # a string to be executed
-                exec(afteraxes)
-            else:
-                # assume it's a function
+    
+            pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
+    
+            if plotaxes.time_label is not None:
+                pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
+    
+    
+            # call an afteraxes function if present:
+            afteraxes =  getattr(plotaxes, 'afteraxes', None)
+            if afteraxes:
+                if isinstance(afteraxes, str):
+                    # a string to be executed
+                    exec(afteraxes)
+                else:
+                    # assume it's a function
+                    try:
+                        current_data.add_attribute("plotaxes",plotaxes)
+                        current_data.add_attribute("plotfigure",plotaxes._plotfigure)
+                        output = afteraxes(current_data)
+                        if output: current_data = output
+                    except:
+                        print('*** Error in afteraxes ***')
+                        raise
+    
+            if plotaxes.scaled:
+                pylab.axis('scaled')
+    
+            # set axes limits:
+            if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                 try:
-                    current_data.add_attribute("plotaxes",plotaxes)
-                    current_data.add_attribute("plotfigure",plotaxes._plotfigure)
-                    output = afteraxes(current_data)
-                    if output: current_data = output
+                    pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                 except:
-                    print('*** Error in afteraxes ***')
-                    raise
-
-        if plotaxes.scaled:
-            pylab.axis('scaled')
-
-        # set axes limits:
-        if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
-            try:
-                pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
-            except:
-                pass  # let axis be set automatically
-        if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
-            try:
-                pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
-            except:
-                pass  # let axis be set automatically
-
+                    pass  # let axis be set automatically
+            if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
+                try:
+                    pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                except:
+                    pass  # let axis be set automatically
+    
 
             # end of loop over plotaxes
             
@@ -404,7 +404,8 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     color = plotitem.color
     plotstyle = plotitem.plotstyle
 
-    t = gaugesoln.t
+    t = gaugesoln.t * plotaxes.time_scale
+
     if type(plot_var) is int:
         var = gaugesoln.q[plot_var,:]
     else:
@@ -415,21 +416,12 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     tmax = t.max()
     varmax = var.max()
 
-    # The plot commands using matplotlib:
-    # Need to debug why gaugesoln.number always 1 here
-    pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title,\
-                 gaugesoln.id))
-
-    pylab.xlabel("time")
 
     if (plot_type in ['1d_plot']) and (plotstyle != ''):
         if color:
             kwargs['color'] = color
 
         pobj = pylab.plot(t,var,plotstyle,**kwargs)
-        # plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)"  \
-        #               % plotstyle
-        # exec(plotcommand)
 
 
     elif plot_type == '1d_empty':
@@ -637,14 +629,14 @@ def printgauges(plotdata=None, verbose=True):
     rootdir = os.getcwd()
 
     # annoying fix needed when EPD is used for plotting under cygwin:
-    if rootdir[0:9] == 'C:\cygwin' and outdir[0:9] != 'C:\cygwin':
-        outdir = 'C:\cygwin' + outdir
+    if rootdir[0:9] == r'C:\cygwin' and outdir[0:9] != r'C:\cygwin':
+        outdir = r'C:\cygwin' + outdir
         plotdata.outdir = outdir
-    if rootdir[0:9] == 'C:\cygwin' and rundir[0:9] != 'C:\cygwin':
-        rundir = 'C:\cygwin' + rundir
+    if rootdir[0:9] == r'C:\cygwin' and rundir[0:9] != r'C:\cygwin':
+        rundir = r'C:\cygwin' + rundir
         plotdata.rundir = rundir
-    if rootdir[0:9] == 'C:\cygwin' and plotdir[0:9] != 'C:\cygwin':
-        plotdir = 'C:\cygwin' + plotdir
+    if rootdir[0:9] == r'C:\cygwin' and plotdir[0:9] != r'C:\cygwin':
+        plotdir = r'C:\cygwin' + plotdir
         plotdata.plotdir = plotdir
 
     try:
