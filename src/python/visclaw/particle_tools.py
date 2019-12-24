@@ -26,7 +26,7 @@ def read_gauges(gaugenos='all', outdir=None):
         if (gaugeno in gaugenos) or (gaugenos[0] == 'all'):
             g = gauges.GaugeSolution(gaugeno, outdir)
             gauge_solutions[gaugeno] = g
-    
+
     # for debugging:
     gaugenos_lagrangian = [k for k in gauge_solutions.keys() \
                 if gauge_solutions[k].gtype=='lagrangian']
@@ -36,19 +36,43 @@ def read_gauges(gaugenos='all', outdir=None):
         % (len(gaugenos_stationary),len(gaugenos_lagrangian)))
         
     return gauge_solutions
-                
+        
+def check_gaugenos_input(gauge_solutions, gaugenos):
+    """
+    If `gaugenos` is 'all', replace by list of lagrangian gauges
+    If `gaugenos` is a single integer, turn into list
+    Then check if each gaugeno is lagrangian, and add to output
+        list only if lagrangian
+    Return modified list of lagrangian gaugenos
+    """
+    gaugenos_lagrangian = []
+    gaugenos_stationary = []
+    
+    if gaugenos=='all':
+        gaugenos = gauge_solutions.keys()    
+    elif type(gaugenos) is int:
+        gaugenos = [gaugenos]  # single gaugeno passed in
+        
+    for gaugeno in gaugenos:
+        if gauge_solutions[gaugeno].gtype == 'lagrangian':
+            gaugenos_lagrangian.append(gaugeno)
+        else:
+            gaugenos_stationary.append(gaugeno)
+            
+    if len(gaugenos_lagrangian) == 0:
+        print('*** Warning, no lagrangian gauges in gaugenos')
+        
+    return gaugenos_lagrangian
+               
+                           
 def interp_particles(gauge_solutions, t, gaugenos='all'):
     """
     Interpolate (x,y) to the given time t for each specified gauge.
     Returns a dictionary of results indexed by gauge number.
     """
-    
-    if gaugenos=='all':
-        gaugenos = [k for k in gauge_solutions.keys() \
-                    if gauge_solutions[k].gtype=='lagrangian']
-    elif type(gaugenos) is int:
-        gaugenos = [gaugenos]  # single gaugeno passed in
         
+    gaugenos = check_gaugenos_input(gauge_solutions, gaugenos)
+    
     particle_positions = {}
     for gaugeno in gaugenos:
         g = gauge_solutions[gaugeno]
@@ -82,11 +106,7 @@ def plot_particles(gauge_solutions, t, gaugenos='all', kwargs_plot=None):
     """
     from matplotlib import pyplot as plt
 
-    if gaugenos=='all':
-        gaugenos = [k for k in gauge_solutions.keys() \
-                    if gauge_solutions[k].gtype=='lagrangian']
-    elif type(gaugenos) is int:
-        gaugenos = [gaugenos]
+    gaugenos = check_gaugenos_input(gauge_solutions, gaugenos)
         
     if kwargs_plot is None:
         kwargs_plot = {'marker':'o','markersize':2,'color':'k'}
@@ -97,21 +117,19 @@ def plot_particles(gauge_solutions, t, gaugenos='all', kwargs_plot=None):
         plt.plot([x],[y],**kwargs_plot)
         
 
-def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all', kwargs_plot=None):
+def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all', 
+               kwargs_plot=None):
     """
     Plot the particle path for a set of gauges over some time interval.
     """
     from matplotlib import pyplot as plt
     
+    
     if kwargs_plot is None:
         kwargs_plot = {'linestyle':'-','linewidth':0.7,'color':'k'}
 
-    if gaugenos=='all':
-        gaugenos = [k for k in gauge_solutions.keys() \
-                    if gauge_solutions[k].gtype=='lagrangian']
-    elif type(gaugenos) is int:
-        gaugenos = [gaugenos]
-        
+    gaugenos = check_gaugenos_input(gauge_solutions, gaugenos)
+    
     for gaugeno in gaugenos:
         g = gauge_solutions[gaugeno]
         tg = g.particle_path[:,0]
@@ -135,18 +153,13 @@ def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all', kwargs_plot=No
                 except:
                     i2 = None
             
-            #print('+++ gaugeno = %i, i1,i2: %i,%i' % (gaugeno,i1,i2))
             if (i1 is not None) and (i2 is not None):
                 pp1 = interp_particles(gauge_solutions, t1, gaugeno)
                 pp2 = interp_particles(gauge_solutions, t2, gaugeno)
                 xp = numpy.hstack((pp1[gaugeno][0], xg[i1:i2], pp2[gaugeno][0]))
                 yp = numpy.hstack((pp1[gaugeno][1], yg[i1:i2], pp2[gaugeno][1]))
                 plt.plot(xp, yp, **kwargs_plot)
-                #print('+++ gaugeno = %i, len(xp,py) = %i, %i' % (gaugeno,len(xp),len(yp)))
             else:
                 pass # no points in this time range
-            #import pdb; pdb.set_trace()
-        #except:
-        #    raise(Exception)
-                
+
     
