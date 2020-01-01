@@ -534,6 +534,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         current_data.add_attribute('var2',var2)
 
     # Grid mapping:
+    xc_centers = patch.grid.c_centers
 
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
@@ -541,9 +542,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        p_centers = pp['mapc2p'](current_data.x)
+        p_centers = pp['mapc2p'](xc_centers[0])
     else:
-        p_centers = current_data.x
+        p_centers = xc_centers[0]
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
