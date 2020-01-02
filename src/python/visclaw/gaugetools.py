@@ -860,9 +860,3 @@ def compare_gauges(outdir1, outdir2, gaugenos='all', q_components='all',
                 plt.title('q[%s] at gauge number %s' % (m,gaugeno))
         
     return matches       
-
-    
-                
-            
-            
-    
