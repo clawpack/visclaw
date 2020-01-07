@@ -65,7 +65,7 @@ def check_gaugenos_input(gauge_solutions, gaugenos):
     return gaugenos_lagrangian
                
                            
-def interp_particles(gauge_solutions, t, gaugenos='all'):
+def interp_particles(gauge_solutions, t, gaugenos='all', extend='neither'):
     """
     Interpolate (x,y) to the given time t for each specified gauge.
     Returns a dictionary of results indexed by gauge number.
@@ -80,11 +80,23 @@ def interp_particles(gauge_solutions, t, gaugenos='all'):
         xg = g.particle_path[:,1]
         yg = g.particle_path[:,2]
         if t <= tg[0]:
-            x = xg[0]
-            y = yg[0]
+            if extend in ['neither', 'max']:
+                x = numpy.nan
+                y = numpy.nan
+            elif extend in ['min', 'both']:
+                x = xg[0]
+                y = yg[0]
+            else:
+                raise ValueError('Unrecognized extend')
         elif t > tg[-1]:
-            x = numpy.nan
-            y = numpy.nan
+            if extend in ['neither', 'min']:
+                x = numpy.nan
+                y = numpy.nan
+            elif extend in ['max', 'both']:
+                x = xg[-1]
+                y = yg[-1]
+            else:
+                raise ValueError('Unrecognized extend')
         else:
             i = numpy.where(tg<=t)[0][-1]
             if i > len(tg)-2: 
@@ -100,7 +112,8 @@ def interp_particles(gauge_solutions, t, gaugenos='all'):
     return particle_positions
 
 
-def plot_particles(gauge_solutions, t, gaugenos='all', kwargs_plot=None):
+def plot_particles(gauge_solutions, t, gaugenos='all', kwargs_plot=None,
+                   extend='neither'):
     """
     Plot particle locations as points for some set of gauges.
     """
@@ -111,14 +124,14 @@ def plot_particles(gauge_solutions, t, gaugenos='all', kwargs_plot=None):
     if kwargs_plot is None:
         kwargs_plot = {'marker':'o','markersize':2,'color':'k'}
         
-    pp = interp_particles(gauge_solutions, t, gaugenos)
+    pp = interp_particles(gauge_solutions, t, gaugenos, extend)
     for k in pp.keys():
         x,y = pp[k]
         plt.plot([x],[y],**kwargs_plot)
         
 
 def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all', 
-               kwargs_plot=None):
+               kwargs_plot=None, extend='neither'):
     """
     Plot the particle path for a set of gauges over some time interval.
     """
@@ -154,12 +167,11 @@ def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all',
                     i2 = None
             
             if (i1 is not None) and (i2 is not None):
-                pp1 = interp_particles(gauge_solutions, t1, gaugeno)
-                pp2 = interp_particles(gauge_solutions, t2, gaugeno)
+                pp1 = interp_particles(gauge_solutions, t1, gaugeno, extend)
+                pp2 = interp_particles(gauge_solutions, t2, gaugeno, extend)
                 xp = numpy.hstack((pp1[gaugeno][0], xg[i1:i2], pp2[gaugeno][0]))
                 yp = numpy.hstack((pp1[gaugeno][1], yg[i1:i2], pp2[gaugeno][1]))
                 plt.plot(xp, yp, **kwargs_plot)
             else:
                 pass # no points in this time range
 
-    
