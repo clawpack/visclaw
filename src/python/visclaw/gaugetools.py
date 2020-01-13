@@ -410,9 +410,13 @@ def plotgauge1(gaugesoln, plotitem, current_data):
         var = gaugesoln.q[plot_var,:]
     else:
         try:
-            var = plot_var(gaugesoln)
+            var = plot_var(current_data)
         except:
-            raise Exception("Problem applying plot_var to gaugesoln")
+            print('Applying plot_var to current_data failed, try gaugesoln')
+            try:
+                var = plot_var(gaugesoln)
+            except:
+                raise Exception("Problem applying plot_var to gaugesoln")
     tmax = t.max()
     varmax = var.max()
 
