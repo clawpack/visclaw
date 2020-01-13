@@ -76,6 +76,9 @@ def interp_particles(gauge_solutions, t, gaugenos='all', extend='neither'):
     particle_positions = {}
     for gaugeno in gaugenos:
         g = gauge_solutions[gaugeno]
+        if g.particle_path is None: 
+            particle_positions[gaugeno] = (numpy.nan, numpy.nan)
+            continue # no gauge data yet, go on to next gauge
         tg = g.particle_path[:,0]
         xg = g.particle_path[:,1]
         yg = g.particle_path[:,2]
@@ -145,6 +148,8 @@ def plot_paths(gauge_solutions, t1=None, t2=None, gaugenos='all',
     
     for gaugeno in gaugenos:
         g = gauge_solutions[gaugeno]
+        if g.particle_path is None: 
+            continue # no gauge data yet, go on to next gauge
         tg = g.particle_path[:,0]
         xg = g.particle_path[:,1]
         yg = g.particle_path[:,2]
