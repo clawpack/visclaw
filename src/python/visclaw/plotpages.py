@@ -1045,8 +1045,12 @@ def plotclaw2kml(plotdata):
 
             # plotdata.gauges_fignos
             # Not clear how to get the figure number for each gauge.   Assume that
-            # there is only one figure number for all gauges
+            # there is only one figure number figno for all gauges
             # If user has set 'gaugeno=[]', gauge files will not be added to the KMLfile. 
+            
+            if plotdata.gauges_fignos is not None:
+                figno = plotdata.gauges_fignos[0] # use just the first
+                
             figname = gauge_pngfile[gaugeno,figno]
 
             elev = 0
