@@ -1022,11 +1022,15 @@ def plotclaw2kml(plotdata):
 
         # Loop over all gauges
         for gnum,gauge in enumerate(gauges):
+            gaugeno = int(gauge[0])
+            if plotdata.print_gaugenos != 'all':
+                if gaugeno not in plotdata.print_gaugenos:
+                    #print('+++ skipping gauge %i, not in print_gaugenos' % gaugeno)
+                    continue # to next gauge
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
             if plotdata.kml_map_topo_to_latlong is not None:
                 x1,y1 = plotdata.kml_map_topo_to_latlong(x1,y1)
-            gaugeno = int(gauge[0])
 
             # Get proper coordinates, otherwise placemark doesn't show up.
             if x1 > 180:
