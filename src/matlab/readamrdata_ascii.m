@@ -43,7 +43,7 @@ elseif dim == 2
 else
     amr_s = struct('gridno',[],'level',[],'blockno',[],...
         'mx',[],'my',[],'mz',[],'xlow',[],'ylow',[],'zlow',[],...
-        'dx',[],'dy',[],'dz',[],'data',[],'q',[]);
+        'dx',[],'dy',[],'dz',[],'data',[]);
 end
 amr = repmat(amr_s,ngrids,1);
 
