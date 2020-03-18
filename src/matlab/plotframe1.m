@@ -17,19 +17,19 @@
 %
 %    See SETPLOT, PLOTCLAW1, MAPPEDGRID.
 
+global xcenter;  % For use in UserVariableFile (a hack, I know)
 
-
-if length(amrdata) == 0
+if isempty(amrdata)
   disp(' ');
   disp(['Frame ',num2str(Frame),' does not exist ***']);
-  return;
+  return
 end
 
 disp(' ')
 disp(['Frame ',num2str(Frame),' at time t = ',num2str(t)]);
 
 
-if exist('beforeframe')==2
+if exist('beforeframe','file')==2
   beforeframe  % make an m-file with this name for any other commands you
   % want executed before drawing each frame, for example
   % if you want to use axes to specify exactly where the
@@ -38,7 +38,7 @@ end
 
 set_value('maxlevels','MaxLevels',6);
 
-if (exist('plotstyle'))
+if (exist('plotstyle','var'))
   % Parse line spec style
   disp([' *** plotframe1 : ''plotstyle'' should be replaced by ',...
         '''PlotStyle''.  Set SETPLOTSTYLE.']);
@@ -47,23 +47,23 @@ if (exist('plotstyle'))
     PlotStyle = {plotstyle};
   else
     PlotStyle = plotstyle;
-  end;
-end;
+  end
+end
 
 set_value('pstyle','PlotStyle',{'b-'});
 if (~iscell(PlotStyle))
   error([' *** plotframe1 : PlotStyle must be a cell matrix. ',...
 	'Use ''setplotstyle''.']);
-end;
+end
 
 [linestyle,linecolors,markerstyle] = get_plotstyle(pstyle,maxlevels);
 
 set_value('mappedgrid','MappedGrid',0);
 if (mappedgrid == 1)
-  if (~exist('mapc2p'))
+  if (~exist('mapc2p','file'))
     error(' *** plotframe1 : MappedGrid == 1 but no mapc2p function was found');
-  end;
-end;
+  end
+end
 
 clear_amrplot;
 create_amrplot(maxlevels);
@@ -72,7 +72,7 @@ create_amrplot(maxlevels);
 % to the plot (in afterframe, for example), using 'hold on/off'.  'newplot'
 % respects the hold on/off commands, whereas clear_amrplot and
 % create_amrplot do not.
-newplot;
+newplot
 
 
 %=============================================
@@ -81,7 +81,7 @@ newplot;
 
 qmin = [];
 qmax = [];
-for ng = 1:length(amrdata),
+for ng = 1:length(amrdata)
 
   gridno = amrdata(ng).gridno;
   level = amrdata(ng).level;
@@ -91,20 +91,20 @@ for ng = 1:length(amrdata),
 
   data = amrdata(ng).data';
 
+  ax = xlow;
+  bx = xlow + mx*dx;
+  xedge = linspace(ax,bx,mx+1);
+  xcenter = xedge(1:end-1) + dx/2;
+  
   if UserVariable==1
     % User has supplied a function to convert original q variables to
     % the variable which is to be plotted, e.g. Mach number, entropy.
     q = feval(UserVariableFile,data);
   else
     q = data(:,mq);
-  end;
+  end
 
   amrdata(ng).q = q;
-
-  ax = xlow;
-  bx = xlow + mx*dx;
-  xedge = linspace(ax,bx,mx+1);
-  xcenter = xedge(1:end-1) + dx/2;
 
   % for compatibility with old matlab41/plotframe1 convention:
   x = xcenter;
@@ -117,25 +117,25 @@ for ng = 1:length(amrdata),
     xp = mapc2p(xcenter);
   else
     xp = xcenter;
-  end;
+  end
 
   if (nplots > 1)
-    for n = 1:nplots,
+    for n = 1:nplots
       subplot(nplots,1,n)
       newplot;
       add_line2plot(xp,q(:,n),level,markerstyle{level},...
 	  linecolors{level},linestyle{level});
-    end;
+    end
   else
     add_line2plot(xp,q,level,markerstyle{level},...
 	linecolors{level},linestyle{level});
-  end;
+  end
 
-  if exist('aftergrid') == 2
+  if exist('aftergrid','file') == 2
     % make an m-file with this name for any other commands you
     % want executed at the end of drawing each grid
     aftergrid;
-  end;
+  end
 
 end  % loop on ng
 
@@ -148,14 +148,14 @@ elseif (nplots == 1)
   str = sprintf('q(%d) at time %8.4f',mq,t);
   title(str,'fontsize',15);
 else
-  for  n = 1:nplots,
+  for  n = 1:nplots
     subplot(nplots,1,n);
     str = sprintf('q(%d) at time %8.4f',n,t);
     title(str);
   end  % loop on mq
 end  % if UserVariable
 
-if exist('afterframe')==2
+if exist('afterframe','file')==2
   % make an m-file with this name for any other commands you
   % want executed at the end of drawing each frame
   % for example to change the axes, or add something to the plot

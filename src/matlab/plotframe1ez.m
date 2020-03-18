@@ -57,35 +57,35 @@ function [q,xc,h]  = plotframe1ez(amrdata,mq,plotstyle,...
 %
 %    See also SETPLOT, MappedGrid, READAMRDATA.
 
-if (length(amrdata) == 0)
-  disp('*** plotframe1ez : Input ''amrdata'' is empty');
-  return;
-end;
+if (isempty(amrdata))
+    disp('*** plotframe1ez : Input ''amrdata'' is empty');
+    return;
+end
 
 if (length(amrdata) > 1)
-  disp('*** plotframe1ez : length(amrdata) > 1; plotframe1ez does not ');
-  disp('*** support multiple grids');
-  return;
-end;
+    disp('*** plotframe1ez : length(amrdata) > 1; plotframe1ez does not ');
+    disp('*** support multiple grids');
+    return;
+end
 
 if (nargin < 5)
-  mapc2pfile = '';
-  if (nargin < 4)
-    uservariablefile = '';
-    if (nargin < 3)
-      plotstyle = 'r-';
-      if (nargin < 2)
-	mq = 1;
-      end;
-    end;
-  end;
-end;
+    mapc2pfile = '';
+    if (nargin < 4)
+        uservariablefile = '';
+        if (nargin < 3)
+            plotstyle = 'r-';
+            if (nargin < 2)
+                mq = 1;
+            end
+        end
+    end
+end
 
 uservariable = ~isempty(uservariablefile);
 mappedgrid = ~isempty(mapc2pfile);
 
-gridno = amrdata(1).gridno;
-level = amrdata(1).level;
+% gridno = amrdata(1).gridno;
+% level = amrdata(1).level;
 mx = amrdata(1).mx;
 xlow = amrdata(1).xlow;
 dx = amrdata(1).dx;
@@ -94,16 +94,16 @@ data = amrdata(1).data';
 xc = xlow + ((1:mx) - 0.5)*dx;
 
 if (uservariable == 1)
-  % User has supplied a function to convert original q variables to
-  % the variable which is to be plotted, e.g. Mach number, entropy.
-  q = feval(uservariablefile,data);
+    % User has supplied a function to convert original q variables to
+    % the variable which is to be plotted, e.g. Mach number, entropy.
+    q = feval(uservariablefile,data);
 else
-  q = data(:,mq);
-end;
+    q = data(:,mq);
+end
 
 if (mappedgrid == 1)
-  % coordinate mapping must be applied
-  xc = feval(mapc2pfile,xc);
+    % coordinate mapping must be applied
+    xc = feval(mapc2pfile,xc);
 end
 
 [lstyle,lcolors,mstyle] = get_plotstyle({plotstyle},1);
@@ -112,6 +112,6 @@ p = line('XData',xc,'YData',q,'LineStyle',lstyle{1},...
     'Color',lcolors{1},'Marker',mstyle{1});
 
 if (nargout == 3)
-  % send out plot handle.
-  h = p;
-end;
+    % send out plot handle.
+    h = p;
+end

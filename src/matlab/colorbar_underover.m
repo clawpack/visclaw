@@ -43,7 +43,7 @@ set(o,'ticklength',0);
 if (nargin == 0)
   under_label = 'undershoot';
   over_label = 'overshoot';
-end;
+end
 
 % Fix the tick marks
 set(o,'ytick',linspace(0,1,n+1));
