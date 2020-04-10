@@ -22,7 +22,7 @@ stand-alone files that can be viewed in other ways, including
  - A mp4 file,
  - A reStructured text file with the JSAnimation for inclusion in Sphinx docs.
 
-The utility function make_anim_from_plotdir can be used to convert the png 
+The utility function make_anim_outputs_from_plotdir can be used to convert the png 
 files in a Clawpack _plots directory into standalone animations of the types
 listed above.  See the file make_anim.py for an example of how this can be
 invoked from an applications directory.
@@ -83,7 +83,7 @@ def save_frame(frameno, plotdir='_plots', fname_base='frame', format='png',
         print("Saved ",filename)
 
 
-def make_anim(plotdir, fname_pattern='frame*.png', figsize=(10,6), dpi=None):
+def make_anim(plotdir, fname_pattern='frame*.png', figsize=None, dpi=None):
     """
     Assumes that a set of frames are available as png files in directory _plots,
     numbered consecutively, e.g. frame0000.png, frame0001.png, etc.
@@ -115,13 +115,22 @@ def make_anim(plotdir, fname_pattern='frame*.png', figsize=(10,6), dpi=None):
     # sort them into increasing order:
     filenames=sorted(filenames)
 
+    im0 = image.imread(filenames[0])
+    
+    if figsize is None:
+        # choose figsize based on aspect ratio of image
+        xin = 6.  # width in inches
+        yin = xin * im0.shape[0]/im0.shape[1]
+        figsize = (xin,yin)
+        #print('+++ im0.shape, xin, yin: ',im0.shape, xin, yin)
+        
     fig = plt.figure(figsize=figsize, dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1])
     ax.axis('off')  # so there's not a second set of axes
-    im = plt.imshow(image.imread(filenames[0]))
-
+    im = plt.imshow(im0)
+    
     def init():
-        im.set_data(image.imread(filenames[0]))
+        im.set_data(im0)
         return im,
 
     def animate(i):
@@ -201,7 +210,8 @@ def make_html(anim, file_name='anim.html', title=None, raw_html='', \
     html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
                                default_mode=default_mode)
     html_file = open(file_name,'w')
-    html_file.write("<html>\n <h1>%s</h1>\n" % title)
+    if title is not None:
+        html_file.write("<html>\n <h1>%s</h1>\n" % title)
     html_file.write(raw_html)
     html_file.write(html_body)
     html_file.close()
@@ -354,8 +364,8 @@ def interact_animate_figs(figs, manual=False, TextInput=False):
 
 
 def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
-        outputs=['mp4','html','rst'], file_name_prefix=None,
-        figsize=(5,4), dpi=None, fps=5):
+        outputs=['mp4','html','rst'], file_name_prefix='',
+        figsize=None, dpi=None, fps=5, raw_html=''):
 
     """
     After running `make plots` using VisClaw, convert the png files in 
@@ -397,7 +407,7 @@ def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
         if 'html' in outputs:
             file_name = file_name_prefix + 'fig%s.html' % figno
             make_html(anim, file_name, fps=fps, \
-                embed_frames=True, default_mode='once')
+                embed_frames=True, default_mode='once', raw_html=raw_html)
 
         if 'rst' in outputs:
             file_name = file_name_prefix + 'fig%s.rst' % figno
