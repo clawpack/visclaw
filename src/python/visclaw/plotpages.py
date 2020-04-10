@@ -2234,7 +2234,7 @@ def plotclaw2html(plotdata):
     if plotdata.gif_movie:
         html.write('<p><tr><td><b>gif Movies:</b></td>')
         for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="movie%s.gif">%s</a></td>' \
+            html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
                            % (fignos[ifig],fignames[fignos[ifig]]))
         html.write('</tr>\n')
     html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
@@ -3060,7 +3060,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 #yin = im0.shape[0] / html_movie_dpi
                 xin = 6.
                 yin = xin * im0.shape[0]/im0.shape[1]
-                print('+++ im0.shape, xin, yin: ',im0.shape, xin, yin)
+                #print('+++ im0.shape, xin, yin: ',im0.shape, xin, yin)
                 fig = plt.figure(figsize=(xin,yin),dpi=html_movie_dpi)
     
                 # using 'nearest' gives slightly better resolution:
