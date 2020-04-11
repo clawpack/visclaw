@@ -147,7 +147,10 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5,
     bounds[:int(N / 2)] = numpy.linspace(data_limits[0], data_break, int(N / 2))
     bounds[int(N / 2):] = numpy.linspace(data_break, data_limits[1], 
                                                              int(N / 2) + N % 2)
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=N)
+    #norm = colors.BoundaryNorm(boundaries=bounds, ncolors=N)
+
+    # Use this norm for proportional pw linear with better tick mark locations:
+    norm = colors.TwoSlopeNorm(data_break, data_limits[0], data_limits[1])
 
     return cmap, norm
 
