@@ -11,6 +11,12 @@ import os, time, string, glob
 import sys
 from functools import wraps
 
+# increase resolution for images in animations:
+html_movie_dpi = 100
+import matplotlib as mpl
+mpl.rcParams['figure.dpi']= html_movie_dpi
+#print('+++ backend =',  mpl.rcParams['backend'])
+
 
 # Required for new animation style modified MAY 2013
 import numpy as np
@@ -20,6 +26,8 @@ import six
 from six.moves import range
 
 from clawpack.visclaw import gaugetools
+from clawpack.visclaw import animation_tools
+
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv('CLAW')
 if clawdir is not None:
@@ -2226,7 +2234,7 @@ def plotclaw2html(plotdata):
     if plotdata.gif_movie:
         html.write('<p><tr><td><b>gif Movies:</b></td>')
         for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="movie%s.gif">%s</a></td>' \
+            html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
                            % (fignos[ifig],fignames[fignos[ifig]]))
         html.write('</tr>\n')
     html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
@@ -3037,78 +3045,22 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if (plotdata.html_movie == "JSAnimation") and (len(framenos) > 0):
 
         # Create Animations
-
+    
         for figno in fignos_each_frame:
             fname = '*fig' + str(figno) + '.png'
             filenames=sorted(glob.glob(fname))
-            fig = plt.figure()
-            # using 'nearest' gives slightly better resolution:
-            im = plt.imshow(Image.imread(filenames[0]), interpolation='nearest')
-            plt.axis('off')  # suppress second axis around image
-            def init():
-                im.set_data(Image.imread(filenames[0]))
-                return im,
 
-            def animate(i):
-                image=Image.imread(filenames[i])
-                im.set_data(image)
-                return im,
+            # RJL: This way gives better resolution although it basically does
+            # the same thing as the code I removed, so not sure why
 
-            anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                          frames=len(filenames), blit=True)
+            raw_html = '<html>\n<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n'
+            animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
+                            file_name_prefix = 'movieframe_allframes',
+                            figsize=None,
+                            fignos=[figno], outputs=['html'], raw_html=raw_html)
 
-
-            try:
-                # this original approach gives better resolution movies
-                # than using anim.to_jshtml, so try this first.  
-                # It might fail with newer matplotlib versions.
-                
-                # Added by @maojrs, Summer 2013, based on JSAnimation of @jakevdp
-                class myHTMLWriter(HTMLWriter):
-                    """
-                    Subclass to use JSAnimations for movies.
-                    """
-
-                    def __init__(self, fps=10, codec=None, bitrate=None, extra_args=None,\
-                           metadata=None, embed_frames=False, frame_dir=None, add_html='', \
-                           frame_width=650, default_mode='once', file_names=None):
-                        self.file_names=file_names
-                        super(myHTMLWriter, self).__init__(fps=fps, codec=codec, bitrate=bitrate,
-                           extra_args=extra_args, metadata=metadata,
-                           embed_frames=embed_frames, frame_dir=frame_dir,
-                           add_html=add_html, frame_width=frame_width, default_mode=default_mode)
-
-                    def get_all_framenames(self):
-                        frame_fullname = self.file_names
-                        return frame_fullname
-                        
-                #set embed_frames=True to embed base64-encoded frames directly in the HTML
-                pre_html = '<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>'
-
-                
-                myHTMLwriter = myHTMLWriter(embed_frames=False, 
-                                            frame_dir=os.getcwd(), 
-                                            add_html=pre_html,
-                                            frame_width=plotdata.html_movie_width,
-                                            file_names=filenames)
-                fname = 'movieframe_allframesfig%s.html' % figno
-                anim.save(fname, writer=myHTMLwriter)
-                print("Created JSAnimation for figure", figno)
-                fix_file(fname, verbose=False)
-                # Clean up animation temporary files of the form frame0000.png
-                myHTMLwriter.clear_temp = True
-                myHTMLwriter.cleanup()
-
-            except:
-                # anim.to_jshtml should replace our JSAnimation code above,
-                # but we still need to figure out how to get full resolution of
-                # the reloaded png figures when using this:
-                html_text = '<html>\n<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n' \
-                 + anim.to_jshtml() + '</html>\n'
-                 
-                fname = 'movieframe_allframesfig%s.html' % figno
-                open(fname, 'w').write(html_text)
-                print("Created anim.to_jshtml for figure ", figno)
+            # Note: setting figsize=None above chooses figsize with aspect
+            # ratio based on .png files read in, may fit better on page
                 
 
     #-----------
