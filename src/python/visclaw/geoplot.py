@@ -274,8 +274,17 @@ def surface_or_depth(current_data):
 
 def kml_build_colorbar(cb_filename, cmap, cmin, cmax):
 
+    """
+    This version is deprecated, please use 
+        clawpack.geoclaw.kmltools.kml_build_colorbar
+    """
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import warnings
+
+    msg = "geoplot.kml_build_colorbar is deprecated, " \
+        + "instead use clawpack.geoclaw.kmltools.kml_build_colorbar"
+    warnings.warn(msg)
 
     fig = plt.figure(figsize=(0.8,3))
     ax1 = fig.add_axes([0.1, 0.075, 0.25, 0.85])
