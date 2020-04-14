@@ -207,29 +207,34 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # ----------------
 
                 num_skipped = 0
+                skip_patches_outside_xylimits = \
+                        getattr(plotaxes,'skip_patches_outside_xylimits',True)
+
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
 
-                    if (plotaxes.xlimits is not None) \
-                            & (type(plotaxes.xlimits) is not str):
-                        if (patch.dimensions[0].lower \
-                                    >= plotaxes.xlimits[1]) \
-                                or  (patch.dimensions[0].upper \
-                                    <= plotaxes.xlimits[0]):
-                            num_skipped += 1
-                            continue  # go to next patch
-
-                    if len(patch.dimensions) > 1:
-                        # 2d patch
-                        if (plotaxes.ylimits is not None) \
-                                & (type(plotaxes.ylimits) is not str):
-                            if (patch.dimensions[1].lower \
-                                        >= plotaxes.ylimits[1]) \
-                                    or  (patch.dimensions[1].upper \
-                                        <= plotaxes.ylimits[0]):
+                    if skip_patches_outside_xylimits:
+                        # skip patches not visible based on xlimits,ylimits:
+                        if (plotaxes.xlimits is not None) \
+                                & (type(plotaxes.xlimits) is not str):
+                            if (patch.dimensions[0].lower \
+                                        >= plotaxes.xlimits[1]) \
+                                    or  (patch.dimensions[0].upper \
+                                        <= plotaxes.xlimits[0]):
                                 num_skipped += 1
                                 continue  # go to next patch
+    
+                        if len(patch.dimensions) > 1:
+                            # 2d patch
+                            if (plotaxes.ylimits is not None) \
+                                    & (type(plotaxes.ylimits) is not str):
+                                if (patch.dimensions[1].lower \
+                                            >= plotaxes.ylimits[1]) \
+                                        or  (patch.dimensions[1].upper \
+                                            <= plotaxes.ylimits[0]):
+                                    num_skipped += 1
+                                    continue  # go to next patch
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute("level",1)
