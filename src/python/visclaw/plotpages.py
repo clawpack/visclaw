@@ -3053,7 +3053,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             # RJL: This way gives better resolution although it basically does
             # the same thing as the code I removed, so not sure why
 
-            raw_html = '<html>\n<center><h3><a href=_PlotIndex.html>Plot Index</a></h3>\n'
+            raw_html = '<html>\n<center><h3><a href=%s>Plot Index</a></h3>\n' \
+                        % plotdata.html_index_fname
             animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
                             file_name_prefix = 'movieframe_allframes',
                             figsize=None,
