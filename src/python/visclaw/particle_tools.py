@@ -27,14 +27,15 @@ def read_gauges(gaugenos='all', outdir=None):
             g = gauges.GaugeSolution(gaugeno, outdir)
             gauge_solutions[gaugeno] = g
 
-    # for debugging:
-    gaugenos_lagrangian = [k for k in gauge_solutions.keys() \
-                if gauge_solutions[k].gtype=='lagrangian']
-    gaugenos_stationary = [k for k in gauge_solutions.keys() \
-                if gauge_solutions[k].gtype=='stationary']
-    print('+++ Loaded %i stationary and %i Lagrangian gauges' \
-        % (len(gaugenos_stationary),len(gaugenos_lagrangian)))
-        
+    if 0:
+        # for debugging:
+        gaugenos_lagrangian = [k for k in gauge_solutions.keys() \
+                    if gauge_solutions[k].gtype=='lagrangian']
+        gaugenos_stationary = [k for k in gauge_solutions.keys() \
+                    if gauge_solutions[k].gtype=='stationary']
+        print('+++ Loaded %i stationary and %i Lagrangian gauges' \
+            % (len(gaugenos_stationary),len(gaugenos_lagrangian)))
+            
     return gauge_solutions
         
 def check_gaugenos_input(gauge_solutions, gaugenos):
