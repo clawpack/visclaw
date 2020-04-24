@@ -41,12 +41,7 @@ Version: Updated 2020-04-09 for v5.7.0, but some things still need updating.
 # use Python 3 style print function rather than Python 2 print statements:
 from __future__ import print_function 
 
-from IPython.display import display, HTML
 from matplotlib import image, animation
-from matplotlib import pyplot as plt
-from ipywidgets import interact, interact_manual
-import ipywidgets
-import io
 from matplotlib import pyplot as plt
 
 
@@ -330,6 +325,9 @@ def imshow_noaxes(im, figsize=(8,6)):
     
 def interact_animate_images(images, figsize=(10,6), manual=False, TextInput=False):
 
+    import ipywidgets
+    from ipywidgets import interact, interact_manual
+
     def display_frame(frameno): 
         imshow_noaxes(images[frameno], figsize=figsize)
 
@@ -346,6 +344,10 @@ def interact_animate_images(images, figsize=(10,6), manual=False, TextInput=Fals
         interact(display_frame, frameno=widget)
 
 def interact_animate_figs(figs, manual=False, TextInput=False):
+
+    from IPython.display import display
+    import ipywidgets
+    from ipywidgets import interact, interact_manual
 
     def display_frame(frameno): 
         display(figs[frameno])
