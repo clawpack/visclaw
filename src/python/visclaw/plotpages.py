@@ -2994,8 +2994,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
         # Only import if we need it:
         try:
             from matplotlib import animation
-            from .JSAnimation import HTMLWriter
-            from .JSAnimation.fix_jsmovies import fix_file
         except:
             print("*** Warning: Your version of matplotlib may not support JSAnimation")
             print("    Switching to 4.x style animation")
