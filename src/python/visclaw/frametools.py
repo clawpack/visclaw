@@ -1036,7 +1036,7 @@ def get_var(state, plot_var, current_data):
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
              verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None,
-             bbox_inches='tight'):
+             bbox_inches='tight',close_fig=True):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1087,6 +1087,10 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         plt.savefig(fname, transparent=True, bbox_inches='tight',dpi=kml_dpi)
     else:
         plt.savefig(fname, bbox_inches=bbox_inches)
+
+    if close_fig:
+        # to avoid running out of memory when making many plots
+        plt.close(figno)
 
 
 #======================================================================
