@@ -202,8 +202,15 @@ def make_html(anim, file_name='anim.html', title=None, raw_html='', \
     #html_body = anim_to_html(anim, fps=fps, embed_frames=embed_frames, \
                  #default_mode=default_mode)
 
-    html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
-                               default_mode=default_mode)
+    try:
+        html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
+                                   default_mode=default_mode)
+    except:
+        print('*** anim.to_jshtml() failed, not making animation')
+        print('*** you may need to update your version of matplotlib')
+        html_body = '<h2>Unable to make animation</h2>\n' + \
+                    '<h3>Consider updating matplotlib</h3>\n'
+
     html_file = open(file_name,'w')
     if title is not None:
         html_file.write("<html>\n <h1>%s</h1>\n" % title)
