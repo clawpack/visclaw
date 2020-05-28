@@ -199,9 +199,6 @@ def make_html(anim, file_name='anim.html', title=None, raw_html='', \
     """
 
 
-    #html_body = anim_to_html(anim, fps=fps, embed_frames=embed_frames, \
-                 #default_mode=default_mode)
-
     try:
         html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
                                    default_mode=default_mode)
