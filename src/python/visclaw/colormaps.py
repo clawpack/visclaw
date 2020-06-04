@@ -152,7 +152,7 @@ def add_colormaps(colormaps, data_limits=[0.0,1.0], data_break=0.5,
     try:
         # Use this norm for proportional pw linear with better tick mark locations:
         norm = colors.TwoSlopeNorm(data_break, data_limits[0], data_limits[1])
-    except:
+    except AttributeError:
         # older matplotlib.colors did not have TwoSlopeNorm, revert to old:
         norm = colors.BoundaryNorm(boundaries=bounds, ncolors=N)
 
