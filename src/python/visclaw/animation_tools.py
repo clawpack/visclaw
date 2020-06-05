@@ -43,6 +43,7 @@ from __future__ import print_function
 
 from matplotlib import image, animation
 from matplotlib import pyplot as plt
+import warnings
 
 
 def make_plotdir(plotdir='_plots', clobber=True):
@@ -92,9 +93,9 @@ def make_anim(plotdir, fname_pattern='frame*.png', figsize=None, dpi=None):
     import matplotlib
 
     if matplotlib.backends.backend in ['MacOSX']:
-        print("*** animation.FuncAnimation doesn't work with backend %s" \
-            % matplotlib.backends.backend)
-        print("*** Suggest using 'Agg'")
+        msg = "\n*** animation.FuncAnimation doesn't work with backend %s" \
+            % matplotlib.backends.backend + "\n*** Suggest using 'Agg'"
+        warnings.warn(msg)
         return
         
 
@@ -104,7 +105,8 @@ def make_anim(plotdir, fname_pattern='frame*.png', figsize=None, dpi=None):
     filenames = glob.glob('%s/%s' % (plotdir, fname_pattern))
     
     if len(filenames)==0:
-        print('*** No files found matching %s/%s' % (plotdir, fname_pattern))
+        msg = '\n*** No files found matching %s/%s' % (plotdir, fname_pattern)
+        warnings.warn(msg)
         return None
 
     # sort them into increasing order:
@@ -199,11 +201,16 @@ def make_html(anim, file_name='anim.html', title=None, raw_html='', \
     """
 
 
-    #html_body = anim_to_html(anim, fps=fps, embed_frames=embed_frames, \
-                 #default_mode=default_mode)
+    try:
+        html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
+                                   default_mode=default_mode)
+    except:
+        msg = '\n*** anim.to_jshtml() failed, not making animation' \
+              + '\n*** you may need to update your version of matplotlib'
+        warnings.warn(msg)
+        html_body = '<h2>Unable to make animation</h2>\n' + \
+                    '<h3>Consider updating matplotlib</h3>\n'
 
-    html_body = anim.to_jshtml(fps=fps, embed_frames=embed_frames, \
-                               default_mode=default_mode)
     html_file = open(file_name,'w')
     if title is not None:
         html_file.write("<html>\n <h1>%s</h1>\n" % title)
@@ -250,7 +257,8 @@ def make_mp4(anim, file_name='anim.mp4',
         return
 
     if os.path.splitext(file_name)[1] != '.mp4':
-        print("*** Might not work if file extension is not .mp4")
+        msg = "\n*** Might not work if file extension is not .mp4"
+        warnings.warn(msg)
     if fps is None:
         fps = 3
     writer = animation.writers['ffmpeg'](fps=fps)
