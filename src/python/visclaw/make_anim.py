@@ -3,6 +3,13 @@ Make stand-alone animations similar to the movies in the plots directory.
 
 First run `make plots` so that directory exists with png files for the
 individual frames.
+
+For illustration of other tools defined in the animation_tools module, 
+see the notebook
+  $CLAW/apps/notebooks/visclaw/animation_tools_demo.html
+also visible in rendered form in the Clawpack gallery:
+  http://www.clawpack.org/gallery/_static/apps/notebooks/visclaw/animation_tools_demo.html
+  
 """
 
 import matplotlib
@@ -34,6 +41,6 @@ dpi = None
 # Frames per second (for mp4 file only):
 fps = 5
 
-animation_tools.make_anim_from_plotdir(plotdir=plotdir, fignos=fignos,
+animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir, fignos=fignos,
         outputs=outputs, file_name_prefix=file_name_prefix,
         figsize=figsize, dpi=dpi, fps=fps)

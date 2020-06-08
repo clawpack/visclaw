@@ -5,7 +5,7 @@ Jupyter notebooks.
 Three types of animations are supported: 
  - using the ipywidget interact to create a figure with a slider bar, 
  - an `animation.FuncAnimation` object, which can be displayed using the
-   `to_jshtml` method in a notebook.
+   `to_jshtml` method in a notebook, or written to an html file.
    NOTE: this replaces the old JSAnimation tools, now incorporated into
    matplotlib's `animation.FuncAnimation`.
  - creation of mp4 files using ffmpeg (provided this package is installed).
@@ -22,19 +22,25 @@ stand-alone files that can be viewed in other ways, including
  - A mp4 file,
  - A reStructured text file with the JSAnimation for inclusion in Sphinx docs.
 
-The utility function make_anim_outputs_from_plotdir can be used to convert the png 
-files in a Clawpack _plots directory into standalone animations of the types
-listed above.  See the file make_anim.py for an example of how this can be
-invoked from an applications directory.
+The utility function make_anim_outputs_from_plotdir can be used to convert the 
+png files in a Clawpack _plots directory into standalone animations of the types
+listed above.  See the file 
+    $CLAW/visclaw/src/python/visclaw/make_anim.py 
+for an example of how this can be invoked from an applications directory.
 
+For illustration of many of the tools defined in this module, see the notebook
+  $CLAW/apps/notebooks/visclaw/animation_tools_demo.html
+also visible in rendered form in the Clawpack gallery:
+  http://www.clawpack.org/gallery/_static/apps/notebooks/visclaw/animation_tools_demo.html
+  
 See also:
  https://ipywidgets.readthedocs.io/en/latest/#ipywidgets
- https://matplotlib.org/3.1.0/api/_as_gen/matplotlib.animation.Animation.html
+ https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.animation.Animation.html
 
 More documentation of these functions is needed and they can probably be
 improved.
 
-Version: Updated 2020-04-09 for v5.7.0, but some things still need updating.
+Version: Updated for Clawpack v5.7.1.
 
 """
 
@@ -88,16 +94,13 @@ def make_anim(plotdir, fname_pattern='frame*.png', figsize=None, dpi=None):
 
     You can then display anim in an IPython notebook, or
     call make_html(anim) to create a stand-alone webpage.
+    
+    Note also the convenience functions that call this function:
+        animate_from_plotdir: assumes plotdir has standard from from Clawpack
+        make_anim_outputs_from_plotdir: creates .html, .mp4, and/or .rst files
     """
 
     import matplotlib
-
-    if matplotlib.backends.backend in ['MacOSX']:
-        msg = "\n*** animation.FuncAnimation doesn't work with backend %s" \
-            % matplotlib.backends.backend + "\n*** Suggest using 'Agg'"
-        warnings.warn(msg)
-        return
-        
 
     import glob   # for finding all files matching a pattern
 
@@ -151,12 +154,6 @@ def animate_images(images, figsize=(10,6), dpi=None):
     
     import matplotlib
 
-    if matplotlib.backends.backend in ['MacOSX']:
-        print("*** animation.FuncAnimation doesn't work with backend %s" \
-            % matplotlib.backends.backend)
-        print("*** Suggest using 'Agg'")
-        return
-        
     # display each image in a new fig:
     fig = plt.figure(figsize=figsize, dpi=None)
     ax = fig.add_axes([0, 0, 1, 1])
@@ -424,8 +421,15 @@ def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
             make_rst(anim, file_name, fps=fps, \
                 embed_frames=True, default_mode='once')
 
-def animate_from_plotdir(plotdir, figno=None, figsize=(10,6), dpi=None, fps=5):
-    
+
+def animate_from_plotdir(plotdir='_plots', figno=None, figsize=None, 
+                         dpi=None, fps=5):
+    """
+    Use the png files in plotdir to create an animation that is returned.
+    Convenience function that calls make_anim with the 
+        fname_pattern = 'frame*fig%s.png' % figno
+    If figno==None, attempt to determine figno from the movies found in plotdir.
+    """
     import glob, re
     
     if figno is None:
