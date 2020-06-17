@@ -12,6 +12,7 @@ if (~isempty(o))
 end
 
 np = get(gca,'NextPlot');
+set(gca,'NextPlot','add');
 
 if (~exist('regions.data','file'))
     fprintf('File regions.data does not exist.  No regions will be plotted.\n');

@@ -12,6 +12,7 @@ end
 use_forestclaw = strcmpi(format,'forestclaw');
 
 np = get(gca,'NextPlot');
+set(gca,'NextPlot','add');
 
 if (~exist('gauges.data','file'))
     fprintf('File gauges.data does not exist.  No gauges will be plotted.\n');
@@ -56,10 +57,9 @@ for n = 1:num_gauges
     % set(gca,'zlimmode','auto');
     set(hg,'Tag','gauge');
     set(hg,'userdata',g);
-    hold on;
     h = text(data(2),data(3),zp,sprintf('%d',data(1)),'fontsize',11,'color','k');
     set(h,'HorizontalAlignment','center');
-    set(h,'backgroundcolor','none');
+    % set(h,'backgroundcolor','none');
     gauge_handles(n) = hg;
 end
 
