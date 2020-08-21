@@ -1,7 +1,22 @@
 function ghout = add_gauges(format)
+%
+% add_gauges plots gauge locations from file 'gauges.data'
+%
+% add_gauges() will plot a symbol at gauge locations found in the
+% file 'gauges.data'.  
+%
+% add_gauges(FORMAT) The format can be specified to make sure that gauges
+% are plotted at suitable z-level and that they will appear  on top of all
+% levels. Available formats are either 'geoclaw' or 'forestclaw' (default).
+%
+% gout = add_gauges(...) returns a handle to the symbols plotting for
+% gauges.  
+% 
+% See also add_regions, plot_gauges.
+
 
 if (nargin < 1)
-    format = 'ForestClaw';    
+    format = 'ForestClaw';
 end
 
 o = findobj(gcf,'Tag','gauge');

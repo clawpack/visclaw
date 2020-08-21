@@ -1,4 +1,19 @@
 function rhout = add_regions(t,format)
+%
+% add_regions plots regions from file 'regions.data'
+%
+% add_regions(T) will plot a rectangle at regions found in the
+% file 'regions.data' if region is active at time T.  
+%
+% add_regions(T,FORMAT) The format can be specified to make sure that
+% regions are plotted at a suitable z-level and that they will appear  on
+% top of all levels. Available formats are 'geoclaw' or 'forestclaw'
+% (default).
+%
+% gout = add_regions(...) returns a handle to the region rectangles.
+% 
+% See also add_gauges, plot_gauges.
+
 
 if (nargin < 2)
     format = 'ForestClaw';    
