@@ -1437,6 +1437,9 @@ def plotclaw2kml(plotdata):
         while (a.startswith('#')):
             a = f.readline()
 
+        # read line max1d
+        f.readline()
+
         # read line containing max number of levels
         a = f.readline()
         ainfo = np.fromstring(a.strip(),sep=' ')
