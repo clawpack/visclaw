@@ -31,16 +31,14 @@ gauges = read_gauges();
 np = get(gca,'NextPlot');
 set(gca,'NextPlot','add');
 
-if (~exist('gauges.data','file'))
-    fprintf('File gauges.data does not exist.  No gauges will be plotted.\n');
-    return
-end
-
+% Set z-levels appropriately for each code. 
 if (use_forestclaw)
+    % ForestClaw plots coarser levels above finer levels so that 
+    % patch boundaries show up nicely
     zmax = 0;
     zl = [-20,0];
 else
-    % Use AMRClaw : set maxlevel = 20
+    % AMRClaw plots finer levels on top of coarser levels.
     zmax = 20;
     zl = [0,20];
 end
@@ -84,6 +82,7 @@ function gauges = read_gauges()
 
 if (~exist('gauges.data','file'))
     fprintf('File gauges.data does not exist.  No gauges will be plotted.\n');
+    gauges = [];
     return
 end
 
