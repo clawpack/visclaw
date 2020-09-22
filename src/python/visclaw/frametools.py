@@ -186,6 +186,23 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             beforeaxes = getattr(plotaxes,'beforeaxes',None)
             current_data = run_str_or_func(beforeaxes,current_data)
                 
+            skip_patches_outside_xylimits = plotaxes.skip_patches_outside_xylimits
+            print('+++ skip_patches_outside_xylimits = ', \
+                  skip_patches_outside_xylimits)
+            if skip_patches_outside_xylimits is None:
+                # User didn't set.  Set to True unless there's a mapped grid
+                
+                MappedGridExists = plotdata.mapc2p
+                if not MappedGridExists:
+                    # check every item in case there's a mapc2p:
+                    for itemname in plotaxes._itemnames:
+                        plotitem = plotaxes.plotitem_dict[itemname]
+                        MappedGridExists = MappedGridExists or \
+                                           (plotitem.mapc2p is not None)
+                                           
+                skip_patches_outside_xylimits = not MappedGridExists
+                print('+++ setting skip_patches_outside_xylimits to ', \
+                      skip_patches_outside_xylimits)
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -206,10 +223,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
-                num_skipped = 0
-                skip_patches_outside_xylimits = \
-                        getattr(plotaxes,'skip_patches_outside_xylimits',True)
 
+                num_skipped = 0
+                
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
@@ -332,7 +348,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     # end of loop over plotitems
                 # end of loop over patches
 
-            if False and num_skipped > 0:
+            if num_skipped > 0:
                 # possible warning message:
                 print('Skipped plotting %i patches not visible' % num_skipped)
 
@@ -1080,11 +1096,19 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
 
         if kml_figsize is not None:
             fig.set_size_inches(kml_figsize[0],kml_figsize[1])
-        a.set_frame_on(False)
-        plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
-                        hspace = 0, wspace = 0)
-        plt.margins(0,0)
-        plt.savefig(fname, transparent=True, bbox_inches='tight',dpi=kml_dpi)
+
+        if 0:
+            # original:
+            plt.savefig(fname, transparent=True, bbox_inches='tight', \
+                          pad_inches=0,dpi=kml_dpi)
+
+        else:
+            #a.set_frame_on(False)
+            plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
+                            hspace = 0, wspace = 0)
+            plt.margins(0,0)
+            plt.savefig(fname, transparent=True, bbox_inches='tight',
+                        dpi=kml_dpi)  #, pad_inches=0)
     else:
         plt.savefig(fname, bbox_inches=bbox_inches)
 

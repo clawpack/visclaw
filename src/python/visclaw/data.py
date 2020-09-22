@@ -656,7 +656,7 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('afteraxes',None)
         self.add_attribute('xlimits',None)
         self.add_attribute('ylimits',None)
-        self.add_attribute('skip_patches_outside_xylimits',True)
+        self.add_attribute('skip_patches_outside_xylimits',None)
         self.add_attribute('scaled',False)   # true so x- and y-axis scaled same
         self.add_attribute('image',False)    # true so x- and y-axis scaled same
                                              # and plot bounds tight
