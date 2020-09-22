@@ -1094,19 +1094,11 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
 
         if kml_figsize is not None:
             fig.set_size_inches(kml_figsize[0],kml_figsize[1])
-
-        if 0:
-            # original:
-            plt.savefig(fname, transparent=True, bbox_inches='tight', \
-                          pad_inches=0,dpi=kml_dpi)
-
-        else:
-            #a.set_frame_on(False)
-            plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
-                            hspace = 0, wspace = 0)
-            plt.margins(0,0)
-            plt.savefig(fname, transparent=True, bbox_inches='tight',
-                        dpi=kml_dpi)  #, pad_inches=0)
+        a.set_frame_on(False)
+        plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
+                        hspace = 0, wspace = 0)
+        plt.margins(0,0)
+        plt.savefig(fname, transparent=True, bbox_inches='tight',dpi=kml_dpi)
     else:
         plt.savefig(fname, bbox_inches=bbox_inches)
 
