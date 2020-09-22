@@ -187,8 +187,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             current_data = run_str_or_func(beforeaxes,current_data)
                 
             skip_patches_outside_xylimits = plotaxes.skip_patches_outside_xylimits
-            print('+++ skip_patches_outside_xylimits = ', \
-                  skip_patches_outside_xylimits)
+            
             if skip_patches_outside_xylimits is None:
                 # User didn't set.  Set to True unless there's a mapped grid
                 
@@ -201,8 +200,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                                            (plotitem.mapc2p is not None)
                                            
                 skip_patches_outside_xylimits = not MappedGridExists
-                print('+++ setting skip_patches_outside_xylimits to ', \
-                      skip_patches_outside_xylimits)
+                
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -348,7 +346,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     # end of loop over plotitems
                 # end of loop over patches
 
-            if num_skipped > 0:
+            if False and num_skipped > 0:
                 # possible warning message:
                 print('Skipped plotting %i patches not visible' % num_skipped)
 
