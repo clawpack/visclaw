@@ -191,7 +191,7 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             if skip_patches_outside_xylimits is None:
                 # User didn't set.  Set to True unless there's a mapped grid
                 
-                MappedGridExists = plotdata.mapc2p
+                MappedGridExists = (plotdata.mapc2p is not None)
                 if not MappedGridExists:
                     # check every item in case there's a mapc2p:
                     for itemname in plotaxes._itemnames:
