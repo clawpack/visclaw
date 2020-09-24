@@ -186,6 +186,21 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             beforeaxes = getattr(plotaxes,'beforeaxes',None)
             current_data = run_str_or_func(beforeaxes,current_data)
                 
+            skip_patches_outside_xylimits = plotaxes.skip_patches_outside_xylimits
+            
+            if skip_patches_outside_xylimits is None:
+                # User didn't set.  Set to True unless there's a mapped grid
+                
+                mapc2p_exists = (plotdata.mapc2p is not None)
+                if not mapc2p_exists:
+                    # check every item in case there's a mapc2p:
+                    for itemname in plotaxes._itemnames:
+                        plotitem = plotaxes.plotitem_dict[itemname]
+                        mapc2p_exists = mapc2p_exists or \
+                                           (plotitem.mapc2p is not None)
+                                           
+                skip_patches_outside_xylimits = not mapc2p_exists
+                
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -206,10 +221,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
-                num_skipped = 0
-                skip_patches_outside_xylimits = \
-                        getattr(plotaxes,'skip_patches_outside_xylimits',True)
 
+                num_skipped = 0
+                
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
