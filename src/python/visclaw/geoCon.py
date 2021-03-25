@@ -1,7 +1,12 @@
-import gdal, ogr, os, osr, glob
+import ogr, os, osr, glob
 import numpy as np
 import clawpack.pyclaw.solution as solution
 import datetime, sys
+
+try:
+    from osgeo import gdal
+except ImportError:
+    import gdal
 
 def render(sol, extension):
 
