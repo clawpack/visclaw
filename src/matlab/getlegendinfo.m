@@ -1,4 +1,4 @@
-function [level_handles,level_labels_out] = getlegendinfo(base_level);
+function [level_handles,level_labels_out] = getlegendinfo(base_level)
 
 % GETLEGENDINFO returns line plot info for creating legends.
 %

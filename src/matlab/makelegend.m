@@ -42,14 +42,14 @@ if (nargin > 0)
     tok1 = tok{1};
   else
     tok1 = tok;
-  end;
+  end
   if (ischar(tok1))
     if (iscell(tok))
       level_labels_in = tok;
     else
       level_labels_in = {tok};
-    end;
-  end;
+    end
+  end
   args_read = args_read + 1;
   if (args_read <= nargin)
     tok = varargin{args_read};
@@ -58,16 +58,16 @@ if (nargin > 0)
       other_hdls = tok;
     else
       other_hdls = {tok};
-    end;
+    end
     args_read = args_read + 1;
     tok = varargin{args_read};
     if (iscell(tok))
       other_labels = tok;
     else
       other_labels = {tok};
-    end;
-  end;
-end;
+    end
+  end
+end
 
 % Okay, we have all the arguments...
 
@@ -81,16 +81,18 @@ for level = 1:length(amrlines),
       level_labels{level} = level_labels_in{level};
     else
       level_labels{level} = sprintf('Level %d',level);
-    end;
+    end
     phdl(end+1) = svec(1);
-  end;
-end;
+  end
+end
 phdl = [phdl,other_hdls{:}];
 
 labels = {level_labels{:},other_labels{:}};
 
 h = legend(phdl,labels);
 
+set(h,'AutoUpdate','off');
+
 if (nargout == 1)
   hout = h;
-end;
+end

@@ -100,6 +100,6 @@ while Frame <= MaxFrames
 	             outputprefix,readblocknumber);
   end
 
-  plotframe2; 
+plotframe2; 
 
 end % main loop on frames
