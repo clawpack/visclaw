@@ -32,7 +32,7 @@ end
 if isempty(amrdata)
     fprintf('\n');
     fprintf('Frame %d (%s) does not exist\n',Frame,outputflag);
-    fprint('\n');
+    fprintf('\n');
     return;
 end
 
@@ -47,6 +47,7 @@ if exist('beforeframe','file')
     beforeframe;
 end
 
+set_value('forestclaw','ForestClaw',0);
 
 
 % ------------------------------------------------------------------------
@@ -250,6 +251,9 @@ for ng = 1:ngrids
     gridno = amrdata(ng).gridno;
     blockno = amrdata(ng).blockno;
     level = amrdata(ng).level;
+    if (forestclaw)
+        level = level + 1;   % ForestClaw levels start at 0
+    end
     
     set_blocknumber(blockno);
     
@@ -316,8 +320,8 @@ for ng = 1:ngrids
     
     % minimum over all grids at this time, but not necessarily on slice
     % shown.
-    qmin = min([qmin,min(min(min(q)))]);
-    qmax = max([qmax,max(max(max(q)))]);
+    qmin = min([qmin;q(:)]);
+    qmax = max([qmax;q(:)]);
     
     % keep count of how many cells at this refinement level:
     if length(ncells) < level
