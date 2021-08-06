@@ -1,10 +1,10 @@
-import ogr, os, osr, glob
+import os, glob
 import numpy as np
 import clawpack.pyclaw.solution as solution
 import datetime, sys
 
 try:
-    from osgeo import gdal
+    from osgeo import gdal, ogr, osr
 except ImportError:
     import gdal
 
