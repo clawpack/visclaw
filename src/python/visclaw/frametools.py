@@ -32,6 +32,8 @@ from numpy import ma
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
 
+import geoCon as gc
+
 
 
 #==============================================================================
@@ -96,6 +98,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
     if type(framesolns) is not list:
         framesolns = [framesolns]
+
+    #if plotaxes.plotitem_dict['ITEM1'].plot_type == '2d_gtiff':
+        #gc.render(framesolns[0], frameno)
 
     t = framesolns[0].t
 
@@ -174,6 +179,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             plotaxes = plotaxes_dict[axesname]
             if not plotaxes._show:
                 continue   # skip this axes if no items show
+
+            if plotaxes.plotitem_dict['ITEM1'].plot_type == '2d_gtiff':
+                gc.render(framesolns[0], frameno)
 
             # create the axes:
             axescmd = getattr(plotaxes,'axescmd','subplot(1,1,1)')
@@ -782,7 +790,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         pc_cmd = 'pcolormesh'
         pc_mth = plt.pcolormesh
 
-    if pp['plot_type'] == '2d_pcolor':
+    if pp['plot_type'] == '2d_gtiff':
+        pass
+
+    elif pp['plot_type'] == '2d_pcolor':
 
         pcolor_cmd = "plotitem._current_pobj = plt."+pc_cmd+"(X_edge, Y_edge, var, \
                         cmap=pp['pcolor_cmap']"

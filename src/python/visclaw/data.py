@@ -862,6 +862,9 @@ class ClawPlotItem(clawdata.ClawData):
                 for a in amr_attributes:
                     self.add_attribute('amr_quiver_%s' % a, [])
 
+            elif plot_type == '2d_gtiff':
+                pass
+
             else:
                  print('*** Warning 2d plot type %s not recognized' % plot_type)
 
