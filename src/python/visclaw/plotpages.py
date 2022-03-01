@@ -1809,13 +1809,16 @@ def massage_frames_data(plot_pages_data):
         frametimes = ppd.timeframes_frametimes
         fignos = ppd.timeframes_fignos
         fignames = ppd.timeframes_fignames
-        prefix = getattr(ppd, 'timeframes_prefix', 'frame')
+        prefix = getattr(ppd, 'file_prefix', 'fort')
+        if prefix is 'fort':
+            prefix = getattr(ppd, 'timeframes_prefix', 'frame')
+        if prefix != 'frame':
+            prefix = prefix + 'frame'
     except:
         print('*** Error: timeframes not set properly')
         return
 
     startdir = os.getcwd()
-
 
     if framenos == 'all' or fignos == 'all':
         # need to determine which figures exist
@@ -1837,10 +1840,12 @@ def massage_frames_data(plot_pages_data):
             fignos.sort()
 
     allframesfile = {}
+    moviefile = {}
     for figno in fignos:
         if figno not in fignames:
             fignames[figno] = 'Solution'
-        allframesfile[figno] = '%s_allframesfig%s.html'  % (prefix,figno)
+        allframesfile[figno] = 'allframes_fig%s.html'  % figno
+        moviefile[figno] = 'movie_fig%s.html'  % figno
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -1883,6 +1888,7 @@ def massage_frames_data(plot_pages_data):
     ppd._frametimef = frametimef
     ppd._allfigsfile = allfigsfile
     ppd._allframesfile = allframesfile
+    ppd._moviefile = moviefile
     return ppd
 
 
@@ -2163,6 +2169,7 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
+    moviefile = plotdata._moviefile
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -2231,8 +2238,8 @@ def plotclaw2html(plotdata):
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
-            html.write('\n   <td><a href="movie%s">%s</a></td>' \
-                           % (allframesfile[figno],fignames[figno]))
+            html.write('\n   <td><a href="%s">%s</a></td>' \
+                           % (moviefile[figno],fignames[figno]))
         html.write('</tr>\n')
     if plotdata.gif_movie:
         html.write('<p><tr><td><b>gif Movies:</b></td>')
@@ -2800,6 +2807,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     plotdata.save_frames = False
 
+    if plotdata.file_prefix is None:
+        plotdata.file_prefix = 'fort'
+
     datadir = os.getcwd()  # assume data files in this directory
 
     if 'matplotlib' not in sys.modules:
@@ -2926,8 +2936,9 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     pngfile = {}
     frametimes = {}
 
-    for file in glob.glob('fort.q*'):
-        frameno = int(file[7:10])
+    #import pdb; pdb.set_trace()
+    for file in glob.glob(plotdata.file_prefix + '.q*'):
+        frameno = int(file[-4:])
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
@@ -2947,7 +2958,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     # Discard frames that are not from latest run, based on
     # file modification time:
-    framenos = frametools.only_most_recent(framenos, plotdata.outdir)
+    framenos = frametools.only_most_recent(framenos, plotdata.outdir,
+                                           plotdata.file_prefix)
 
     numframes = len(framenos)
 
@@ -2965,6 +2977,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Only grab times by loading in time
     for frameno in framenos:
         plotdata.output_controller.output_path = plotdata.outdir
+        plotdata.output_controller.file_prefix = plotdata.file_prefix
         frametimes[frameno] = plotdata.output_controller.get_time(frameno)
 
     # for frameno in framenos:
@@ -3056,8 +3069,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
             raw_html = '<html>\n<center><h3><a href=%s>Plot Index</a></h3>\n' \
                         % plotdata.html_index_fname
+            
+            if plotdata.file_prefix in ['fort',None]:
+                png_prefix = ''
+            else:
+                png_prefix = plotdata.file_prefix
             animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
-                            file_name_prefix = 'movieframe_allframes',
+                            #file_name_prefix='movieframe_allframes',
+                            file_name_prefix='movie_',
+                            png_prefix=png_prefix,
                             figsize=None,
                             fignos=[figno], outputs=['html'], raw_html=raw_html)
 
