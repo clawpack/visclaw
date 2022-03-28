@@ -54,7 +54,7 @@ amrlines = get_lines;
 level_handles = [];
 level_labels = {};
 k = 1;
-for level = 1:length(amrlines),
+for level = 1:length(amrlines)
   svec = amrlines{level};  
   if (~isempty(svec))
       level_labels{k} = sprintf('Level %d',level-1+base_level);
@@ -65,4 +65,4 @@ end
 
 if (nargout == 2)
   level_labels_out = level_labels;
-end;
+end
