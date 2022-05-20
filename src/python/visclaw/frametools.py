@@ -793,7 +793,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
         else:
             pcolor_cmd += ", shading='flat'"
-
+        
+        pcolor_cmd += ", rasterized=True"
+        
         pcolor_cmd += ", **pp['kwargs'])"
 
         if not var_all_masked:
