@@ -51,7 +51,7 @@ class ClawPlotData(clawdata.ClawData):
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
             self.add_attribute('format','ascii')
-            self.add_attribute('file_prefix',None)
+            self.add_attribute('file_prefix','fort')
 
         # This should eventually replace all need for recording the above
         # information
