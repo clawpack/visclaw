@@ -823,9 +823,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                     norm=color_norm)
 
             if pp['celledges_show']:
-                # This draws patch for labels shown.  Levels not shown will
-                # not have lower levels blanked out however.  There doesn't
-                # seem to be an easy way to do this.
+                # This draws cell edges for this level.
+                # Note that these will still be visible when imshow is used
+                # for finer levels, so imshow doesn't look as good as pcolor
+                # when you only want to show celledges on coarse levels.
+                # There doesn't seem to be an easy way to fix this.
                 pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'])
                 pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
 
