@@ -792,7 +792,8 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         else:
             pcolor_cmd += ", shading='flat'"
         
-        pcolor_cmd += ", rasterized=True"
+        if 'rasterized' not in pp['kwargs']:
+            pcolor_cmd += ", rasterized=True"
         
         pcolor_cmd += ", **pp['kwargs'])"
 
