@@ -46,10 +46,12 @@ class ClawPlotData(clawdata.ClawData):
                 for i,frame in enumerate(controller.frames):
                     self.framesoln_dict[str(i)] = frame
             self.add_attribute('format',copy.copy(controller.output_format))
+            self.add_attribute('file_prefix',copy.copy(controller.output_file_prefix))
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
             self.add_attribute('format','ascii')
+            self.add_attribute('file_prefix','fort')
 
         # This should eventually replace all need for recording the above
         # information
@@ -231,7 +233,9 @@ class ClawPlotData(clawdata.ClawData):
         key = (frameno, outdir)
 
         if refresh or (key not in framesoln_dict):
-            framesoln = solution.Solution(frameno,path=outdir,file_format=self.format)
+            framesoln = solution.Solution(frameno,path=outdir,
+                                          file_prefix=self.file_prefix,
+                                          file_format=self.format)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln

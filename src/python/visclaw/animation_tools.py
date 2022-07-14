@@ -372,7 +372,7 @@ def interact_animate_figs(figs, manual=False, TextInput=False):
 
 def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
         outputs=['mp4','html','rst'], file_name_prefix='',
-        figsize=None, dpi=None, fps=5, raw_html=''):
+        png_prefix='frame', figsize=None, dpi=None, fps=5, raw_html=''):
 
     """
     After running `make plots` using VisClaw, convert the png files in 
@@ -403,7 +403,8 @@ def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
 
     for figno in fignos:
 
-        fname_pattern = 'frame*fig%s.png' % figno
+        #fname_pattern = 'frame*fig%s.png' % figno
+        fname_pattern = '%s*fig%s.png' % (png_prefix,figno)
         anim = make_anim(plotdir, fname_pattern, figsize, dpi)
 
         if 'mp4' in outputs:

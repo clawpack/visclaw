@@ -155,7 +155,7 @@ water_colors = tsunami_colormap
 # The drytol parameter is used in masking land and water and
 # affects what color map is used for cells with small water depth h.
 # The best value to use often depends on the application and can
-# be set for an application by setting current_data.user.drytol in
+# be set for an application by setting current_data.user['dry_tolerance'] in
 # a beforeframe function, for example.  If it's not set by the user,
 # the following default value is used (in meters):
 
@@ -177,7 +177,7 @@ def land(current_data):
    """
    Return a masked array containing the surface elevation only in dry cells.
    """
-   drytol = getattr(current_data.user, 'drytol', drytol_default)
+   drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
    h = q[0,:,:]
    eta = q[3,:,:]
@@ -188,7 +188,7 @@ def land(current_data):
 def water(current_data):
    """Deprecated: use surface instead."""
    raise DeprecationWarning("Deprecated function, use surface instead.")
-   drytol = getattr(current_data.user, 'drytol', drytol_default)
+   drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
    h = q[0,:,:]
    eta = q[3,:,:]
@@ -200,7 +200,7 @@ def depth(current_data):
    """
    Return a masked array containing the depth of fluid only in wet cells.
    """
-   drytol = getattr(current_data.user, 'drytol', drytol_default)
+   drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
    h = q[0,:,:]
    depth = numpy.ma.masked_where(h<=drytol, h)
@@ -220,7 +220,7 @@ def surface(current_data):
     Surface is eta = h+topo, assumed to be output as 4th column of fort.q
     files.
     """
-    drytol = getattr(current_data.user, 'drytol', drytol_default)
+    drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
     h = q[0,:,:]
     eta = q[3,:,:]
@@ -246,7 +246,7 @@ def surface_or_depth(current_data):
     files.
     """
 
-    drytol = getattr(current_data.user, 'drytol', drytol_default)
+    drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
     h = q[0,:,:]
     eta = q[3,:,:]
@@ -269,6 +269,77 @@ def surface_or_depth(current_data):
         pass
 
     return surface_or_depth
+
+
+def u_velocity(current_data):
+    """
+    Return a masked array containing the u velocity (x-component)
+    Mask out dry cells.  
+    """
+
+    drytol = current_data.user.get('dry_tolerance', drytol_default)
+    q = current_data.q
+    h = q[0,:,:]
+    hu = q[1,:,:]
+    h_wet = numpy.ma.masked_where(h<=drytol, h)
+    u_wet = hu / h_wet
+
+    try:
+        # Use mask covering coarse regions if it's set:
+        m = current_data.mask_coarse
+        u_wet = numpy.ma.masked_where(m, u_wet)
+    except:
+        pass
+
+    return u_wet
+
+
+def v_velocity(current_data):
+    """
+    Return a masked array containing the v velocity (y-component)
+    Mask out dry cells.  
+    """
+
+    drytol = current_data.user.get('dry_tolerance', drytol_default)
+    q = current_data.q
+    h = q[0,:,:]
+    hv = q[2,:,:]
+    h_wet = numpy.ma.masked_where(h<=drytol, h)
+    v_wet = hv / h_wet
+
+    try:
+        # Use mask covering coarse regions if it's set:
+        m = current_data.mask_coarse
+        v_wet = numpy.ma.masked_where(m, v_wet)
+    except:
+        pass
+
+    return v_wet
+
+def speed(current_data):
+    """
+    Return a masked array containing the speed.
+    Mask out dry cells.  
+    """
+
+    drytol = current_data.user.get('dry_tolerance', drytol_default)
+    q = current_data.q
+    h = q[0,:,:]
+    hu = q[1,:,:]
+    hv = q[2,:,:]
+    h_wet = numpy.ma.masked_where(h<=drytol, h)
+    u_wet = hu / h_wet
+    v_wet = hv / h_wet
+    speed = numpy.sqrt(u_wet**2 + v_wet**2)
+
+    try:
+        # Use mask covering coarse regions if it's set:
+        m = current_data.mask_coarse
+        speed = numpy.ma.masked_where(m, speed)
+    except:
+        pass
+
+    return speed
 
 
 
