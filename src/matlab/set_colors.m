@@ -101,7 +101,7 @@ switch  colormapping
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
         
-    case 'parallelpartitions'
+    case {'parallelpartitions', 'blockcolors'}
         
         pp = parallelpartitions(q);
         npmax = pp.npmax;
@@ -117,7 +117,12 @@ switch  colormapping
             end
         end
 
-        mpirank = getmpirank();  % mpirank for this patch        
+        % 'mpirank' should be renamed to something more generic
+        if strcmp(colormapping,'parallelpartitions') == 1
+            mpirank = getmpirank();  % mpirank for this patch        
+        elseif strcmp(colormapping,'blockcolors') == 1
+            mpirank = getblocknumber();
+        end
         if (~isfield(pp,'plotq'))
             pp.plotq = ~isempty(pp.qcolors);
         end
@@ -165,7 +170,6 @@ switch  colormapping
             
             w = [1 1 1]; 
             cm_extended = [ppcm;pp.colormap;w];
-
         end
         
         % -----------------------
@@ -183,8 +187,8 @@ switch  colormapping
         end
         
         % Hardwire colors for the patch
-        % set(p,'FaceVertexCData',cm_extended(fv_idx,:));
-        set(p,'FaceVertexCData',fv_idx);
+        set(p,'FaceVertexCData',cm_extended(fv_idx,:));
+        % set(p,'FaceVertexCData',fv_idx);
         set(p,'cdatamapping','direct');
         
         % Use 'flat' so that each mesh cell has single identifing color

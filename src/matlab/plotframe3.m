@@ -69,6 +69,9 @@ if (PlotType <= 3)
         end
     end
     
+    set_value('plotparallelpartitions','PlotParallelPartitions',0);
+    set_value('plotblockcolors','PlotBlockColors',0);
+
     set_value('underoverflag','ShowUnderOverShoots',0);
     if underoverflag == 1 && ~exist('underover','file')
         error(['*** ShowUnderOverShoots = 1, but no ''underover'' ',...
@@ -81,8 +84,12 @@ if (PlotType <= 3)
             'function was found.']);
     end
     
-    if (underoverflag == 1)
+    if underoverflag == 1
         colormapping = 'underover';
+    elseif plotparallelpartitions == 1
+        colormapping = 'parallelpartitions';
+    elseif plotblockcolors == 1
+        colormapping = 'blockcolors';
     elseif (usercolormapping == 1)
         colormapping = 'usercolormapping';
     else
@@ -261,6 +268,14 @@ for ng = 1:ngrids
         % Continue to next patch
         continue;
     end
+
+    if (forestclaw)
+        mpirank = amrdata(ng).mpirank;
+        set_mpirank(mpirank);
+    else
+        set_mpirank(0);
+    end
+
     
     mx = amrdata(ng).mx;
     my = amrdata(ng).my;
@@ -335,8 +350,12 @@ for ng = 1:ngrids
         
         sliceCoords = {xscoords, yscoords, zscoords};
         sdirs = {'x','y','z'};
-        maskflag = 1;  % Mask out patch areas
-        
+        if (forestclaw)
+            maskflag = 0;
+        else
+            maskflag = 1;
+        end
+                
         for idir = 1:3  % Loop over directions
             slicevals = sliceCoords{idir}; % user specified slice constants
             sdir = sdirs{idir};
@@ -352,10 +371,13 @@ for ng = 1:ngrids
                         xedge,yedge,zedge,qcm2,level,...
                         cvalues,mappedgrid, manifold,maskflag,ng,blockno,...
                         colormapping);
+                    axis([0 2 0 2 0 1])
+                    daspect([1 1 1])
                 end
             end
         end
-        hidelevels(find(~PlotData));
+        % Skip this - it does weird things.
+        % hidelevels(find(~PlotData));
         
         % Add cube to plot - whether it is visible or not depends on how user
         % set PlotCubeEdges.
