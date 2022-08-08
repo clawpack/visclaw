@@ -30,4 +30,4 @@ if (~evalin('base',['exist(''',a_user,''')']))
   assignin('base',a,a_default);
 else
   evalin('base',[a, ' = ',a_user,';']);
-end;
+end
