@@ -14,6 +14,8 @@ if (isempty(c))
     return;
 end
 
+set_blocknumber(blockno);
+
 st_idx = 1;
 line_cnt = 0;
 while (1)
@@ -40,7 +42,6 @@ while (1)
             % are being generated: may want to shift off
             % manifold slightly to avoid hidden line removal
             % causing apparent gaps in contours.
-            set_blocknumber(blockno);
             [xdata, ydata, zdata] = mapc2m(xdata,ydata);
             creatingclines = 0;
         end
