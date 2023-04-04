@@ -12,10 +12,10 @@ function surfloop()
 
 isurfaces = get_isosurfaces;
 
-if (length(isurfaces) == 0)
-  fprintf('isoloop : %sIsurfValues == []\n',sdir);
+if (isempty(isurfaces))
+  fprintf('isoloop : %sIsurfValues == []\n');
   return;  % Nothing to loop over
-end;
+end
 
 % First hide all slices in direction dir.
 hidesurfs;
@@ -34,7 +34,7 @@ while (notdone)
     keyboard;
   elseif (strcmp(s,'q'))
     return;
-  end;
+  end
   hidesurfs(last_surf);
   fprintf('\n');
   fprintf('Showing surf %d\n',next_surf);
@@ -42,4 +42,4 @@ while (notdone)
 
   last_surf = next_surf;
 
-end;
+end

@@ -14,7 +14,7 @@ function o = multicolormap_colorbar(npmax)
 % caxis([1 npmax+1]);
 % h = multicolormap_colorbar(npmax);
 
-qmin = 0;    % assume min i sprocessor 0 and max if NP-1
+qmin = 0;    % assume min is processor 0 and max if NP-1
 qmax = npmax-1;
 
 o = colorbar;
@@ -22,6 +22,6 @@ o = colorbar;
 set(o,'ytick',(0:(npmax)) + 0.5);
 set(o,'yticklabel',(1:npmax)-1);
 set(o,'ylim',[qmin qmax+1]);
-set(o,'ticklength',[0])
+set(o,'ticklength',0)
 set(o,'fontsize',16,'fontweight','bold')
 

@@ -11,7 +11,7 @@ function cm = multicolormap(n,s)
 
 if (nargin > 1)
   rand('seed',s);
-end;
+end
 
 % Grid in colorcube for obtaining distinct colors.
 N1 = 5;
