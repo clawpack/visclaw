@@ -6,14 +6,17 @@ from __future__ import absolute_import
 
 def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
     """
+        This function is meant to be used in a Jupyter notebook.  It returns a matplotlib
+        animation object, rendered using Javascript and HTML.
+
         frame_list may be:
 
             - a list of Solution objects
             - a controller possessing a list of Solution objects
     """
     import matplotlib.pyplot as plt
+    from IPython.display import HTML
     from matplotlib import animation
-    from clawpack.visclaw.JSAnimation import IPython_display
     from clawpack.pyclaw import Controller
     import numpy as np
 
@@ -74,4 +77,6 @@ def ianimate(frame_list,plotdata=None,ivar=0,varname=None,**kargs):
             raise Exception('3D animation not yet implemented')
         return im,
 
-    return animation.FuncAnimation(fig, fplot, frames=len(frame_list))
+    plt.close()
+
+    return HTML(animation.FuncAnimation(fig, fplot, frames=len(frame_list)).to_jshtml())

@@ -462,12 +462,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             figno = plotfigure.figno
             if figno in plotted_fignos:
                 if figno in kml_fignos:
-                    printfig(frameno=frameno, figno=figno, \
+                    printfig(frameno=frameno, figno=figno,\
+                             file_prefix=plotdata.file_prefix,\
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
                              verbose=verbose,kml_fig=True,kml_dpi=plotfigure.kml_dpi,
                              kml_figsize=plotfigure.kml_figsize)
                 else:
-                    printfig(frameno=frameno, figno=figno, \
+                    printfig(frameno=frameno, figno=figno,\
+                             file_prefix=plotdata.file_prefix,\
                              format=plotdata.print_format, plotdir=plotdata.plotdir,\
                              verbose=verbose,kml_fig=False)
 
@@ -791,7 +793,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
         else:
             pcolor_cmd += ", shading='flat'"
-
+        
+        if 'rasterized' not in pp['kwargs']:
+            pcolor_cmd += ", rasterized=True"
+        
         pcolor_cmd += ", **pp['kwargs'])"
 
         if not var_all_masked:
@@ -820,9 +825,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                     norm=color_norm)
 
             if pp['celledges_show']:
-                # This draws patch for labels shown.  Levels not shown will
-                # not have lower levels blanked out however.  There doesn't
-                # seem to be an easy way to do this.
+                # This draws cell edges for this level.
+                # Note that these will still be visible when imshow is used
+                # for finer levels, so imshow doesn't look as good as pcolor
+                # when you only want to show celledges on coarse levels.
+                # There doesn't seem to be an easy way to fix this.
                 pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'])
                 pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
 
@@ -1048,7 +1055,8 @@ def get_var(state, plot_var, current_data):
 
 
 #------------------------------------------------------------------------
-def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
+def printfig(fname='',frameno='', figno='', file_prefix='fort',
+             format='png', plotdir='.',
              verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None,
              bbox_inches='tight',close_fig=True):
 #------------------------------------------------------------------------
@@ -1064,8 +1072,15 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
     If figno='' then the figJ part is omitted.
     """
 
+    if file_prefix == 'fort':
+        # usual case:
+        png_prefix = 'frame'
+    else:
+        # e.g. file_prefix == 'fgout0001'
+        png_prefix = file_prefix + 'frame'
+
     if fname == '':
-        fname = 'frame' + str(frameno).rjust(4,'0')
+        fname = png_prefix + str(frameno).rjust(4,'0')
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
@@ -1459,7 +1474,7 @@ def var_minmax(plotdata,framenos,vars):
 
 
 #------------------------------------------------------------------
-def only_most_recent(framenos,outdir='.',verbose=True):
+def only_most_recent(framenos,outdir='.',prefix='fort',verbose=True):
 #------------------------------------------------------------------
 
     """
@@ -1480,8 +1495,8 @@ def only_most_recent(framenos,outdir='.',verbose=True):
             return framenos
 
     fortfile = {}
-    for file in glob.glob('fort.q*'):
-        frameno = int(file[6:])
+    for file in glob.glob(prefix + '.q*'):
+        frameno = int(file[-4:])
         fortfile[frameno] = file
 
     #DK: In PetClaw, we don't output fort.q* files.  Instead count the

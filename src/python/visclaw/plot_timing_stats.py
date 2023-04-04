@@ -211,7 +211,8 @@ def make_plots(outdir='_output', make_pngs=True, make_html=None,
 
     # Read in timing states from output directory:
     timing_stats_file = os.path.join(outdir, 'timing.csv')
-    timing_stats = loadtxt(timing_stats_file, skiprows=1, delimiter=',')
+    timing_stats = loadtxt(timing_stats_file, skiprows=1, delimiter=',',
+                           ndmin=2)
     ntimes = timing_stats.shape[0]
     nlevels = int(timing_stats.shape[1] / 3) - 1
 
