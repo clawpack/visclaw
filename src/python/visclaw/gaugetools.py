@@ -280,7 +280,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # end of loop over plotitems
 
     
-            pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
+            title_str = "%s at gauge %s" % (plotaxes.title,gaugeno)
+            pylab.title(title_str, **plotaxes.title_kwargs)
     
             if plotaxes.time_label is not None:
                 pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
@@ -318,6 +319,16 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 except:
                     pass  # let axis be set automatically
     
+            if plotaxes.grid:
+                pylab.grid(**plotaxes.grid_kwargs)
+ 
+            if plotaxes.xticks_kwargs is not None:
+                pylab.xticks(**plotaxes.xticks_kwargs)
+            if plotaxes.yticks_kwargs is not None:
+                pylab.yticks(**plotaxes.yticks_kwargs)
+
+            if plotaxes.y_label is not None:
+                pylab.ylabel(plotaxes.y_label, **plotaxes.y_label_kwargs)
 
             # end of loop over plotaxes
             

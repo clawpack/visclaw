@@ -150,9 +150,15 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         if plotfigure.use_for_kml:
             kml_fignos.append(figno)
 
-        if 'facecolor' not in plotfigure.kwargs:
+        if (plotfigure.facecolor is None) and \
+           ('facecolor' not in plotfigure.kwargs):
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'
+        elif plotfigure.facecolor is not None:
+            plotfigure.kwargs['facecolor'] = plotfigure.facecolor
+
+        if plotfigure.figsize is not None:
+            plotfigure.kwargs['figsize'] = plotfigure.figsize
 
         # create figure and set handle:
         plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
@@ -372,6 +378,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         if plotitem.colorbar_ticks is not None:
                             plotitem.colorbar_kwargs['ticks'] = \
                                     plotitem.colorbar_ticks
+                        if plotitem.colorbar_extend is not None:
+                            plotitem.colorbar_kwargs['extend'] = \
+                                    plotitem.colorbar_extend
 
                         cbar = plt.colorbar(pobj, **plotitem.colorbar_kwargs)
 
@@ -388,13 +397,33 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 pass
             else:
                 if plotaxes.title_with_t:
-                    if (t==0.) | ((t>=0.001) & (t<1000.)):
-                        plt.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                    else:
-                        plt.title("%s at time t = %14.8e" % (plotaxes.title,t))
-                else:
-                    plt.title(plotaxes.title)
+                    if 'h:m:s' in plotaxes.title:
+                        # special case: replace this by time in
+                        # hours:minutes:seconds (assuming original t in seconds)
+                        # particularly useful in GeoClaw
+                        from datetime import timedelta
+                        t_str = str(timedelta(seconds=t))
+                        title_str = plotaxes.title.replace('h:m:s',t_str)
 
+                    elif plotaxes.title_t_format:
+                        # now allow user to specify other formats for t:
+                        t_str = plotaxes.title_t_format % t
+
+                        title_str = "%s at time t = %s" \
+                                  % (plotaxes.title,t_str)
+                        
+                    elif (t==0.) | ((t>=0.001) & (t<1000.)):
+                        title_str = "%s at time t = %14.8f" \
+                                  % (plotaxes.title,t)
+                    else:
+                        title_str = "%s at time t = %14.8e" \
+                                  % (plotaxes.title,t)
+
+                    plt.title(title_str, **plotaxes.title_kwargs)
+
+                else:
+                    # omit t from title:
+                    plt.title(plotaxes.title, **plotaxes.title_kwargs)
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
@@ -435,6 +464,19 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
                     except:
                         pass  # let axis be set automatically
+
+            if plotaxes.grid:
+                plt.grid(**plotaxes.grid_kwargs)
+
+            if plotaxes.xticks_kwargs is not None:
+                plt.xticks(**plotaxes.xticks_kwargs)
+            if plotaxes.yticks_kwargs is not None:
+                plt.yticks(**plotaxes.yticks_kwargs)
+
+            if plotaxes.x_label is not None:
+                plt.xlabel(plotaxes.x_label, **plotaxes.x_label_kwargs)
+            if plotaxes.y_label is not None:
+                plt.ylabel(plotaxes.y_label, **plotaxes.y_label_kwargs)
 
             # end of loop over plotaxes
         # end of loop over plotfigures
