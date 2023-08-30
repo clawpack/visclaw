@@ -419,11 +419,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         title_str = "%s at time t = %14.8e" \
                                   % (plotaxes.title,t)
 
-                    plt.title(title_str, **plotaxes.title_kwargs)
 
                 else:
                     # omit t from title:
-                    plt.title(plotaxes.title, **plotaxes.title_kwargs)
+                    title_str = plotaxes.title
+
+                if plotaxes.title_fontsize is not None:
+                    plotaxes.title_kwargs['fontsize'] = plotaxes.title_fontsize
+                plt.title(title_str, **plotaxes.title_kwargs)
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
@@ -468,14 +471,23 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             if plotaxes.grid:
                 plt.grid(**plotaxes.grid_kwargs)
 
-            if plotaxes.xticks_kwargs is not None:
+            if plotaxes.xticks_fontsize is not None:
+                plotaxes.xticks_kwargs['fontsize'] = plotaxes.xticks_fontsize
+            if plotaxes.xticks_kwargs != {}:
                 plt.xticks(**plotaxes.xticks_kwargs)
-            if plotaxes.yticks_kwargs is not None:
+
+            if plotaxes.yticks_fontsize is not None:
+                plotaxes.yticks_kwargs['fontsize'] = plotaxes.yticks_fontsize
+            if plotaxes.yticks_kwargs != {}:
                 plt.yticks(**plotaxes.yticks_kwargs)
 
             if plotaxes.x_label is not None:
+                if plotaxes.x_label_fontsize is not None:
+                    plotaxes.x_label_kwargs['fontsize'] = plotaxes.x_label_fontsize
                 plt.xlabel(plotaxes.x_label, **plotaxes.x_label_kwargs)
             if plotaxes.y_label is not None:
+                if plotaxes.y_label_fontsize is not None:
+                    plotaxes.y_label_kwargs['fontsize'] = plotaxes.y_label_fontsize
                 plt.ylabel(plotaxes.y_label, **plotaxes.y_label_kwargs)
 
             # end of loop over plotaxes

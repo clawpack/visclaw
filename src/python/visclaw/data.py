@@ -685,12 +685,17 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('kwargs', {})
         self.add_attribute('grid', None) # True to add grid() command
         self.add_attribute('grid_kwargs', {}) # argument to grid() command
-        self.add_attribute('title_kwargs', {}) # e.g. to set fontsize
+        self.add_attribute('title_fontsize', None)
+        self.add_attribute('title_kwargs', {}) # e.g. to set color
         self.add_attribute('title_t_format', None) # format for t in title
-        self.add_attribute('xticks_kwargs', {}) # e.g. to set fontsize
-        self.add_attribute('yticks_kwargs', {}) # e.g. to set fontsize
+        self.add_attribute('xticks_fontsize', None) 
+        self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
+        self.add_attribute('yticks_fontsize', None) 
+        self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
         self.add_attribute('x_label', None) # label for x-axis
         self.add_attribute('y_label', None) # label for y-axis
+        self.add_attribute('x_label_fontsize', None)
+        self.add_attribute('y_label_fontsize', None)
         self.add_attribute('x_label_kwargs', {})
         self.add_attribute('y_label_kwargs', {})
 
