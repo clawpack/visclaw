@@ -481,14 +481,14 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             if plotaxes.yticks_kwargs != {}:
                 plt.yticks(**plotaxes.yticks_kwargs)
 
-            if plotaxes.x_label is not None:
-                if plotaxes.x_label_fontsize is not None:
-                    plotaxes.x_label_kwargs['fontsize'] = plotaxes.x_label_fontsize
-                plt.xlabel(plotaxes.x_label, **plotaxes.x_label_kwargs)
-            if plotaxes.y_label is not None:
-                if plotaxes.y_label_fontsize is not None:
-                    plotaxes.y_label_kwargs['fontsize'] = plotaxes.y_label_fontsize
-                plt.ylabel(plotaxes.y_label, **plotaxes.y_label_kwargs)
+            if plotaxes.xlabel is not None:
+                if plotaxes.xlabel_fontsize is not None:
+                    plotaxes.xlabel_kwargs['fontsize'] = plotaxes.xlabel_fontsize
+                plt.xlabel(plotaxes.xlabel, **plotaxes.xlabel_kwargs)
+            if plotaxes.ylabel is not None:
+                if plotaxes.ylabel_fontsize is not None:
+                    plotaxes.ylabel_kwargs['fontsize'] = plotaxes.ylabel_fontsize
+                plt.ylabel(plotaxes.ylabel, **plotaxes.ylabel_kwargs)
 
             # end of loop over plotaxes
         # end of loop over plotfigures

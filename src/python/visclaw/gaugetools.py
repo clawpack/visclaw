@@ -281,6 +281,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     
             title_str = "%s at gauge %s" % (plotaxes.title,gaugeno)
+            if plotaxes.title_fontsize is not None:
+                plotaxes.title_kwargs['fontsize'] = plotaxes.title_fontsize
             pylab.title(title_str, **plotaxes.title_kwargs)
     
             if plotaxes.time_label is not None:
@@ -327,8 +329,10 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             if plotaxes.yticks_kwargs is not None:
                 pylab.yticks(**plotaxes.yticks_kwargs)
 
-            if plotaxes.y_label is not None:
-                pylab.ylabel(plotaxes.y_label, **plotaxes.y_label_kwargs)
+            if plotaxes.ylabel is not None:
+                if plotaxes.ylabel_fontsize is not None:
+                    plotaxes.ylabel_kwargs['fontsize'] = plotaxes.ylabel_fontsize
+                pylab.ylabel(plotaxes.ylabel, **plotaxes.ylabel_kwargs)
 
             # end of loop over plotaxes
             

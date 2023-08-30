@@ -692,12 +692,12 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
         self.add_attribute('yticks_fontsize', None) 
         self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
-        self.add_attribute('x_label', None) # label for x-axis
-        self.add_attribute('y_label', None) # label for y-axis
-        self.add_attribute('x_label_fontsize', None)
-        self.add_attribute('y_label_fontsize', None)
-        self.add_attribute('x_label_kwargs', {})
-        self.add_attribute('y_label_kwargs', {})
+        self.add_attribute('xlabel', None) # label for x-axis
+        self.add_attribute('ylabel', None) # label for y-axis
+        self.add_attribute('xlabel_fontsize', None)
+        self.add_attribute('ylabel_fontsize', None)
+        self.add_attribute('xlabel_kwargs', {})
+        self.add_attribute('ylabel_kwargs', {})
 
 
     def new_plotitem(self, name=None, plot_type=None):
