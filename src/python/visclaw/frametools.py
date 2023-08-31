@@ -490,6 +490,12 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     plotaxes.ylabel_kwargs['fontsize'] = plotaxes.ylabel_fontsize
                 plt.ylabel(plotaxes.ylabel, **plotaxes.ylabel_kwargs)
 
+            if plotaxes.aspect_latitude is not None:
+                plt.gca().set_aspect(1./np.cos(plotaxes.aspect_latitude \
+                            * np.pi/180))
+            elif plotaxes.aspect is not None:
+                plt.gca().set_aspect(plotaxes.aspect)
+
             # end of loop over plotaxes
         # end of loop over plotfigures
 

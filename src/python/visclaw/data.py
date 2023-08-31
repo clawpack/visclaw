@@ -698,6 +698,8 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('ylabel_fontsize', None)
         self.add_attribute('xlabel_kwargs', {})
         self.add_attribute('ylabel_kwargs', {})
+        self.add_attribute('aspect', None)
+        self.add_attribute('aspect_latitude', None)
 
 
     def new_plotitem(self, name=None, plot_type=None):
