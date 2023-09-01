@@ -677,6 +677,7 @@ class ClawPlotAxes(clawdata.ClawData):
 
         # attributes for gauge plots
         self.add_attribute('time_label', 'time')  # for time axis in gauges
+        self.add_attribute('time_label_fontsize', None)
         self.add_attribute('time_label_kwargs', {})  # kwargs for xlabel cmd
         self.add_attribute('time_scale', 1)  # multiplicative factor to rescale t
                                              # e.g. 1/3600. from sec to hours

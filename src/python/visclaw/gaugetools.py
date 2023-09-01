@@ -286,6 +286,9 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             pylab.title(title_str, **plotaxes.title_kwargs)
     
             if plotaxes.time_label is not None:
+                if plotaxes.time_label_fontsize is not None:
+                    plotaxes.time_label_kwargs['fontsize'] = \
+                                    plotaxes.time_label_fontsize
                 pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
     
     
