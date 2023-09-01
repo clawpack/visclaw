@@ -397,12 +397,24 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 pass
             else:
                 if plotaxes.title_with_t:
-                    if 'h:m:s' in plotaxes.title:
-                        # special case: replace this by time in
-                        # hours:minutes:seconds (assuming original t in seconds)
-                        # particularly useful in GeoClaw
-                        from datetime import timedelta
-                        t_str = str(timedelta(seconds=t))
+                    if 'd:h:m:s' in plotaxes.title:
+                        #from datetime import timedelta
+                        #t_str = str(timedelta(seconds=t))
+                        #title_str = plotaxes.title.replace('d:h:m:s',t_str)
+
+                        # formats the same as above but doesn't use datetime:
+                        days, remainder = divmod(t, 24*3600)
+                        hours, remainder = divmod(remainder, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        t_str = '%i days, %i:%i:%i' \
+                                % (days,hours,minutes,seconds)
+                        title_str = plotaxes.title.replace('d:h:m:s',t_str)
+
+                    elif 'h:m:s' in plotaxes.title:
+                        # keep total hours, not days
+                        hours, remainder = divmod(t, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        t_str = '%i:%i:%i' % (hours,minutes,seconds)
                         title_str = plotaxes.title.replace('h:m:s',t_str)
 
                     elif plotaxes.title_t_format:
