@@ -480,6 +480,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                     except:
                         pass  # let axis be set automatically
 
+            if plotaxes.useOffset is not None:
+                plt.ticklabel_format(useOffset = plotaxes.useOffset)
+
             if plotaxes.grid:
                 plt.grid(**plotaxes.grid_kwargs)
 
