@@ -220,6 +220,9 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'   
 
+        if plotfigure.figsize is not None:
+            plotfigure.kwargs['figsize'] = plotfigure.figsize
+
         # create figure and set handle:
         plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
 
