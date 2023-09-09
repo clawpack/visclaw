@@ -576,6 +576,8 @@ class ClawPlotFigure(clawdata.ClawData):
         self._plotdata = plotdata           # parent ClawPlotData object
         self.add_attribute('name',name)
         self.add_attribute('figno',figno)
+        self.add_attribute('figsize',None)
+        self.add_attribute('facecolor',None)
         self.add_attribute('kwargs',{})
         self.add_attribute('clf_each_frame',True)
         self.add_attribute('clf_each_gauge',True)
@@ -675,9 +677,32 @@ class ClawPlotAxes(clawdata.ClawData):
 
         # attributes for gauge plots
         self.add_attribute('time_label', 'time')  # for time axis in gauges
+        self.add_attribute('time_label_fontsize', None)
         self.add_attribute('time_label_kwargs', {})  # kwargs for xlabel cmd
         self.add_attribute('time_scale', 1)  # multiplicative factor to rescale t
                                              # e.g. 1/3600. from sec to hours
+
+        # recently added attributes:
+        self.add_attribute('kwargs', {})
+        self.add_attribute('grid', None) # True to add grid() command
+        self.add_attribute('grid_kwargs', {}) # argument to grid() command
+        self.add_attribute('title_fontsize', None)
+        self.add_attribute('title_kwargs', {}) # e.g. to set color
+        self.add_attribute('title_t_format', None) # format for t in title
+        self.add_attribute('xticks_fontsize', None) 
+        self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
+        self.add_attribute('yticks_fontsize', None) 
+        self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
+        self.add_attribute('xlabel', None) # label for x-axis
+        self.add_attribute('ylabel', None) # label for y-axis
+        self.add_attribute('xlabel_fontsize', None)
+        self.add_attribute('ylabel_fontsize', None)
+        self.add_attribute('xlabel_kwargs', {})
+        self.add_attribute('ylabel_kwargs', {})
+        self.add_attribute('aspect', None)
+        self.add_attribute('aspect_latitude', None)
+        self.add_attribute('useOffset', None)
+
 
     def new_plotitem(self, name=None, plot_type=None):
         # Create a new entry in self.plotitem_dict
@@ -800,6 +825,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_label',None)
             self.add_attribute('colorbar_ticks', None)
             self.add_attribute('colorbar_tick_labels',None)
+            self.add_attribute('colorbar_extend',None)
             self.add_attribute('colorbar_kwargs',{})
             self.add_attribute('kwargs',{})
             amr_attributes = """celledges_show celledges_color data_show
