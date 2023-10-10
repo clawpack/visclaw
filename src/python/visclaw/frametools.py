@@ -406,15 +406,19 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         days, remainder = divmod(t, 24*3600)
                         hours, remainder = divmod(remainder, 3600)
                         minutes, seconds = divmod(remainder, 60)
-                        t_str = '%i days, %i:%i:%i' \
-                                % (days,hours,minutes,seconds)
+                        t_str = '%i days, %i:%s:%s' \
+                                           % (days,hours,\
+                                              str(int(minutes)).zfill(2),\
+                                              str(int(seconds)).zfill(2))
                         title_str = plotaxes.title.replace('d:h:m:s',t_str)
 
                     elif 'h:m:s' in plotaxes.title:
                         # keep total hours, not days
                         hours, remainder = divmod(t, 3600)
                         minutes, seconds = divmod(remainder, 60)
-                        t_str = '%i:%i:%i' % (hours,minutes,seconds)
+                        t_str = '%i:%s:%s' % (hours,\
+                                              str(int(minutes)).zfill(2),\
+                                              str(int(seconds)).zfill(2))
                         title_str = plotaxes.title.replace('h:m:s',t_str)
 
                     elif plotaxes.title_t_format:
