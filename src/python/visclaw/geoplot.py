@@ -8,7 +8,6 @@ import warnings
 from clawpack.visclaw import colormaps
 from matplotlib.colors import Normalize
 from clawpack.geoclaw import topotools
-# from six.moves import range, zip
 
 
 # Colormaps from geoclaw
