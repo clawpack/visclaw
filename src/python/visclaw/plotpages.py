@@ -5,9 +5,7 @@ Module plotpages
 Utilities for taking a set of plot files and creating a set of html and/or
 latex/pdf pages displaying the plots.
 """
-from __future__ import absolute_import
-from __future__ import print_function
-import os, time, string, glob
+import os, time, glob
 import sys
 from functools import wraps
 
@@ -22,8 +20,6 @@ mpl.rcParams['figure.dpi']= html_movie_dpi
 import numpy as np
 from matplotlib import image as Image
 from matplotlib import pyplot as plt
-import six
-from six.moves import range
 
 from clawpack.visclaw import gaugetools
 from clawpack.visclaw import animation_tools
@@ -2301,7 +2297,7 @@ def plotclaw2html(plotdata):
     if len(plotdata.otherfigure_dict)>0:
         html.write('<p>\n<a name="eachrun"><h3>Other plots:</h3></a>\n')
         html.write('<p><ul>\n')
-        for name in six.iterkeys(plotdata.otherfigure_dict):
+        for name in plotdata.otherfigure_dict.keys():
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
             makefig = otherfigure.makefig

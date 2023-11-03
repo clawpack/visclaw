@@ -2,16 +2,10 @@
 Useful things for plotting GeoClaw results.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import numpy
 import warnings
 
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize
-from clawpack.geoclaw import topotools
-from six.moves import range, zip
-
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run

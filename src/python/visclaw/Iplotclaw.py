@@ -10,11 +10,7 @@ For options during looping type:
 
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import sys
-import six
-from six.moves import input
 
 if 'matplotlib' not in sys.modules:
     import matplotlib
@@ -294,7 +290,7 @@ class Iplotclaw(Iplot):
         if len(plotdata.otherfigure_dict)==0:
             print("No other figures specified.")
         else:
-            for name in six.iterkeys(plotdata.otherfigure_dict):
+            for name in plotdata.otherfigure_dict.keys():
                 otherfigure = plotdata.otherfigure_dict[name]
                 fname = otherfigure.fname
                 makefig = otherfigure.makefig
