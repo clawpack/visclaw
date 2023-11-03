@@ -3,8 +3,6 @@
 Module frametools for plotting frames of time-dependent data.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import sys
 import traceback
@@ -12,8 +10,6 @@ import glob
 import time
 import types
 
-import six
-from six.moves import input
 # "reload" is only available from a module in Python 3.
 if sys.version_info[0] >= 3:
     if sys.version_info[1] >= 4:
@@ -1815,12 +1811,12 @@ def set_show(plotdata):
         plotfigure._show = False
         if plotfigure.show:
             # Loop through all axes to make sure at least some item is showing
-            for plotaxes in six.itervalues(plotfigure.plotaxes_dict):
+            for plotaxes in plotfigure.plotaxes_dict.values():
                 plotaxes._show = False
                 if plotaxes.show:
                     # Loop through plotitems checking each item to see if it
                     # should be shown
-                    for plotitem in six.itervalues(plotaxes.plotitem_dict):
+                    for plotitem in plotaxes.plotitem_dict.values():
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True

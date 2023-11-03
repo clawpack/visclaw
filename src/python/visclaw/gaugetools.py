@@ -2,11 +2,7 @@
 Tools for plotting data from gauges, gauge locations, etc.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-import os,sys,shutil,glob
-import string,re
-import time
+import os,sys,glob
 import traceback
 import warnings
 
@@ -15,7 +11,6 @@ import numpy as np
 import clawpack.clawutil.data as clawdata
 
 from clawpack.visclaw.frametools import set_show
-from six.moves import range
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
