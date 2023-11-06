@@ -10,11 +10,8 @@ For options during looping type:
 
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import cmd, os
 import matplotlib
-from six.moves import input
 matplotlib.rc('text', usetex=False)
 matplotlib.interactive(True)
 import matplotlib.pyplot as plt

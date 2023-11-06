@@ -12,12 +12,9 @@ for example, to get colors ranging from white to green.
 See matplotlib._cm for the data defining various maps.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import numpy
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-from six.moves import range
 
 #-------------------------
 def make_colormap(color_list):

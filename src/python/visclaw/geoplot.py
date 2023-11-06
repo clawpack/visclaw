@@ -6,9 +6,6 @@ import numpy
 import warnings
 
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize
-from clawpack.geoclaw import topotools
-
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run
