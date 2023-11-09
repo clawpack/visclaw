@@ -1068,7 +1068,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     elif pp['plot_type'] == '2d_hillshade':
         if not var_all_masked:
             if pp['hillshade_latlon']:
-                xcoord2meters = 1/111139
+                xcoord2meters = 1/111200
+
+                # could eventually adjust dx
+                # based on np.cos(np.radians(latitude))
+
             else:
                 xcoord2meters = 1
             
