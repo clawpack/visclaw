@@ -892,6 +892,13 @@ class ClawPlotItem(clawdata.ClawData):
                 for a in amr_attributes:
                     self.add_attribute('amr_quiver_%s' % a, [])
 
+            elif plot_type == '2d_hillshade':
+                self.add_attribute('hillshade_cmap','gray')
+                self.add_attribute('hillshade_vertical_exaggeration',1)
+                self.add_attribute('hillshade_azimuth_degree',315)
+                self.add_attribute('hillshade_altitude_degree',45)
+                self.add_attribute('hillshade_latlon', False)
+
             else:
                  print('*** Warning 2d plot type %s not recognized' % plot_type)
 

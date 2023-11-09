@@ -26,8 +26,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy import ma
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, LightSource
 
+# This routine is from matplotlib/lib/matplotlib/colors.py
+# from v3.1.1.
+# https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html
+def _vector_magnitude(arr):
+    sum_sq = 0
+    for i in range(arr.shape[-1]):
+        sum_sq += np.square(arr[..., i, np.newaxis])
+    return np.sqrt(sum_sq)
 
 
 #==============================================================================
@@ -811,7 +819,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'schlieren_cmap','schlieren_cmin', 'schlieren_cmax',
              'quiver_coarsening','quiver_var_x','quiver_var_y','quiver_key_show',
              'quiver_key_scale','quiver_key_label_x','quiver_key_label_y',
-             'quiver_key_scale','quiver_key_units','quiver_key_kwargs']
+             'quiver_key_scale','quiver_key_units','quiver_key_kwargs',
+             'hillshade_cmap','hillshade_vertical_exaggeration',
+             'hillshade_azimuth_degree','hillshade_altitude_degree',
+             'hillshade_latlon']
 
     pp = params_dict(plotitem, base_params, level_params,patch.level)
 
@@ -1053,6 +1064,52 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # no plot to create (user might make one in afteritem or
         # afteraxes)
         pass
+
+    elif pp['plot_type'] == '2d_hillshade':
+        if not var_all_masked:
+            if pp['hillshade_latlon']:
+                xcoord2meters = 1/111139
+            else:
+                xcoord2meters = 1
+            
+            ve = pp['hillshade_vertical_exaggeration'] * xcoord2meters
+            azdeg=pp['hillshade_azimuth_degree']
+            altdeg = pp['hillshade_altitude_degree']
+
+            ls = LightSource(azdeg=azdeg, altdeg=altdeg)
+            # typically would do the following:
+            #  hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
+
+            # but here we need to calculate the hillshade by hand so that the values
+            # are consistent across all patches. The matplotlib code applies a 
+            # contrast stretch that we don't want. 
+   
+            # This code was modified from:
+            # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
+            z = np.flipud(var.T)
+            dx = current_data.dx
+            dy = current_data.dy
+            
+            e_dy, e_dx = np.gradient(ve * z, -dy, dx)
+            normal = np.empty(z.shape + (3,)).view(type(z))
+            normal[..., 0] = -e_dx
+            normal[..., 1] = -e_dy
+            normal[..., 2] = 1
+            normal /= _vector_magnitude(normal)
+            intensity = normal.dot(ls.direction)
+
+            # contrast stretch was applied here, code was deleted from the matplotlib routines.
+
+            intensity = np.clip(intensity, 0, 1)
+            hs = intensity
+
+            xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
+            pobj = plt.imshow(hs, cmap="gray", vmin=0, vmax=1, extent=xylimits)
+            color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
+
+        else:
+            #print '*** Not doing hillshade on totally masked array'
+            pass
 
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
