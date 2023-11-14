@@ -845,6 +845,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('imshow_cmin',None)
                 self.add_attribute('imshow_cmax',None)
                 self.add_attribute('imshow_norm', None)
+                self.add_attribute('imshow_alpha', None)
 
 
             elif plot_type in ['2d_contour', '2d_contourf']:
