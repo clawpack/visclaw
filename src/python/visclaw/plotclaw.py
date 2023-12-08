@@ -17,10 +17,7 @@ will call the plotclaw function from this module.
 
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import matplotlib
-from six.moves import range
 matplotlib.use('Agg') 
 
 import sys

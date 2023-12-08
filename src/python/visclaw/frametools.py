@@ -3,8 +3,6 @@
 Module frametools for plotting frames of time-dependent data.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import sys
 import traceback
@@ -12,8 +10,6 @@ import glob
 import time
 import types
 
-import six
-from six.moves import input
 # "reload" is only available from a module in Python 3.
 if sys.version_info[0] >= 3:
     if sys.version_info[1] >= 4:
@@ -150,9 +146,15 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
         if plotfigure.use_for_kml:
             kml_fignos.append(figno)
 
-        if 'facecolor' not in plotfigure.kwargs:
+        if (plotfigure.facecolor is None) and \
+           ('facecolor' not in plotfigure.kwargs):
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'
+        elif plotfigure.facecolor is not None:
+            plotfigure.kwargs['facecolor'] = plotfigure.facecolor
+
+        if plotfigure.figsize is not None:
+            plotfigure.kwargs['figsize'] = plotfigure.figsize
 
         # create figure and set handle:
         plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
@@ -372,6 +374,9 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         if plotitem.colorbar_ticks is not None:
                             plotitem.colorbar_kwargs['ticks'] = \
                                     plotitem.colorbar_ticks
+                        if plotitem.colorbar_extend is not None:
+                            plotitem.colorbar_kwargs['extend'] = \
+                                    plotitem.colorbar_extend
 
                         cbar = plt.colorbar(pobj, **plotitem.colorbar_kwargs)
 
@@ -388,13 +393,52 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 pass
             else:
                 if plotaxes.title_with_t:
-                    if (t==0.) | ((t>=0.001) & (t<1000.)):
-                        plt.title("%s at time t = %14.8f" % (plotaxes.title,t))
-                    else:
-                        plt.title("%s at time t = %14.8e" % (plotaxes.title,t))
-                else:
-                    plt.title(plotaxes.title)
+                    if 'd:h:m:s' in plotaxes.title:
+                        #from datetime import timedelta
+                        #t_str = str(timedelta(seconds=t))
+                        #title_str = plotaxes.title.replace('d:h:m:s',t_str)
 
+                        # formats the same as above but doesn't use datetime:
+                        days, remainder = divmod(t, 24*3600)
+                        hours, remainder = divmod(remainder, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        t_str = '%i days, %i:%s:%s' \
+                                           % (days,hours,\
+                                              str(int(minutes)).zfill(2),\
+                                              str(int(seconds)).zfill(2))
+                        title_str = plotaxes.title.replace('d:h:m:s',t_str)
+
+                    elif 'h:m:s' in plotaxes.title:
+                        # keep total hours, not days
+                        hours, remainder = divmod(t, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+                        t_str = '%i:%s:%s' % (hours,\
+                                              str(int(minutes)).zfill(2),\
+                                              str(int(seconds)).zfill(2))
+                        title_str = plotaxes.title.replace('h:m:s',t_str)
+
+                    elif plotaxes.title_t_format:
+                        # now allow user to specify other formats for t:
+                        t_str = plotaxes.title_t_format % t
+
+                        title_str = "%s at time t = %s" \
+                                  % (plotaxes.title,t_str)
+                        
+                    elif (t==0.) | ((t>=0.001) & (t<1000.)):
+                        title_str = "%s at time t = %14.8f" \
+                                  % (plotaxes.title,t)
+                    else:
+                        title_str = "%s at time t = %14.8e" \
+                                  % (plotaxes.title,t)
+
+
+                else:
+                    # omit t from title:
+                    title_str = plotaxes.title
+
+                if plotaxes.title_fontsize is not None:
+                    plotaxes.title_kwargs['fontsize'] = plotaxes.title_fontsize
+                plt.title(title_str, **plotaxes.title_kwargs)
 
             # call an afteraxes function if present:
             afteraxes =  getattr(plotaxes, 'afteraxes', None)
@@ -435,6 +479,37 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                         plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
                     except:
                         pass  # let axis be set automatically
+
+            if plotaxes.useOffset is not None:
+                plt.ticklabel_format(useOffset = plotaxes.useOffset)
+
+            if plotaxes.grid:
+                plt.grid(**plotaxes.grid_kwargs)
+
+            if plotaxes.xticks_fontsize is not None:
+                plotaxes.xticks_kwargs['fontsize'] = plotaxes.xticks_fontsize
+            if plotaxes.xticks_kwargs != {}:
+                plt.xticks(**plotaxes.xticks_kwargs)
+
+            if plotaxes.yticks_fontsize is not None:
+                plotaxes.yticks_kwargs['fontsize'] = plotaxes.yticks_fontsize
+            if plotaxes.yticks_kwargs != {}:
+                plt.yticks(**plotaxes.yticks_kwargs)
+
+            if plotaxes.xlabel is not None:
+                if plotaxes.xlabel_fontsize is not None:
+                    plotaxes.xlabel_kwargs['fontsize'] = plotaxes.xlabel_fontsize
+                plt.xlabel(plotaxes.xlabel, **plotaxes.xlabel_kwargs)
+            if plotaxes.ylabel is not None:
+                if plotaxes.ylabel_fontsize is not None:
+                    plotaxes.ylabel_kwargs['fontsize'] = plotaxes.ylabel_fontsize
+                plt.ylabel(plotaxes.ylabel, **plotaxes.ylabel_kwargs)
+
+            if plotaxes.aspect_latitude is not None:
+                plt.gca().set_aspect(1./np.cos(plotaxes.aspect_latitude \
+                            * np.pi/180))
+            elif plotaxes.aspect is not None:
+                plt.gca().set_aspect(plotaxes.aspect)
 
             # end of loop over plotaxes
         # end of loop over plotfigures
@@ -1736,12 +1811,12 @@ def set_show(plotdata):
         plotfigure._show = False
         if plotfigure.show:
             # Loop through all axes to make sure at least some item is showing
-            for plotaxes in six.itervalues(plotfigure.plotaxes_dict):
+            for plotaxes in plotfigure.plotaxes_dict.values():
                 plotaxes._show = False
                 if plotaxes.show:
                     # Loop through plotitems checking each item to see if it
                     # should be shown
-                    for plotitem in six.itervalues(plotaxes.plotitem_dict):
+                    for plotitem in plotaxes.plotitem_dict.values():
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True

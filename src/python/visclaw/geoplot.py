@@ -2,16 +2,10 @@
 Useful things for plotting GeoClaw results.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import numpy
 import warnings
 
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize
-from clawpack.geoclaw import topotools
-from six.moves import range, zip
-
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run
@@ -167,8 +161,8 @@ def topo(current_data):
    Surface eta is assumed to be output as 4th column of fort.q files.
    """
    q = current_data.q
-   h = q[0,:,:]
-   eta = q[3,:,:]
+   h = q[0,...]
+   eta = q[-1,...]
    topo = eta - h
    return topo
 
@@ -179,8 +173,8 @@ def land(current_data):
    """
    drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
-   h = q[0,:,:]
-   eta = q[3,:,:]
+   h = q[0,...]
+   eta = q[-1,...]
    land = numpy.ma.masked_where(h>drytol, eta)
    return land
 
@@ -190,8 +184,8 @@ def water(current_data):
    raise DeprecationWarning("Deprecated function, use surface instead.")
    drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
-   h = q[0,:,:]
-   eta = q[3,:,:]
+   h = q[0,...]
+   eta = q[-1,...]
    water = numpy.ma.masked_where(h<=drytol, eta)
    return water
 
@@ -202,7 +196,7 @@ def depth(current_data):
    """
    drytol = current_data.user.get('dry_tolerance', drytol_default)
    q = current_data.q
-   h = q[0,:,:]
+   h = q[0,...]
    depth = numpy.ma.masked_where(h<=drytol, h)
    try:
        # Use mask covering coarse regions if it's set:
@@ -222,8 +216,8 @@ def surface(current_data):
     """
     drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
-    h = q[0,:,:]
-    eta = q[3,:,:]
+    h = q[0,...]
+    eta = q[-1,...]
 
     water = numpy.ma.masked_where(h <= drytol,eta)
 
@@ -248,8 +242,8 @@ def surface_or_depth(current_data):
 
     drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
-    h = q[0,:,:]
-    eta = q[3,:,:]
+    h = q[0,...]
+    eta = q[-1,...]
     topo = eta - h
 
     # With this version, the land was plotted as white in png files for KML.
@@ -279,8 +273,8 @@ def u_velocity(current_data):
 
     drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
-    h = q[0,:,:]
-    hu = q[1,:,:]
+    h = q[0,...]
+    hu = q[1,...]
     h_wet = numpy.ma.masked_where(h<=drytol, h)
     u_wet = hu / h_wet
 
@@ -302,8 +296,8 @@ def v_velocity(current_data):
 
     drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
-    h = q[0,:,:]
-    hv = q[2,:,:]
+    h = q[0,...]
+    hv = q[2,...]
     h_wet = numpy.ma.masked_where(h<=drytol, h)
     v_wet = hv / h_wet
 
@@ -324,9 +318,9 @@ def speed(current_data):
 
     drytol = current_data.user.get('dry_tolerance', drytol_default)
     q = current_data.q
-    h = q[0,:,:]
-    hu = q[1,:,:]
-    hv = q[2,:,:]
+    h = q[0,...]
+    hu = q[1,...]
+    hv = q[2,...]
     h_wet = numpy.ma.masked_where(h<=drytol, h)
     u_wet = hu / h_wet
     v_wet = hv / h_wet
@@ -404,4 +398,3 @@ def discrete_cmap_2(clines):
     Blue = flipud(hstack([linspace(1,0.2,n1), zeros(n2)]))
     colors = list(zip(Red,Green,Blue))
     return colors
-

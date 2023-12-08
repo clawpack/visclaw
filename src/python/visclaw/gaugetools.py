@@ -2,11 +2,7 @@
 Tools for plotting data from gauges, gauge locations, etc.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-import os,sys,shutil,glob
-import string,re
-import time
+import os,sys,glob
 import traceback
 import warnings
 
@@ -15,7 +11,6 @@ import numpy as np
 import clawpack.clawutil.data as clawdata
 
 from clawpack.visclaw.frametools import set_show
-from six.moves import range
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
@@ -220,6 +215,9 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs['facecolor'] = '#ffeebb'   
 
+        if plotfigure.figsize is not None:
+            plotfigure.kwargs['figsize'] = plotfigure.figsize
+
         # create figure and set handle:
         plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
 
@@ -280,9 +278,15 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # end of loop over plotitems
 
     
-            pylab.title("%s at gauge %s" % (plotaxes.title,gaugeno))
+            title_str = "%s at gauge %s" % (plotaxes.title,gaugeno)
+            if plotaxes.title_fontsize is not None:
+                plotaxes.title_kwargs['fontsize'] = plotaxes.title_fontsize
+            pylab.title(title_str, **plotaxes.title_kwargs)
     
             if plotaxes.time_label is not None:
+                if plotaxes.time_label_fontsize is not None:
+                    plotaxes.time_label_kwargs['fontsize'] = \
+                                    plotaxes.time_label_fontsize
                 pylab.xlabel(plotaxes.time_label, **plotaxes.time_label_kwargs)
     
     
@@ -318,6 +322,18 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 except:
                     pass  # let axis be set automatically
     
+            if plotaxes.grid:
+                pylab.grid(**plotaxes.grid_kwargs)
+ 
+            if plotaxes.xticks_kwargs is not None:
+                pylab.xticks(**plotaxes.xticks_kwargs)
+            if plotaxes.yticks_kwargs is not None:
+                pylab.yticks(**plotaxes.yticks_kwargs)
+
+            if plotaxes.ylabel is not None:
+                if plotaxes.ylabel_fontsize is not None:
+                    plotaxes.ylabel_kwargs['fontsize'] = plotaxes.ylabel_fontsize
+                pylab.ylabel(plotaxes.ylabel, **plotaxes.ylabel_kwargs)
 
             # end of loop over plotaxes
             
