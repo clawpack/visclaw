@@ -944,7 +944,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
-        elif pp['patch_bgcolor'] is not 'w':
+        elif pp['patch_bgcolor'] != 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
 
@@ -1007,8 +1007,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # plot only the patches, no data:
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'],\
-                    shading='faceted')
+                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
         else:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
