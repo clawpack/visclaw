@@ -16,6 +16,9 @@ import numpy
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 
+# Clawpack tan color for plotfigure.facecolor if desired (default now 'w'):
+clawpack_tan = '#ffeebb'  
+
 #-------------------------
 def make_colormap(color_list):
 #-------------------------
