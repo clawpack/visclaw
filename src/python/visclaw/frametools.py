@@ -816,6 +816,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'patchedges_show','patchedges_color','add_colorbar',
              'pcolor_cmap','pcolor_cmin','pcolor_cmax',
              'imshow_cmap','imshow_cmin','imshow_cmax',
+             'imshow_norm', 'imshow_alpha',
              'contour_levels','contour_nlevels','contour_min','contour_max',
              'contour_colors','contour_cmap','contour_show',
              'fill_cmap','fill_cmin','fill_cmax','fill_colors',
@@ -906,12 +907,18 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 pp['imshow_cmin'] = np.min(var)
             if pp['imshow_cmax'] in ['auto',None]:
                 pp['imshow_cmax'] = np.max(var)
-            color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
+            if pp['imshow_norm'] in ["auto", None]:
+                color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
+            else:
+                color_norm = pp['imshow_norm']
+         
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
             pobj = plt.imshow(np.flipud(var.T), extent=xylimits, \
                     cmap=pp['imshow_cmap'], interpolation='nearest', \
-                    norm=color_norm)
+                    norm=color_norm, \
+                    alpha=pp["imshow_alpha"]
+                    )
 
             if pp['celledges_show']:
                 # This draws cell edges for this level.
