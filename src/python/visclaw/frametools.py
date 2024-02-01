@@ -26,8 +26,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy import ma
 from clawpack.visclaw import colormaps
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, LightSource
 
+# This routine is from matplotlib/lib/matplotlib/colors.py
+# from v3.1.1.
+# https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html
+def _vector_magnitude(arr):
+    sum_sq = 0
+    for i in range(arr.shape[-1]):
+        sum_sq += np.square(arr[..., i, np.newaxis])
+    return np.sqrt(sum_sq)
 
 
 #==============================================================================
@@ -148,8 +156,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
         if (plotfigure.facecolor is None) and \
            ('facecolor' not in plotfigure.kwargs):
-            # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'
+            # Use white as default starting in v5.10.0
+            # To use old default Clawpack tan, in setplot.py set:
+            #     plotfigure.facecolor = \
+            #           clawpack.visclaw.colormaps.clawpack_tan
+            plotfigure.kwargs['facecolor'] = 'w'
         elif plotfigure.facecolor is not None:
             plotfigure.kwargs['facecolor'] = plotfigure.facecolor
 
@@ -805,13 +816,17 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'patchedges_show','patchedges_color','add_colorbar',
              'pcolor_cmap','pcolor_cmin','pcolor_cmax',
              'imshow_cmap','imshow_cmin','imshow_cmax',
+             'imshow_norm', 'imshow_alpha',
              'contour_levels','contour_nlevels','contour_min','contour_max',
              'contour_colors','contour_cmap','contour_show',
              'fill_cmap','fill_cmin','fill_cmax','fill_colors',
              'schlieren_cmap','schlieren_cmin', 'schlieren_cmax',
              'quiver_coarsening','quiver_var_x','quiver_var_y','quiver_key_show',
              'quiver_key_scale','quiver_key_label_x','quiver_key_label_y',
-             'quiver_key_scale','quiver_key_units','quiver_key_kwargs']
+             'quiver_key_scale','quiver_key_units','quiver_key_kwargs',
+             'hillshade_cmap','hillshade_vertical_exaggeration',
+             'hillshade_azimuth_degree','hillshade_altitude_degree',
+             'hillshade_latlon']
 
     pp = params_dict(plotitem, base_params, level_params,patch.level)
 
@@ -892,12 +907,18 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 pp['imshow_cmin'] = np.min(var)
             if pp['imshow_cmax'] in ['auto',None]:
                 pp['imshow_cmax'] = np.max(var)
-            color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
 
+            if pp['imshow_norm'] in ["auto", None]:
+                color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
+            else:
+                color_norm = pp['imshow_norm']
+         
             xylimits = (X_edge[0,0],X_edge[-1,-1],Y_edge[0,0],Y_edge[-1,-1])
             pobj = plt.imshow(np.flipud(var.T), extent=xylimits, \
                     cmap=pp['imshow_cmap'], interpolation='nearest', \
-                    norm=color_norm)
+                    norm=color_norm, \
+                    alpha=pp["imshow_alpha"]
+                    )
 
             if pp['celledges_show']:
                 # This draws cell edges for this level.
@@ -933,7 +954,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
-        elif pp['patch_bgcolor'] is not 'w':
+        elif pp['patch_bgcolor'] != 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
 
@@ -996,8 +1017,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # plot only the patches, no data:
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'],\
-                    shading='faceted')
+                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
         else:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
@@ -1053,6 +1073,56 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # no plot to create (user might make one in afteritem or
         # afteraxes)
         pass
+
+    elif pp['plot_type'] == '2d_hillshade':
+        if not var_all_masked:
+            if pp['hillshade_latlon']:
+                xcoord2meters = 1/111200
+
+                # could eventually adjust dx
+                # based on np.cos(np.radians(latitude))
+
+            else:
+                xcoord2meters = 1
+            
+            ve = pp['hillshade_vertical_exaggeration'] * xcoord2meters
+            azdeg=pp['hillshade_azimuth_degree']
+            altdeg = pp['hillshade_altitude_degree']
+
+            ls = LightSource(azdeg=azdeg, altdeg=altdeg)
+            # typically would do the following:
+            #  hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
+
+            # but here we need to calculate the hillshade by hand so that the values
+            # are consistent across all patches. The matplotlib code applies a 
+            # contrast stretch that we don't want. 
+   
+            # This code was modified from:
+            # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
+            z = np.flipud(var.T)
+            dx = current_data.dx
+            dy = current_data.dy
+            
+            e_dy, e_dx = np.gradient(ve * z, -dy, dx)
+            normal = np.empty(z.shape + (3,)).view(type(z))
+            normal[..., 0] = -e_dx
+            normal[..., 1] = -e_dy
+            normal[..., 2] = 1
+            normal /= _vector_magnitude(normal)
+            intensity = normal.dot(ls.direction)
+
+            # contrast stretch was applied here, code was deleted from the matplotlib routines.
+
+            intensity = np.clip(intensity, 0, 1)
+            hs = intensity
+
+            xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
+            pobj = plt.imshow(hs, cmap="gray", vmin=0, vmax=1, extent=xylimits)
+            color_norm = Normalize(pp['imshow_cmin'],pp['imshow_cmax'],clip=True)
+
+        else:
+            #print '*** Not doing hillshade on totally masked array'
+            pass
 
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp['plot_type'])
