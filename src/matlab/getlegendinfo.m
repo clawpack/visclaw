@@ -46,7 +46,8 @@ function [level_handles,level_labels_out] = getlegendinfo(base_level)
 %     See Also LEGEND, CELL, PAREN.
 
 if nargin == 0
-    base_level = 1;
+    %% Assume ForestClaw base
+    base_level = 0;
 end
 
 amrlines = get_lines;
