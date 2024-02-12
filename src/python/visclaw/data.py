@@ -104,6 +104,13 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
+        self.add_attribute('ffmpeg_movie',False)  # make animated mp4 movie with ffmpeg
+        self.add_attribute('ffmpeg_name', "")
+        self.add_attribute('ffmpeg_global_options', '')
+        self.add_attribute('ffmpeg_input_options', '-y -r 6 -f image2')
+        self.add_attribute('ffmpeg_output_options', '-vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p')
+
+
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational

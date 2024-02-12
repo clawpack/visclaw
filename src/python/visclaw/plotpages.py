@@ -3095,6 +3095,20 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             except:
                 print('*** Error creating moviefig%s.gif' % figno)
 
+    #-----------
+    # mp4 movie:
+    #-----------
+    if plotdata.ffmpeg_movie:
+        print('Making movies with ffmpeg.  This may take some time....')
+        for figno in fignos_each_frame:
+            try:
+                cmd = f"ffmpeg {plotdata.ffmpeg_global_options} {plotdata.ffmpeg_input_options} -i frame%4dfig{figno}.png {plotdata.ffmpeg_output_options} {plotdata.ffmpeg_name}moviefig{figno}.mp4"
+                os.system(cmd)
+                print('    Created ffmpeg outputs for figno %s' % figno)
+            except:
+                print('*** Error creating ffmpeg outputs for figno %s' % figno)
+
+
     os.chdir(rootdir)
 
     # print out pointers to html index page:
