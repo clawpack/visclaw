@@ -101,71 +101,107 @@ switch  colormapping
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
         
-    case 'parallelpartitions'
+    case {'parallelpartitions', 'blockcolors'}
         
         pp = parallelpartitions(q);
         npmax = pp.npmax;
         
         % Seed to use for random processor colormap.
         if (~isfield(pp,'pp_colormap'))
-            s = pp.seed;
-            ppcm = ppcolors(npmax,s);
-        else
-            ppcm = pp.pp_colormap;
-            if (size(ppcm,1) ~= pp.npmax)
-                error('set_colors: length(ppcm) ~= npmax')
-            end
+            error(['parallelpartitions : Supply pp color map ',...
+                'field pp_colormap. Hint : use pp_colors']);
+        end           
+        ppcm = pp.pp_colormap;
+        if (size(ppcm,1) ~= pp.npmax)
+            error('set_colors: length(ppcm) ~= npmax')
         end
 
-        mpirank = getmpirank();  % mpirank for this patch        
+        % 'mpirank' should be renamed to something more generic
+        % since we will use it for both parallel partitions
+        % and block partitions.
+        if strcmp(colormapping,'parallelpartitions') == 1
+            mpirank = getmpirank();  % mpirank for this patch        
+        elseif strcmp(colormapping,'blockcolors') == 1
+            mpirank = getblocknumber();
+        end
+
+        % Does the user want to plot true colors for q within a range? 
         if (~isfield(pp,'plotq'))
-            pp.plotq = ~isempty(pp.qcolors);
+            error('Parallelpartition : Supply plotq field (T/F)')
         end
         
         if (~pp.plotq)
+            % Just show parallel partitions - no q values.
+            % use white for any nan values
             cm_extended = [ppcm; [1 1 1]];
-            qcolors = mpirank+1 + zeros(size(q));            
+
+            % Color index has to start at 0
+            qcolors = mpirank + 1 + zeros(size(q));            
             m = isnan(q);
             qcolors(m) = length(cm_extended);
         else
-            % == NAN where processor colors should be used. 
-            qcolors = pp.qcolors;  
-            m = ~isnan(qcolors);
+            % Show q in colormap within a range.
                         
-            n = size(pp.colormap,1);
-            
-            qmin = pp.qmin;
-            qmax = pp.qmax;            
-            
+            % Dimensions mx x my
+            qcolors = pp.qcolors;
+            m = ~isnan(qcolors);
+
+            % Dimensions mx*my x 1
             qm = qcolors(m);
             cidx = zeros(size(qm));
-                        
-            % Everything less than qmin will take processor color
-            m1 = qm < qmin;
-            cidx(m1) = mpirank + 1;
-            
-            % Everything between qmin and qmax, map linearly into 
-            % pp.colormap.
-            m2 = qmin <= qm & qm <= qmax;
-            if (~isempty(qm))
-                cidx(m2) = floor((n-1)/(qmax-qmin)*(qm(m2) - qmin)) + 1;
+
+            qmin = pp.qmin;
+            qmax = pp.qmax;
+            if pp.invert
+                qm(qm < qmin(1)) = qmin(1);
+                qm(qm > qmax(2)) = qmax(2);
+                m_proc_color = qmin(2) < qm & qm < qmax(1);
+                m_q{1} = qmin(1) <= qm & qm <= qmin(2);
+                m_q{2} = qmax(1) <= qm & qm <= qmax(2);
+            else
+                qmin = pp.qmin;
+                qmax = pp.qmax;
+                m_proc_color = qmin <= qm & qm <= qmax;
+                m_q = qm < qmin | qm > qmax;
             end
-            cidx(m2) = cidx(m2) + npmax;
+
+            % Indices that should use proc colormap
+            cidx(m_proc_color) = mpirank + 1;
+
+            % Color map to be used for Q
+            n = size(pp.colormap,1);
             
-            % Everything larger than qmax is a processor color
-            m3 = qm > qmax;
-            cidx(m3) = mpirank + 1;
-            
+            % Indices that use  q colormap
+            if (~isempty(qm))
+                if ~pp.invert
+                    cidx(m_q) = floor((n-1)/(qmax-qmin)*(qm(m_q) - qmin)) + 1;
+                    cidx(m_q) = cidx(m_q) + npmax;
+                else
+                    cidx(m_q{1}) = floor((n-1)/(qmin(2)-qmin(1))*(qm(m_q{1}) - qmin(1))) + 1;
+                    cidx(m_q{2}) = floor((n-1)/(qmax(2)-qmax(1))*(qm(m_q{2}) - qmax(1))) + 1;
+                    for i = 1:2
+                        cidx(m_q{i}) = cidx(m_q{i}) + npmax;
+                    end
+                end
+            end
+
+            if sum(cidx == 0) > 0
+                fprintf("Found %d zeros out of %d in cidx\n",sum(cidx == 0),length(cidx));
+                error('set_colors : Missing indices in cidx')
+            end
+
+               
+            % Set colors to direct index into colormap.
             qcolors(m) = cidx;
-            % qcolors(~m) = mpirank + 1;
-            
+
+                        
             % NANs are colored white.
             qcolors(~m) = npmax + n + 1;
 
-            
             w = [1 1 1]; 
-            cm_extended = [ppcm;pp.colormap;w];
-
+            cm_extended = [ppcm;...
+                           pp.colormap;...
+                           w];
         end
         
         % -----------------------
@@ -183,14 +219,15 @@ switch  colormapping
         end
         
         % Hardwire colors for the patch
-        % set(p,'FaceVertexCData',cm_extended(fv_idx,:));
-        set(p,'FaceVertexCData',fv_idx);
+        if min(fv_idx(:)) < 1 || max(fv_idx(:)) > length(cm_extended)
+            error("set_colors : fv_idx is too large");
+        end
+        set(p,'FaceVertexCData',cm_extended(fv_idx,:));
         set(p,'cdatamapping','direct');
         
         % Use 'flat' so that each mesh cell has single identifing color
         set(p,'FaceColor','flat');
-            
-        set(gca,'clim',[pp.qmin, pp.qmax]);
+           
         setopengl;
                         
     case 'usercolormapping'

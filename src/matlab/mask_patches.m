@@ -5,10 +5,11 @@ function mask_patches(slice,sdir,level, xlow,xhigh,ylow,yhigh,zlow,zhigh)
 % This masks out any patches on level 'level' - 1 and below that are in the
 % region [xlow,xhigh]x[ylow,yhigh]x[zlow,zhigh].
 
+
 if (level == 1)
   % Nothing to mask in this case
   return;
-end;
+end
 
 
 % Find first non-zero level directly beneath current level.
@@ -18,8 +19,8 @@ while (isempty(slice{mask_level})) % no patches have been plotted at this level
   if (mask_level == 0)
     % There are no patches under this one to mask
     return;
-  end;
-end;
+  end
+end
 
 % Vector of patch handles to mask at level 'mask_level'.
 patches_to_mask = slice{mask_level};

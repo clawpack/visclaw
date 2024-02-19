@@ -6,15 +6,15 @@ ftag = get(gcf,'Tag');
 
 if (~strcmp(ftag,'AMRClawSlicePlot'))
   error('get_slices : Current figure does not contain slice data');
-end;
+end
 
 amrplot = get(gcf,'UserData');
 slice_handles = amrplot.slices;
 
-idir = findstr(lower(sdir),'xyz');
+idir = strfind('xyz',lower(sdir));
 if (isempty(idir))
   error('set_slices : sdir must be equal to ''x'', ''y'', or ''z''');
-end;
+end
 
 slice_handles{idir} = slices;
 amrplot.slices = slice_handles;

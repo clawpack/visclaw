@@ -1,9 +1,19 @@
 function gauges = read_gauge_data()
+%
+% read_gauge_data reads data in 'gauges.data' file and returns data in a
+% struct.
+%
+% read_gauge_data() reads data in a file 'gauges.data'.  Data is assumed to
+% be in the current directory. 
+% 
+% See also add_gauges, add_regions.
 
 if (~exist('gauges.data','file'))
     fprintf('File gauges.data does not exist.  No gauges will be plotted.\n');
     return
 end
+
+gtype = struct('id',[],'longitude',[],'latitude',[],'t0',[],'t1',[]);
 
 fid = fopen('gauges.data','r');
 for i = 1:5
@@ -11,14 +21,11 @@ for i = 1:5
     fgetl(fid);
 end
 
-gtype = struct('id',[],'longitude',[],'latitude',[],'t0',[],'t1',[]);
-
-fgetl(fid);  % blank line
+fgetl(fid);      % blank line
 l = fgetl(fid);  % Get number of gauges
 num_gauges = sscanf(l,'%d',1);
 gauges(1:num_gauges) = gtype;
-% gauge_handles = zeros(num_gauges,1);
-for n = 1:num_gauges
+for n = 1:num_gauges    
     l = fgetl(fid);
     data = sscanf(l,'%d %e %e %e %d',Inf);
     g = gtype;
@@ -28,17 +35,6 @@ for n = 1:num_gauges
     g.t0 = data(4);
     g.t1 = data(5);
     gauges(n) = g;
-%     hg = plot(data(2),data(3),'yx','linewidth',3,'markersize',8);
-%     set(hg,'Tag','gauge');
-%     set(hg,'userdata',g);
-%     hold on;
-%     gauge_handles(n) = hg;
-%     h = text(data(2),data(3),sprintf('  %d',data(1)),'fontsize',16);
-%     set(h,'HorizontalAlignment','right');
 end
-
-% set(gca,'NextPlot',np);
-% set(gca,'userdata',gauge_handles);
-
 
 end

@@ -7,7 +7,7 @@ isurf = get_isosurfaces;
 
 q = permute(q,[2 1 3]);
 
-for n = 1:length(isosurfvalues),
+for n = 1:length(isosurfvalues)
   ivalue = isosurfvalues(n);
   icolor = isosurfcolors(n);
   ialpha = isosurfalphas(n);

@@ -27,7 +27,7 @@ function set_value(a,a_user,a_default)
 %
 
 if (~evalin('base',['exist(''',a_user,''')']))
-  assignin('base',a,a_default);
+    assignin('base',a,a_default);
 else
-  evalin('base',[a, ' = ',a_user,';']);
-end;
+    evalin('base',[a, ' = ',a_user,';']);
+end

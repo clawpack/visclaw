@@ -27,6 +27,16 @@ function drawcontourlines(v, sdir,snum)
 %
 %     See also SHOWCONTOURLINES, HIDECONTOURLINES.
 
+% This is a hack to get around fact that `forestclaw` outputflag
+% is not set as a global variable. 
+
+evalin('base','global base_forestclaw')
+
+global base_forestclaw;
+
+evalin('base','base_forestclaw = forestclaw;')
+
+
 if (nargin < 2)
     sdirs = {'x', 'y','z'};
 else
@@ -60,6 +70,8 @@ for idir = 1:length(sdirs)
                 set_cline_visibility(p);
             end
         end
-        mask_patches_all(slice);  % To mask any contourlines.
+        if (base_forestclaw == 0)
+            mask_patches_all(slice);  % To mask any contourlines.
+        end
     end
 end
