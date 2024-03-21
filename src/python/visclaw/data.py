@@ -104,13 +104,8 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
-        self.add_attribute('ffmpeg_movie',False)  # make animated mp4 movie with ffmpeg
-        self.add_attribute('ffmpeg_name', "")
-        self.add_attribute('ffmpeg_global_options', '')
-        self.add_attribute('ffmpeg_input_options', '-y -r 6 -f image2')
-        self.add_attribute('ffmpeg_output_options', '-vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p')
-
-
+        self.add_attribute('mp4_movie',False)         # make animated mp4 movie of frames
+        self.add_attribute('movie_name_prefix', 'movie_')
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational
@@ -696,9 +691,9 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('title_fontsize', None)
         self.add_attribute('title_kwargs', {}) # e.g. to set color
         self.add_attribute('title_t_format', None) # format for t in title
-        self.add_attribute('xticks_fontsize', None) 
+        self.add_attribute('xticks_fontsize', None)
         self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
-        self.add_attribute('yticks_fontsize', None) 
+        self.add_attribute('yticks_fontsize', None)
         self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
         self.add_attribute('xlabel', None) # label for x-axis
         self.add_attribute('ylabel', None) # label for y-axis

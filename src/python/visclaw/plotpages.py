@@ -2243,6 +2243,12 @@ def plotclaw2html(plotdata):
             html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
                            % (fignos[ifig],fignames[fignos[ifig]]))
         html.write('</tr>\n')
+    if plotdata.mp4_movie:
+        html.write('<p><tr><td><b>mp4 Movies:</b></td>')
+        for ifig in range(len(fignos)):
+            html.write(f'\n   <td><a href="{plotdata.movie_name_prefix}fig%s.mp4">%s</a></td>' \
+                           % (fignos[ifig],fignames[fignos[ifig]]))
+        html.write('</tr>\n')
     html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
     for ifig in range(len(fignos)):
         html.write('\n   <td><a href="%s">%s</a></td>' \
@@ -3052,7 +3058,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.kml:
         plotpages.plotclaw2kml(plotdata)
 
-    if (plotdata.html_movie == "JSAnimation") and (len(framenos) > 0):
+    if ((plotdata.html_movie == "JSAnimation") or plotdata.mp4_movie) and (len(framenos) > 0):
 
         # Create Animations
     
@@ -3070,16 +3076,39 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 png_prefix = ''
             else:
                 png_prefix = plotdata.file_prefix
+
+            outputs = []
+            if plotdata.html_movie == "JSAnimation":
+                outputs.append('html')
+            if plotdata.mp4_movie:
+                outputs.append('mp4')
+
+            # get original dpi and fig shape, if
+            # this ensures that the resolution of the movie is the
+            # same as the frames.
+            figname = plotdata._figname_from_num[figno]
+            plotfigure = plotdata.plotfigure_dict[figname]
+
+            figkwargs = getattr(plotfigure, 'kwargs', {})
+            figsize = getattr(plotfigure, 'figsize', None)
+            if figsize is None:
+                figsize = figkwargs.get('figsize', None)
+            dpi = figkwargs.get('dpi', html_movie_dpi)
+
+            # make animations
             animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
                             #file_name_prefix='movieframe_allframes',
-                            file_name_prefix='movie_',
+                            file_name_prefix=plotdata.movie_name_prefix,
                             png_prefix=png_prefix,
-                            figsize=None,
-                            fignos=[figno], outputs=['html'], raw_html=raw_html)
+                            figsize=figsize,
+                            dpi=dpi,
+                            fignos=[figno], outputs=outputs,
+                            raw_html=raw_html)
 
             # Note: setting figsize=None above chooses figsize with aspect
             # ratio based on .png files read in, may fit better on page
-                
+            # 3/21/24 - For MP4 size and dpi are taken from plotdata for each figure.
+
 
     #-----------
     # gif movie:
@@ -3094,20 +3123,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 print('    Created moviefig%s.gif' % figno)
             except:
                 print('*** Error creating moviefig%s.gif' % figno)
-
-    #-----------
-    # mp4 movie:
-    #-----------
-    if plotdata.ffmpeg_movie:
-        print('Making movies with ffmpeg.  This may take some time....')
-        for figno in fignos_each_frame:
-            try:
-                cmd = f"ffmpeg {plotdata.ffmpeg_global_options} {plotdata.ffmpeg_input_options} -i frame%4dfig{figno}.png {plotdata.ffmpeg_output_options} {plotdata.ffmpeg_name}moviefig{figno}.mp4"
-                os.system(cmd)
-                print('    Created ffmpeg outputs for figno %s' % figno)
-            except:
-                print('*** Error creating ffmpeg outputs for figno %s' % figno)
-
 
     os.chdir(rootdir)
 
