@@ -3077,37 +3077,43 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             else:
                 png_prefix = plotdata.file_prefix
 
-            outputs = []
-            if plotdata.html_movie == "JSAnimation":
-                outputs.append('html')
-            if plotdata.mp4_movie:
-                outputs.append('mp4')
-
-            # get original dpi and fig shape, if
-            # this ensures that the resolution of the movie is the
-            # same as the frames.
+            # get original fig shape
             figname = plotdata._figname_from_num[figno]
             plotfigure = plotdata.plotfigure_dict[figname]
-
             figkwargs = getattr(plotfigure, 'kwargs', {})
             figsize = getattr(plotfigure, 'figsize', None)
             if figsize is None:
                 figsize = figkwargs.get('figsize', None)
-            dpi = figkwargs.get('dpi', html_movie_dpi)
 
             # make animations
-            animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
-                            #file_name_prefix='movieframe_allframes',
-                            file_name_prefix=plotdata.movie_name_prefix,
-                            png_prefix=png_prefix,
-                            figsize=figsize,
-                            dpi=dpi,
-                            fignos=[figno], outputs=outputs,
-                            raw_html=raw_html)
+            if plotdata.mp4_movie:
+                # use default dpi or get from plotdata
+                # this ensures that if it was set, dpi of mp4 is same as frames.
+                dpi = figkwargs.get('dpi', html_movie_dpi)
+                animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
+                                #file_name_prefix='movieframe_allframes',
+                                file_name_prefix=plotdata.movie_name_prefix,
+                                png_prefix=png_prefix,
+                                figsize=figsize,
+                                dpi=dpi,
+                                fignos=[figno], outputs=['mp4'],
+                                raw_html=raw_html)
+
+            if plotdata.html_movie == "JSAnimation":
+                # use different dpi so that plots do not take over browser width.
+                animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
+                                #file_name_prefix='movieframe_allframes',
+                                file_name_prefix=plotdata.movie_name_prefix,
+                                png_prefix=png_prefix,
+                                figsize=figsize,
+                                dpi=plotdata.html_movie_dpi,
+                                fignos=[figno], outputs=['html'],
+                                raw_html=raw_html)
 
             # Note: setting figsize=None above chooses figsize with aspect
             # ratio based on .png files read in, may fit better on page
-            # 3/21/24 - For MP4 size and dpi are taken from plotdata for each figure.
+            # 3/21/24 - For MP4 size and dpi are taken from plotdata for
+            # each figure.
 
 
     #-----------
