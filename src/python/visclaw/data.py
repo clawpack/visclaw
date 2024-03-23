@@ -89,7 +89,9 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_index_title','Plot Index')   # title at top of index page
         self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
         self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
-        self.add_attribute('html_movie_width', 500)    # width of movie
+        self.add_attribute('html_movie_width', 500)    # width of movie (not used?)
+        self.add_attribute('html_movie_dpi', 100)      # dpi of movie
+
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
         self.add_attribute('kml',False)                # make kml plots and a kml file for figures
@@ -104,6 +106,8 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
+        self.add_attribute('mp4_movie',False)         # make animated mp4 movie of frames
+        self.add_attribute('movie_name_prefix', 'movie_')
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational
@@ -689,9 +693,9 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('title_fontsize', None)
         self.add_attribute('title_kwargs', {}) # e.g. to set color
         self.add_attribute('title_t_format', None) # format for t in title
-        self.add_attribute('xticks_fontsize', None) 
+        self.add_attribute('xticks_fontsize', None)
         self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
-        self.add_attribute('yticks_fontsize', None) 
+        self.add_attribute('yticks_fontsize', None)
         self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
         self.add_attribute('xlabel', None) # label for x-axis
         self.add_attribute('ylabel', None) # label for y-axis
