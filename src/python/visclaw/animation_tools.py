@@ -242,7 +242,8 @@ def make_rst(anim, file_name='anim.rst',
 
 
 def make_mp4(anim, file_name='anim.mp4',
-              fps=None, embed_frames=True, default_mode='once'):
+              fps=None, embed_frames=True, default_mode='once',
+              dpi=None):
     """
     Take an animation and covert to mp4 file using ffmpeg, which must be
     installed.
@@ -259,7 +260,7 @@ def make_mp4(anim, file_name='anim.mp4',
     if fps is None:
         fps = 3
     writer = animation.writers['ffmpeg'](fps=fps)
-    anim.save(file_name, writer=writer)
+    anim.save(file_name, writer=writer, dpi=dpi)
     print("Created %s" % file_name)
 
 
@@ -409,8 +410,9 @@ def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
 
         if 'mp4' in outputs:
             file_name = file_name_prefix + 'fig%s.mp4' % figno
+
             make_mp4(anim, file_name, fps=fps, \
-                embed_frames=True, default_mode='once')
+                embed_frames=True, default_mode='once', dpi=dpi)
 
         if 'html' in outputs:
             file_name = file_name_prefix + 'fig%s.html' % figno
@@ -423,7 +425,7 @@ def make_anim_outputs_from_plotdir(plotdir='_plots', fignos='all',
                 embed_frames=True, default_mode='once')
 
 
-def animate_from_plotdir(plotdir='_plots', figno=None, figsize=None, 
+def animate_from_plotdir(plotdir='_plots', figno=None, figsize=None,
                          dpi=None, fps=5):
     """
     Use the png files in plotdir to create an animation that is returned.
