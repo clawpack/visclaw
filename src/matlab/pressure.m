@@ -3,7 +3,7 @@ function pressure = pressure(data)
 % Compute the pressure from Euler data in N dimensions
 % assumes data contains density in first column, energy in last column,
 % and components of momentum in between.
-%
+% 
 % Assumes a gamma-law ideal gas.
 % gamma = 1.4 is hardwired here, but you can change this or modify
 % to read in the proper value from setprob.data, for example.

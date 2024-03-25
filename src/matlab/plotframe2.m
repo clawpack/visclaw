@@ -71,17 +71,20 @@ if (PlotType <= 3)
     end
     
     set_value('plotparallelpartitions','PlotParallelPartitions',0);
-    
+    set_value('plotblockcolors','PlotBlockColors',0);
+
     set_value('usercolormapping','UserColorMapping',0);
     if (usercolormapping == 1 && ~exist('setcolors','file'))
         error(['*** UserColorMapping = 1, but no ''setcolors'' ',...
             'function was found.']);
     end
     
-    if (underoverflag == 1)
+    if underoverflag == 1
         colormapping = 'underover';
-    elseif (plotparallelpartitions == 1)
+    elseif plotparallelpartitions == 1
         colormapping = 'parallelpartitions';
+    elseif plotblockcolors == 1
+        colormapping = 'blockcolors';
     elseif (usercolormapping == 1)
         colormapping = 'usercolormapping';
     else

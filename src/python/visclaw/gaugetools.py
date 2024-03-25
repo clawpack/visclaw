@@ -212,8 +212,11 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
 
         if 'facecolor' not in plotfigure.kwargs:
-            # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'   
+            # Use white as default starting in v5.10.0
+            # To use old default Clawpack tan, in setplot.py set:
+            #     plotfigure.facecolor = \
+            #           clawpack.visclaw.colormaps.clawpack_tan
+            plotfigure.kwargs['facecolor'] = 'w'
 
         if plotfigure.figsize is not None:
             plotfigure.kwargs['figsize'] = plotfigure.figsize

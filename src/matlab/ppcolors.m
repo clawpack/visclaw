@@ -50,16 +50,16 @@ chex = {...
 '#2F5D9B','#6C5E46','#D25B88','#5B656C','#00B57F','#545C46','#866097','#365D25',...
 '#252F99','#00CCFF','#674E60','#FC009C','#92896B'};
 
-len = length(chex);
-for i = 1:len
+m = length(chex);
+r = zeros(m,1);
+g = zeros(m,1);
+b = zeros(m,1);
+for i = 1:m
     c = chex{i};
     r(i) = hex2dec(c(2:3))/256;
     g(i) = hex2dec(c(4:5))/256;
     b(i) = hex2dec(c(6:7))/256;
 end
-r = r(:);
-g = g(:);
-b = b(:);
 
 rng('default');
 if (nargin < 2)
@@ -68,7 +68,7 @@ else
     rng(s);
 end
 
-idx = randperm(len);
+idx = randperm(m);
 idx = idx(1:N);
 
 cm = [r(idx),g(idx),b(idx)];

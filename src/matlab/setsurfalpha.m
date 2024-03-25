@@ -36,9 +36,10 @@ function setsurfalpha(a,snum)
 
 
 rstr = get(gcf,'Renderer');
-if (strcmp(rstr,'OpenGL') == 0)
-  return;
-end;
+if (strcmpi(rstr,'OpenGL') == 0)
+   fprintf('setsurfalpha : Renderer should be set to OpenGL.\n');
+   return;
+end
 
 a = min([max([a,0]),1]);
 

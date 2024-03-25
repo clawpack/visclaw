@@ -11,7 +11,7 @@ function cm = multicolormap(n,s)
 
 if (nargin > 1)
   rand('seed',s);
-end;
+end
 
 % Grid in colorcube for obtaining distinct colors.
 N1 = 5;
@@ -23,11 +23,11 @@ npmax = N1*N2*N3;
 rc = 0.25*ones(npmax,1); % Always choose color at center of cube
 
 k = 1;
-for ii = 1:N1,
+for ii = 1:N1
   xlow = (ii-1)/N1;
-  for jj = 1:N2,
+  for jj = 1:N2
     ylow = (jj-1)/N2;
-    for kk = 1:N3,
+    for kk = 1:N3
       zlow = (kk-1)/N3;
       cm(k,:) = [xlow ylow zlow] + rc(k)./[N1 N2 N3];
       k = k + 1;
@@ -36,7 +36,7 @@ for ii = 1:N1,
 end
 
 % Choose colors randomly from colors chosen for each subcube
-[r,idx] = sort(rand(npmax,1));
+[~,idx] = sort(rand(npmax,1));
 
 % Index into grid of subcubes.
 cm = cm(idx(1:n),:);

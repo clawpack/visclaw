@@ -1836,12 +1836,10 @@ def massage_frames_data(plot_pages_data):
             fignos.sort()
 
     allframesfile = {}
-    moviefile = {}
     for figno in fignos:
         if figno not in fignames:
             fignames[figno] = 'Solution'
         allframesfile[figno] = 'allframes_fig%s.html'  % figno
-        moviefile[figno] = 'movie_fig%s.html'  % figno
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -1884,7 +1882,6 @@ def massage_frames_data(plot_pages_data):
     ppd._frametimef = frametimef
     ppd._allfigsfile = allfigsfile
     ppd._allframesfile = allframesfile
-    ppd._moviefile = moviefile
     return ppd
 
 
@@ -2165,7 +2162,6 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
-    moviefile = plotdata._moviefile
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -2234,20 +2230,20 @@ def plotclaw2html(plotdata):
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
-            html.write('\n   <td><a href="%s">%s</a></td>' \
-                           % (moviefile[figno],fignames[figno]))
+            html.write('\n   <td><a href="%sfig%s.html">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
         html.write('</tr>\n')
     if plotdata.gif_movie:
         html.write('<p><tr><td><b>gif Movies:</b></td>')
-        for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
-                           % (fignos[ifig],fignames[fignos[ifig]]))
+        for figno in fignos:
+            html.write('\n   <td><a href="%sfig%s.gif">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
         html.write('</tr>\n')
     if plotdata.mp4_movie:
         html.write('<p><tr><td><b>mp4 Movies:</b></td>')
-        for ifig in range(len(fignos)):
-            html.write(f'\n   <td><a href="{plotdata.movie_name_prefix}fig%s.mp4">%s</a></td>' \
-                           % (fignos[ifig],fignames[fignos[ifig]]))
+        for figno in fignos:
+            html.write('\n   <td><a href="%sfig%s.mp4">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
         html.write('</tr>\n')
     html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
     for ifig in range(len(fignos)):
@@ -3084,6 +3080,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
             figsize = getattr(plotfigure, 'figsize', None)
             if figsize is None:
                 figsize = figkwargs.get('figsize', None)
+            if figsize is None:
+                figsize = (8,6)  # reasonable for browser?
 
             # make animations
             if plotdata.mp4_movie:
@@ -3123,12 +3121,14 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.gif_movie and (len(framenos) > 0):
         print('Making gif movies.  This may take some time....')
         for figno in fignos_each_frame:
+            fname_gif = '%sfig%s.gif' \
+                        % (plotdata.movie_name_prefix, figno)
             try:
-                os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
-                   % (figno,figno))
-                print('    Created moviefig%s.gif' % figno)
+                os.system('convert -delay 20 frame*fig%s.png %s' \
+                   % (figno,fname_gif))
+                print('    Created %s' % fname_gif)
             except:
-                print('*** Error creating moviefig%s.gif' % figno)
+                print('*** Error creating %s' % fname_gif)
 
     os.chdir(rootdir)
 

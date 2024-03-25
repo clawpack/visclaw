@@ -16,11 +16,11 @@ if (mappedgrid == 1)
     % isonormals are computed using triangular elements - results may not
     % appear smooth, but it isn't clear how to set isonormals in the mapped
     % grid case.
-  end;
+  end
 else
   % isonormals are computed using data - smoother results?
   isonormals(xcm,ycm,zcm,q,p);  % for lighting effects.
-end;
+end
 if (strcmp(icolor,'q')==1)
   set(p,'CData',ivalue);
   set(p,'FaceColor','flat');
@@ -28,10 +28,10 @@ else
   [l,ic,m,msg] = colstyle(icolor);
   if (strcmp(ic,'') == 1)
     error(['*** create_isosurface : Bad color spec : ''',icolor,'''']);
-  end;
+  end
   icolor = ic;
   set(p,'FaceColor',icolor);
-end;
+end
 set(p,'EdgeColor','none');
 set(p,'FaceAlpha',ialpha);
 udata.q = q;

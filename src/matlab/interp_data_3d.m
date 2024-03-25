@@ -17,7 +17,7 @@ if (isect == 0)
   % This slice doesn't intersect data.
   qcm2 = [];
   return;
-end;
+end
 
 % --------------------------------------
 % Now setup data for interpolation
