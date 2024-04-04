@@ -602,7 +602,7 @@ def plotclaw2kml(plotdata):
     from copy import deepcopy
     from clawpack.geoclaw import kmltools
 
-    if plotdata.format is 'forestclaw':
+    if plotdata.format == 'forestclaw':
         level_base = 0
     else:
         level_base = 1
@@ -1806,7 +1806,7 @@ def massage_frames_data(plot_pages_data):
         fignos = ppd.timeframes_fignos
         fignames = ppd.timeframes_fignames
         prefix = getattr(ppd, 'file_prefix', 'fort')
-        if prefix is 'fort':
+        if prefix == 'fort':
             prefix = getattr(ppd, 'timeframes_prefix', 'frame')
         if prefix != 'frame':
             prefix = prefix + 'frame'
