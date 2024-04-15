@@ -960,6 +960,7 @@ def plotclaw2kml(plotdata):
             zip.write(dirname)
             for filename in files:
                 zip.write(os.path.join(dirname, filename))
+                #print('++++ writing %s' % os.path.join(dirname, filename))
 
         shutil.rmtree(fig_dir)
 
@@ -1441,6 +1442,18 @@ def plotclaw2kml(plotdata):
         ainfo = np.fromstring(a.strip(),sep=' ')
         maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
 
+
+    try:
+        # for amrclaw/geoclaw, avoid reading max1d from amr.data:
+        from clawpack.clawutil.data import ClawData
+        amrdata = ClawData()
+        amrdata.read(os.path.join(plotdata.outdir, "amr.data"), force=True)
+        maxlevels = amrdata.amr_levels_max
+    except:
+        print('*** failed to read amrdata for maxlevels')
+        pass
+
+    #print('++++ maxlevels for kml = %i' % maxlevels)
 
     # set _outdirs attribute to be list of all outdirs for all items
     plotdata.set_outdirs()
@@ -2791,7 +2804,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     import glob, sys, os
     from clawpack.visclaw.data import ClawPlotData
-    from clawpack.visclaw import frametools, gaugetools, plotpages
+    from clawpack.visclaw import frametools, gaugetools
 
     # doing plots in parallel?
     _parallel = plotdata.parallel and (plotdata.num_procs > 1)
@@ -2899,7 +2912,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     try:
-        plotpages.cd_plotdir(plotdata.plotdir, plotdata.overwrite)
+        cd_plotdir(plotdata.plotdir, plotdata.overwrite)
     except:
         print("*** Error, aborting plotframes")
         return plotdata
@@ -2951,8 +2964,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
 
     if len(fortfile) == 0:
-        print('*** No fort.q or claw.pkl files found in directory ', os.getcwd())
-        return plotdata
+        print('*** Warning: No fort.q or claw.pkl files found in directory ', os.getcwd())
+        #return plotdata
 
     # Discard frames that are not from latest run, based on
     # file modification time:
@@ -3016,8 +3029,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     os.chdir(plotdir)
 
     if plotdata.html:
-        #plotpages.timeframes2html(plotdata)
-        plotpages.plotclaw2html(plotdata)
+        plotclaw2html(plotdata)
         pass
 
     # Make png files for all frames and gauges:
@@ -3048,11 +3060,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     if plotdata.latex:
-        plotpages.timeframes2latex(plotdata)
+        timeframes2latex(plotdata)
 
-#
     if plotdata.kml:
-        plotpages.plotclaw2kml(plotdata)
+        plotclaw2kml(plotdata)
 
     if ((plotdata.html_movie == "JSAnimation") or plotdata.mp4_movie) and (len(framenos) > 0):
 
