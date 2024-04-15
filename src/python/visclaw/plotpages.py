@@ -1418,42 +1418,16 @@ def plotclaw2kml(plotdata):
     print("KML ===> Creating file %s" % level_kml_file)
 
     try:
-        f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
-    except:
-        # Nothing terrible happens;  we just set maxlevels to some large value
-        maxlevels = 20
-        for figname in plotdata._fignames:
-            plotfigure = plotdata.plotfigure_dict[figname]
-            if not plotfigure.use_for_kml:
-                continue
-            else:
-                maxlevels = plotfigure.kml_maxlevel        
-    else:
-        # read past comments - last line is blank
-        a = f.readline()
-        while (a.startswith('#')):
-            a = f.readline()
-
-        # read line max1d
-        f.readline()
-
-        # read line containing max number of levels
-        a = f.readline()
-        ainfo = np.fromstring(a.strip(),sep=' ')
-        maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
-
-
-    try:
-        # for amrclaw/geoclaw, avoid reading max1d from amr.data:
+        # set maxlevels by reading amr_levels_max from amr.data
         from clawpack.clawutil.data import ClawData
         amrdata = ClawData()
         amrdata.read(os.path.join(plotdata.outdir, "amr.data"), force=True)
         maxlevels = amrdata.amr_levels_max
     except:
         print('*** failed to read amrdata for maxlevels')
-        pass
+        # Nothing terrible happens;  we just set maxlevels to some large value
+        maxlevels = 20
 
-    #print('++++ maxlevels for kml = %i' % maxlevels)
 
     # set _outdirs attribute to be list of all outdirs for all items
     plotdata.set_outdirs()
