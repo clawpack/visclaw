@@ -960,6 +960,7 @@ def plotclaw2kml(plotdata):
             zip.write(dirname)
             for filename in files:
                 zip.write(os.path.join(dirname, filename))
+                #print('++++ writing %s' % os.path.join(dirname, filename))
 
         shutil.rmtree(fig_dir)
 
@@ -1417,29 +1418,15 @@ def plotclaw2kml(plotdata):
     print("KML ===> Creating file %s" % level_kml_file)
 
     try:
-        f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
+        # set maxlevels by reading amr_levels_max from amr.data
+        from clawpack.clawutil.data import ClawData
+        amrdata = ClawData()
+        amrdata.read(os.path.join(plotdata.outdir, "amr.data"), force=True)
+        maxlevels = amrdata.amr_levels_max
     except:
+        print('*** failed to read amrdata for maxlevels')
         # Nothing terrible happens;  we just set maxlevels to some large value
         maxlevels = 20
-        for figname in plotdata._fignames:
-            plotfigure = plotdata.plotfigure_dict[figname]
-            if not plotfigure.use_for_kml:
-                continue
-            else:
-                maxlevels = plotfigure.kml_maxlevel        
-    else:
-        # read past comments - last line is blank
-        a = f.readline()
-        while (a.startswith('#')):
-            a = f.readline()
-
-        # read line max1d
-        f.readline()
-
-        # read line containing max number of levels
-        a = f.readline()
-        ainfo = np.fromstring(a.strip(),sep=' ')
-        maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
 
 
     # set _outdirs attribute to be list of all outdirs for all items
@@ -2791,7 +2778,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     import glob, sys, os
     from clawpack.visclaw.data import ClawPlotData
-    from clawpack.visclaw import frametools, gaugetools, plotpages
+    from clawpack.visclaw import frametools, gaugetools
 
     # doing plots in parallel?
     _parallel = plotdata.parallel and (plotdata.num_procs > 1)
@@ -2899,7 +2886,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     try:
-        plotpages.cd_plotdir(plotdata.plotdir, plotdata.overwrite)
+        cd_plotdir(plotdata.plotdir, plotdata.overwrite)
     except:
         print("*** Error, aborting plotframes")
         return plotdata
@@ -2951,8 +2938,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
 
     if len(fortfile) == 0:
-        print('*** No fort.q or claw.pkl files found in directory ', os.getcwd())
-        return plotdata
+        print('*** Warning: No fort.q or claw.pkl files found in directory ', os.getcwd())
+        #return plotdata
 
     # Discard frames that are not from latest run, based on
     # file modification time:
@@ -3016,8 +3003,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     os.chdir(plotdir)
 
     if plotdata.html:
-        #plotpages.timeframes2html(plotdata)
-        plotpages.plotclaw2html(plotdata)
+        plotclaw2html(plotdata)
         pass
 
     # Make png files for all frames and gauges:
@@ -3048,11 +3034,10 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     if plotdata.latex:
-        plotpages.timeframes2latex(plotdata)
+        timeframes2latex(plotdata)
 
-#
     if plotdata.kml:
-        plotpages.plotclaw2kml(plotdata)
+        plotclaw2kml(plotdata)
 
     if ((plotdata.html_movie == "JSAnimation") or plotdata.mp4_movie) and (len(framenos) > 0):
 
