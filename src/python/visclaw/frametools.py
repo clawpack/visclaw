@@ -812,9 +812,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     base_params = ['plot_type','afteritem','mapc2p','MappedGrid']
 
     level_params = ['plot_var','afterpatch','kwargs',
-             'celledges_show','celledges_color','patch_bgcolor',
-             'patchedges_show','patchedges_color','add_colorbar',
-             'pcolor_cmap','pcolor_cmin','pcolor_cmax',
+             'celledges_show','celledges_color','celledges_linewidth', 
+             'patch_bgcolor',
+             'patchedges_show','patchedges_color', 'patchedges_linewidth', 
+             'add_colorbar', 'pcolor_cmap','pcolor_cmin','pcolor_cmax',
              'imshow_cmap','imshow_cmin','imshow_cmax',
              'imshow_norm', 'imshow_alpha',
              'contour_levels','contour_nlevels','contour_min','contour_max',
@@ -828,7 +829,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'hillshade_azimuth_degree','hillshade_altitude_degree',
              'hillshade_latlon']
 
-    pp = params_dict(plotitem, base_params, level_params,patch.level)
+    pp = params_dict(plotitem, base_params, level_params, patch.level)
 
     if pp['mapc2p'] is None:
         # if this item does not have a mapping, check for a global mapping:
@@ -881,6 +882,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
+            pcolor_cmd += ", linewidths=pp['celledges_linewidth']"
         else:
             pcolor_cmd += ", shading='flat'"
         
@@ -926,8 +928,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 # for finer levels, so imshow doesn't look as good as pcolor
                 # when you only want to show celledges on coarse levels.
                 # There doesn't seem to be an easy way to fix this.
-                pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'])
-                pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
+                pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'], 
+                                           linewidth=pp['celledges_linewidth'])
+                pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'], 
+                                           linewidth=pp['celledges_linewidth'])
 
         else:
             #print '*** Not doing imshow on totally masked array'
@@ -953,7 +957,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
+                    cmap=pp['patch_bgcolormap'], 
+                    edgecolors=pp['celledges_color'],
+                    linewidths=pp['celledges_linewidth'])
         elif pp['patch_bgcolor'] != 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
@@ -1017,7 +1023,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # plot only the patches, no data:
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
+                    cmap=pp['patch_bgcolormap'], 
+                    edgecolors=pp['celledges_color'],
+                    linewidths=pp['celledges_linewidth'])
         else:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
@@ -1138,11 +1146,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         for i in [0, X_edge.shape[0]-1]:
             X1 = X_edge[i,:]
             Y1 = Y_edge[i,:]
-            plt.plot(X1, Y1, pp['patchedges_color'])
+            plt.plot(X1, Y1, color=pp['patchedges_color'], linewidth=pp['patchedges_linewidth'])
         for i in [0, X_edge.shape[1]-1]:
             X1 = X_edge[:,i]
             Y1 = Y_edge[:,i]
-            plt.plot(X1, Y1, pp['patchedges_color'])
+            plt.plot(X1, Y1, color=pp['patchedges_color'], linewidth=pp['patchedges_linewidth'])
 
 
     if pp['afterpatch']:

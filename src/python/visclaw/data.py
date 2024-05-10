@@ -821,6 +821,7 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('plot_type',plot_type)
             self.add_attribute('celledges_show',0)
             self.add_attribute('celledges_color','k')
+            self.add_attribute('celledges_linewidth',1.5)
             self.add_attribute('patch_bgcolor','w')
             self.add_attribute('patchedges_show',0)
             self.add_attribute('patchedges_color','k')
@@ -832,8 +833,9 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_extend',None)
             self.add_attribute('colorbar_kwargs',{})
             self.add_attribute('kwargs',{})
-            amr_attributes = """celledges_show celledges_color data_show
-              patch_bgcolor patchedges_show patchedges_color kwargs""".split()
+            amr_attributes = """celledges_show celledges_color 
+              celledges_linewidth data_show patch_bgcolor patchedges_show 
+              patchedges_color kwargs""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 
