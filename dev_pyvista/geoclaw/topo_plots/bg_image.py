@@ -95,9 +95,11 @@ def fetch_img(extent, fname, source='QuadtreeTiles', scale=None,
     img_fetcher.get_image = image_spoof
     img = img_fetcher()
 
-    # plot image with some padding
     fig = plt.figure(figsize=figsize) # open matplotlib figure
     ax1 = plt.axes(projection=img.crs) # use proper coordinate reference system
+
+    # need to plot without any axes or borders so image has exactly
+    # the correct extent.  
     
     fig.set_size_inches(x_inches,y_inches)
     ax1.set_frame_on(False)
@@ -105,13 +107,9 @@ def fetch_img(extent, fname, source='QuadtreeTiles', scale=None,
     plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0,
                     hspace = 0, wspace = 0)
 
-    eps = 0.01  # padding so jpg file saved better matches extent
-    extent = [x1+eps*dx, x2-eps*dx, y1+eps*dy, y2-eps*dy]
-
     ax1.set_extent(extent) # set extents
-    ax1.add_image(img, int(scale)) # add OSM with zoom specification
+    ax1.add_image(img, int(scale)) # plot image with desired resolution
 
-    # save image with no border (still not quite the right extent):
-    plt.savefig(fname,bbox_inches='tight')
+    # save image with no border
+    plt.savefig(fname,bbox_inches='tight', pad_inches=0, transparent=True)
     print('Created ', fname)
-    print('extent = ',extent)
