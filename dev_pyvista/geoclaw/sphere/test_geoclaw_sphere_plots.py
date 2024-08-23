@@ -164,9 +164,6 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
 
     for k in range(1,maxlevel+1):
         if verbose:
-            if len(patches_on_level[k]) == 0:
-                print('No patches on level %i or finer' % k)
-                break
             print('Now working on level %i with %i patches' \
                   % (k, len(patches_on_level[k])))
 
@@ -330,9 +327,6 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
         # now add_mesh for each of these patches:
         for k in range(1,maxlevel+1):
             if verbose:
-                if len(patches_on_level[k]) == 0:
-                    print('No patches on level %i or finer' % k)
-                    break
                 print('Now working on level %i with %i patches' \
                       % (k, len(patches_on_level[k])))
 
