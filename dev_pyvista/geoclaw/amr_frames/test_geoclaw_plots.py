@@ -1,15 +1,15 @@
 from pylab import *
 import os,sys
 
+# import dev_pyvista so that relative imports work:
 CLAW = os.environ['CLAW']
-DEVLIB = CLAW + '/visclaw/dev_pyvista/amrclaw/2d'
-sys.path.insert(0, DEVLIB)
-import unpack_frame_2d  # should be in DEVLIB
-from importlib import reload
-reload(unpack_frame_2d)
+VISCLAW = CLAW + '/visclaw'
+sys.path.insert(0, VISCLAW)
+import dev_pyvista
 sys.path.pop(0)
 
-
+from dev_pyvista.amrclaw import unpack_frame_2d # to unpack grid patches
+from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
 def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
                       outdir='_output',verbose=True):
@@ -48,7 +48,7 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
 
 
 def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
-                    warpfactor=None, verbose=True):
+                    warpfactor=None, show_edges=True, verbose=True):
 
     """
     Plot grids from level minlevel up to level maxlevel (or finest level).
@@ -160,7 +160,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
             if warpfactor is None:
                 # flat 2d plot:
                 plotter.add_mesh(gridxyz, scalars='eta', cmap=tsunami_colormap,
-                                 clim=(-0.2,0.2),show_edges=True)
+                                 clim=(-0.2,0.2),show_edges=show_edges)
                 if 0:
                     # this plots grey everywhere topo is nan,
                     # Would like to be transparent, as in warped version.
@@ -172,7 +172,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
                 # warp surface based on eta (point_values needed):
                 etawarp = gridxyz.warp_by_scalar('eta_point', factor=warpfactor)
                 plotter.add_mesh(etawarp, cmap=tsunami_colormap,
-                                 clim=(-0.2,0.2),show_edges=True)
+                                 clim=(-0.2,0.2),show_edges=show_edges)
 
                 # add warp of topo scaled down so it's nearly flat:
                 topowarp = gridxyz.warp_by_scalar('topo_point', factor=1e-5)
@@ -185,7 +185,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
             if verbose: print(' adding to plotter')
 
     plotter.camera_position = 'xy'
-    plotter.add_title('Time %.1f seconds' % time)
+    plotter.add_title('Time %s' % time_str(time))
     plotter.show(window_size=(1500,1500))
 
 if __name__ == '__main__':
@@ -195,4 +195,4 @@ if __name__ == '__main__':
     # to create the test data used by this sample command...
     
     geoclaw_pv_clip(frameno=4, minlevel = 1, maxlevel=10, outdir='chile2010',
-                    warpfactor=10, verbose=True)
+                    warpfactor=10, show_edges=True, verbose=True)
