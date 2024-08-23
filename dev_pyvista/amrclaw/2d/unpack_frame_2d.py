@@ -21,7 +21,9 @@ def load_frame(frameno, outdir='_output', file_format=None):
             [t,num_eqn,nstates,num_aux,num_dim,num_ghost,file_format] = \
                  read_t(frameno,outdir,file_prefix='fort')
         except:
-            raise InputError('*** Could not read file_format from fort.t file')
+            msg = '*** Could not read file_format from fort.t file in \n  %s' \
+                        % outdir
+            raise IOError(msg)
 
     framesoln = Solution(frameno,path=outdir,file_format=file_format)
     print('======================')
@@ -70,6 +72,16 @@ class PatchIterator:
 
     def __init__(self, frameno, outdir='_output', file_format=None,
                  verbose=False):
+
+        if file_format is None:
+            try:
+                [t,num_eqn,nstates,num_aux,num_dim,num_ghost,file_format] = \
+                     read_t(frameno,outdir,file_prefix='fort')
+            except:
+                msg = '*** Could not read file_format from fort.t file in \n  %s' \
+                            % outdir
+                raise IOError(msg)                
+
         self.framesoln = Solution(frameno,path=outdir,file_format=file_format)
         self.num_patches = len(self.framesoln.states)
         self.verbose = verbose

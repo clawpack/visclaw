@@ -1,3 +1,9 @@
+"""
+Sample plot functions for AMR frames of a GeoClaw solution.
+This code creates the plot on the sphere using GeoVista, see
+        https://geovista.readthedocs.io/en/latest/
+"""
+
 from pylab import *
 import os,sys
 
@@ -22,8 +28,15 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
     """
 
     from clawpack.visclaw.geoplot import tsunami_colormap
+    #from clawpack.pyclaw.fileio.ascii import read_t
+
+    if outdir == 'chile2010':
+        # shorthand for this standard example:
+        outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
+    
     figure(1)
     clf()
+        
     patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
                                                    verbose=verbose)
     for level,X,Y,q in patch_iterator:
@@ -43,20 +56,26 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
         eta_wet = where(q[0,:,:] > 0.001, q[-1,:,:], nan)
         pcolormesh(X,Y,eta_wet,cmap=tsunami_colormap, edgecolors='k')
         clim(-0.2, 0.2)
+    title('Standard matplotlib plot')
     colorbar()
+    show()
 
 
-
-def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
+def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
                     warpfactor=None, verbose=True):
 
     """
     Plot grids from level minlevel up to level maxlevel (or finest level).
     On each level, holes are first cut out for all grids at higher levels.
     If warpfactor is not None, warp grid by surface elevation.
+    
+    This code creates the plot on the sphere using GeoVista, see
+        https://geovista.readthedocs.io/en/latest/
     """
 
     import pyvista as pv
+    import geovista as gv
+
     from clawpack.visclaw.geoplot import tsunami_colormap
     from clawpack.pyclaw.fileio.ascii import read_t
 
@@ -68,19 +87,19 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
         [time,num_eqn,nstates,num_aux,num_dim,num_ghost,file_format] = \
              read_t(frameno,outdir,file_prefix='fort')
     except:
-        raise InputError('*** Could not read time from fort.t file')
-            
-    # read frame solution just to get time:
-    # framesoln = Solution(frameno,path=outdir,file_format=None)
-    # print('Frame %i: time = %.1f seconds' % (frameno,framesoln.t))
-    #time = framesoln.t
+        msg = '*** Could not read time from fort.t file in \n    %s' % outdir
+        raise OSError(msg)
+
 
     print('Will show grids up to level %i (with holes for finer grids)' \
             % maxlevel)
 
+    pv.global_theme.allow_empty_mesh = True
+
+
     # make an iterator for looping over all patches in this frame:
     patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
-                                                   file_format=None)
+                                   file_format=file_format)
 
     # a dictionary to keep track of all grid patches at each level:
     patches_on_level = {}
@@ -103,40 +122,43 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 
-        z = array([0.])
         x = X_edges[:,0]
         y = Y_edges[0,:]
-        X,Y,Z = meshgrid(x, y, z, indexing='ij')
-        gridxyz = pv.StructuredGrid(X,Y,Z)
+
+        #z = array([0.])
+        #X,Y,Z = meshgrid(x, y, z, indexing='ij')
+        #gridxyz = pv.StructuredGrid(X,Y,Z)
+        
 
         # set value to plot:
         eta_wet = where(q[0,:,:] > 0.001, q[-1,:,:], nan)
+        gridxyz = gv.Transform.from_1d(x,y,eta_wet.T)
+    
+        #xx = vstack((x[:-1],x[1:])).T
+        #yy = vstack((y[:-1],y[1:])).T
+        #gridxyz = gv.Transform.from_1d(xx,yy,eta_wet.T)
+        
+
+        #import pdb; pdb.set_trace()
         gridxyz.cell_data['eta'] = eta_wet.flatten(order='F')
 
         # topography can be computed as eta - h (surface - depth)
         topo = q[-1,:,:] - q[0,:,:]
         gridxyz.cell_data['topo'] = topo.flatten(order='F')
-
-        if warpfactor is not None:
-            # water surface eta:
-            eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
-            eta_point = minimum(eta_point, 0.5)  # limit big values near coast
-            gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
-
-            # topography can be computed as eta - h (surface - depth)
-            #topo = q[-1,:,:] - q[0,:,:]
-            topo_point = unpack_frame_2d.extend_cells_to_points(topo)
-
-            # mask topo where we want to plot eta:
-            topo_point = where(isnan(eta_point), topo_point, nan)
-            gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
+        
+        # this reduces size of gridxyz based on nans in eta_wet
+        gridxyz = gridxyz.threshold()  # remove nan values
 
         # append this patch to the set of patches to be plotted:
         patches_on_level[level].append([gridxyz, bounds])
 
     # now construct plotter:
 
-    plotter = pv.Plotter()
+    #plotter = pv.Plotter()
+    plotter = gv.GeoPlotter()
+    plotter.add_base_layer(texture=gv.blue_marble())
+    plotter.add_coastlines()
+    plotter.add_axes()
 
     for k in range(1,maxlevel+1):
         if verbose:
@@ -157,34 +179,16 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
 
             # now that it's got proper holes cut out, add to plotter:
 
-            if warpfactor is None:
-                # flat 2d plot:
-                plotter.add_mesh(gridxyz, scalars='eta', cmap=tsunami_colormap,
-                                 clim=(-0.2,0.2),show_edges=True)
-                if 0:
-                    # this plots grey everywhere topo is nan,
-                    # Would like to be transparent, as in warped version.
-                    #plotter.add_mesh(gridxyz, scalars='topo', cmap='gist_earth',
-                    #             clim=(-500,3000),show_edges=False)
-
-                    plotter.add_mesh(gridxyz, color='g')
-            else:
-                # warp surface based on eta (point_values needed):
-                etawarp = gridxyz.warp_by_scalar('eta_point', factor=warpfactor)
-                plotter.add_mesh(etawarp, cmap=tsunami_colormap,
-                                 clim=(-0.2,0.2),show_edges=True)
-
-                # add warp of topo scaled down so it's nearly flat:
-                topowarp = gridxyz.warp_by_scalar('topo_point', factor=1e-5)
-                #plotter.add_mesh(topowarp, cmap='gist_earth',
-                #                 clim=(-500e-5,3000e-5),show_edges=False)
-
-                # this works ok to make it solid green:
-                plotter.add_mesh(topowarp, color='g')
+            plotter.add_mesh(gridxyz, scalars='eta', cmap=tsunami_colormap,
+                             clim=(-0.2,0.2),show_edges=True)
+            #plotter.add_mesh(gridxyz, scalars='topo', color='g')
+            
+            #plotter.add_mesh(gridxyz, cmap=tsunami_colormap,
+            #                 clim=(-0.2,0.2),show_edges=True)
 
             if verbose: print(' adding to plotter')
 
-    plotter.camera_position = 'xy'
+    plotter.camera_position = 'xz'
     plotter.add_title('Time %.1f seconds' % time)
     plotter.show(window_size=(1500,1500))
 
@@ -193,6 +197,8 @@ if __name__ == '__main__':
     # Note: You first need to run the code in 
     #     $CLAW/geoclaw/examples/tsunami/chile2010
     # to create the test data used by this sample command...
-    
-    geoclaw_pv_clip(frameno=4, minlevel = 1, maxlevel=10, outdir='chile2010',
-                    warpfactor=10, verbose=True)
+                          
+    geoclaw_sphere_pv_clip(frameno=4, minlevel = 1, maxlevel=10, 
+                           outdir='chile2010',
+                           warpfactor=None, verbose=True)
+                           
