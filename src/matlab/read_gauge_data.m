@@ -1,8 +1,5 @@
 function gauges = read_gauge_data()
 %
-% read_gauge_data reads data in 'gauges.data' file and returns data in a
-% struct.
-%
 % read_gauge_data() reads data in a file 'gauges.data'.  Data is assumed to
 % be in the current directory. 
 % 
@@ -13,7 +10,7 @@ if (~exist('gauges.data','file'))
     return
 end
 
-gtype = struct('id',[],'longitude',[],'latitude',[],'t0',[],'t1',[]);
+gtype = struct('id',[],'x',[],'y',[],'t0',[],'t1',[]);
 
 fid = fopen('gauges.data','r');
 for i = 1:5
@@ -30,8 +27,8 @@ for n = 1:num_gauges
     data = sscanf(l,'%d %e %e %e %d',Inf);
     g = gtype;
     g.id = data(1);
-    g.longitude = data(2);
-    g.latitude = data(3);
+    g.x = data(2);
+    g.y = data(3);
     g.t0 = data(4);
     g.t1 = data(5);
     gauges(n) = g;
