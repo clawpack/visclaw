@@ -19,7 +19,7 @@ global mesh_list
 
 # Things to set:
 outdir = CLAW + '/amrclaw/examples/advection_2d_swirl/_output'
-warpfactor = None # warp vertically based on q[0], set to None for flat 2d plots
+warpfactor = 0.1 # warp vertically based on q[0], set to None for flat 2d plots
 
 # set desired camera position:
 if warpfactor is None:
@@ -27,7 +27,7 @@ if warpfactor is None:
 else:
     camera_position =  [(1.127, -1.771, 1.517), (0.531, 0.346, 0.143), (-0.179, 0.5, 0.848)]
 
-make_animation = True  # if False, will open on screen with slider for frameno
+make_animation = False  # if False, will open on screen with slider for frameno
 if make_animation:
     fname_mp4 = 'pyvista_animation.mp4'
     framedir = 'frame_plots'  # where to store png files
@@ -58,18 +58,64 @@ print('Will show grids on levels %i to %i (with holes for finer grids)' \
 
 verbose = False  # True plots info about every patch as it's plotted
         
+def make_gridxyz(X_edges, Y_edges, q):
+    """
+    Make gridxzy for a single patch,
+        might want to change how this is done for GeoVista plots on sphere
+    Set q_cell as the scalar value to plot (cell averages).
+    If warping, also need to set q_point values at vertices.
+    """
+    
+    z = array([0.])
+    x = X_edges[:,0]
+    y = Y_edges[0,:]
+    X,Y,Z = meshgrid(x, y, z, indexing='ij')
+    gridxyz = pv.StructuredGrid(X,Y,Z)
+    
+    # set value to plot:
+    q_cell = q[0,:,:]
+    gridxyz.cell_data['q_cell'] = q_cell.flatten(order='F') 
+    
+    if warpfactor is not None:
+        # need to convert cell averages to vertex values for warping:
+        q_point = unpack_frame_2d.extend_cells_to_points(q_cell)
+        gridxyz.point_data['q_point'] = q_point.flatten(order='F')
+        
+    return gridxyz
 
+def plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q):
+    """
+    Use add_mesh to add a plot for a single patch and return handle
+    since this mesh will have to be removed when plotting new frameno.
+    """
+    
+    if warpfactor is None:
+        # flat 2d plot:
+        gridmesh = plotter.add_mesh(gridxyz, scalars='q_cell', 
+                                    cmap=cmap,
+                                    clim=clim,show_edges=show_edges)
+    else:
+        qwarp = gridxyz.warp_by_scalar('q_point', factor=warpfactor)
+        gridmesh = plotter.add_mesh(qwarp, cmap=cmap,
+                                    clim=clim,show_edges=show_edges) 
+                                           
+    return gridmesh
+    
 #----------------------
 # Set up plotter:
 
 # don't show plots on screen if making animation:
 plotter = pv.Plotter(off_screen=make_animation)
-
+plotter.window_size = (1500,1500)
 plotter.add_axes()
-mesh_list = []  # to keep track of list of meshes to be removed
+mesh_list = []  # list of meshes to be removed for new frameno
 
 plotter.camera_position = camera_position
-    
+
+
+#---------------------------------------------------------------------------
+# The rest of this may not need to change from one application to the next...
+
 def set_frameno(frameno):
     """
     Make the plot for a single frame, looping over all AMR patches.
@@ -87,7 +133,7 @@ def set_frameno(frameno):
         msg = '*** Could not read time from fort.t file in \n    %s' % outdir
         raise OSError(msg)
 
-    plotter.add_title('Time %.2.f' % time)
+    plotter.add_title('Time %.2f, frame %i' % (time,frameno))
         
     try:
         # make an iterator for looping over all patches in this frame:
@@ -119,20 +165,7 @@ def set_frameno(frameno):
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 
-        z = array([0.])
-        x = X_edges[:,0]
-        y = Y_edges[0,:]
-        X,Y,Z = meshgrid(x, y, z, indexing='ij')
-        gridxyz = pv.StructuredGrid(X,Y,Z)
-
-        # set value to plot:
-        qscalar = q[0,:,:]
-        gridxyz.cell_data['qscalar'] = qscalar.flatten(order='F')
-
-        if warpfactor is not None:
-            # need to convert cell averages to vertex values for warping:
-            q_point = unpack_frame_2d.extend_cells_to_points(qscalar)
-            gridxyz.point_data['q_point'] = q_point.flatten(order='F')
+        gridxyz = make_gridxyz(X_edges,Y_edges,q)
 
         # append this patch to the set of patches to be plotted:
         patches_on_level[level].append([gridxyz, bounds])
@@ -141,7 +174,7 @@ def set_frameno(frameno):
     for mesh in mesh_list:
         plotter.remove_actor(mesh)
     
-    # now add_mesh for each of these patches:
+    # now make plot and add_mesh for each of these patches:
     for k in range(1,maxlevel+1):
         if verbose:
             print('Now working on level %i with %i patches' \
@@ -160,20 +193,9 @@ def set_frameno(frameno):
                     gridxyz = gridxyz.clip_box(clip_bounds)
                 patch[0] = gridxyz
 
-            # now that it's got proper holes cut out, add to plotter:
-
-            if warpfactor is None:
-                # flat 2d plot:
-                gridmesh = plotter.add_mesh(gridxyz, scalars='qscalar', 
-                                            cmap=cmap,
-                                            clim=clim,show_edges=show_edges)
-            else:
-                # warp surface based on qscalar (point_values needed):
-                qwarp = gridxyz.warp_by_scalar('q_point', factor=warpfactor)
-                gridmesh = plotter.add_mesh(qwarp, cmap=cmap,
-                                            clim=clim,show_edges=show_edges)
-
-                mesh_list.append(gridmesh)
+            # now that it's got proper holes cut out, make plot, add to plotter:
+            gridmesh = plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q)
+            mesh_list.append(gridmesh)
                                  
     if not make_animation:
 
@@ -210,8 +232,9 @@ else:
     # create slider bar for user to adjust:
     frameno_limits = [framenos[0], framenos[-1]]
     plotter.add_slider_widget(set_frameno, frameno_limits, value=framenos[0],
-                              title='frameno',
-                              pointa=(0.6,0.85), pointb=(0.9,0.85))
-    plotter.show(window_size=(1500,1500))
+                              title='frameno', fmt='%.1f',
+                              pointa=(0.6,0.85), pointb=(0.9,0.85),
+                              tube_width=0.01, slider_width=0.03)
+    plotter.show()
     # Note: user must close window manually when done
     
