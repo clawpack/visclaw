@@ -27,21 +27,15 @@ global mesh_list  # pv meshes created at one frame to remove at the next
 
 # Things to set:
 outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
-warpfactor_eta = 10 # warp vertically based on q[0], set to None for flat 2d plots
-#warpfactor = None
 
+warpfactor_eta = 10   # vertical warp factor for eta
 warpmax_eta = 0.5
 warpmin_eta = -0.5
 
 warpfactor_topo = warpfactor_eta
 warpmax_topo = 0.3
 warpmin_topo = -0.3
-
-# set desired camera position:
-if warpfactor_eta is None:
-    camera_position =  'xy'
-else:
-    camera_position = [(-90.056, -158.408, 101.893), (-90.0, -30.0, 0.0), (-0.011, 0.622, 0.783)]
+    
 
 make_animation = False  # if False, will open on screen with slider for frameno
 
@@ -75,7 +69,7 @@ maxlevel = 3
 print('Will show patches on levels %i to %i (with holes for finer patches)' \
         % (minlevel,maxlevel))
 
-verbose = True  # True plots info about every patch as it's plotted
+verbose = False  # True plots info about every patch as it's plotted
         
 def make_gridxyz(X_edges, Y_edges, q):
     """
@@ -95,24 +89,21 @@ def make_gridxyz(X_edges, Y_edges, q):
     eta_wet = where(q[0,:,:] > 0.001, q[-1,:,:], nan)
     gridxyz.cell_data['eta'] = eta_wet.flatten(order='F')
 
-    # topography can be computed as eta - h (surface - depth)
+    # topography can be computed as topo = eta - h (surface - depth)
     topo = q[-1,:,:] - q[0,:,:]
-    #topo = where(q[0,:,:] > 0.01, nan, topo)
     gridxyz.cell_data['topo'] = topo.flatten(order='F')
     
-    if warpfactor_eta is not None:
-        
-        # water surface eta:
-        eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
-        eta_point = minimum(eta_point, warpmax_eta)  # limit big values near coast
-        eta_point = maximum(eta_point, warpmin_eta)
-        gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
+    # warped surfaces:
+    
+    eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
+    eta_point = minimum(eta_point, warpmax_eta)  # limit big values near coast
+    eta_point = maximum(eta_point, warpmin_eta)
+    gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
 
-        # topography:
-        topo_point = unpack_frame_2d.extend_cells_to_points(topo)
-        topo_point = minimum(topo_point, warpmax_topo)
-        topo_point = maximum(topo_point, warpmin_topo)
-        gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
+    topo_point = unpack_frame_2d.extend_cells_to_points(topo)
+    topo_point = minimum(topo_point, warpmax_topo)
+    topo_point = maximum(topo_point, warpmin_topo)
+    gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
         
     return gridxyz
 
@@ -123,25 +114,18 @@ def make_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
     plotting new frameno.
     """
 
-    if warpfactor_eta is None:
-        # flat 2d plot:
-        topomesh = plotter.add_mesh(gridxyz, scalars='topo', color='g')
-        etamesh = plotter.add_mesh(gridxyz, scalars='eta', cmap=tsunami_colormap,
-                         clim=clim, show_edges=show_edges)
+    # warp surface based on eta (point_values needed):
+    etawarp = gridxyz.warp_by_scalar('eta_point', factor=warpfactor_eta)
+    etamesh = plotter.add_mesh(etawarp, cmap=tsunami_colormap,
+                     clim=clim_eta,show_edges=show_edges)
 
-    else:
-        # warp surface based on eta (point_values needed):
-        etawarp = gridxyz.warp_by_scalar('eta_point', factor=warpfactor_eta)
-        etamesh = plotter.add_mesh(etawarp, cmap=tsunami_colormap,
-                         clim=clim_eta,show_edges=show_edges)
-
-        topowarp = gridxyz.warp_by_scalar('topo_point', factor=warpfactor_topo)
-        topomesh = plotter.add_mesh(topowarp, color='lightgreen',
-                                     show_edges=False)
-                                     
-        # this seems to affect color map of eta if clim_topo != clim_eta:
-        #topomesh = plotter.add_mesh(topowarp, cmap='gist_earth',
-        #                            clim=clim_topo, show_edges=False)
+    topowarp = gridxyz.warp_by_scalar('topo_point', factor=warpfactor_topo)
+    topomesh = plotter.add_mesh(topowarp, color='lightgreen',
+                                 show_edges=False)
+                                 
+    # this seems to affect color map of eta if clim_topo != clim_eta:
+    #topomesh = plotter.add_mesh(topowarp, cmap='gist_earth',
+    #                            clim=clim_topo, show_edges=False)
 
     return [topomesh,etamesh]
     
@@ -150,12 +134,11 @@ def make_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
 
 # don't show plots on screen if making animation:
 plotter = pv.Plotter(off_screen=make_animation)
-plotter.window_size = (1500,1500)
+plotter.window_size = (2000,1500)
 plotter.add_axes()
 mesh_list = []  # list of pyvista meshes to be removed for new frameno
 
-plotter.camera_position = camera_position
-
+plotter.camera_position =  [(-89.445, -139.758, 79.617), (-87.315, -31.325, -1.567), (-0.012, 0.599, 0.8)]
 
 #---------------------------------------------------------------------------
 # The rest of this may not need to change from one application to the next...
