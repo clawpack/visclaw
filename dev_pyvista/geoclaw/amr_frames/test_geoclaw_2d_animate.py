@@ -23,11 +23,18 @@ outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
 warpfactor = 10 # warp vertically based on q[0], set to None for flat 2d plots
 #warpfactor = None
 
+warpmax_eta = 0.5
+warpmin_eta = -0.5
+
+warpfactor_topo = warpfactor
+warpmax_topo = 0.3
+warpmin_topo = -0.3
+
 # set desired camera position:
 if warpfactor is None:
     camera_position =  'xy'
 else:
-    camera_position = [(-69.658, -33.882, 197.263), (-90.0, -30.0, 0.0), (0.009, 1.0, 0.019)]
+    camera_position = [(-90.056, -158.408, 101.893), (-90.0, -30.0, 0.0), (-0.011, 0.622, 0.783)]
 
 make_animation = False  # if False, will open on screen with slider for frameno
 
@@ -39,7 +46,9 @@ if make_animation:
 
 # plotting parameters (or explicitly modify the plotting commands below)
 show_edges = True
-clim = (-0.2,0.2)
+clim = (-0.2,0.2) # eta
+#clim_topo = (-500,500)
+clim_topo = clim
 
 # which frames to include:
 if 1:
@@ -55,11 +64,11 @@ else:
 
 # which levels to plot (usually 1 to 10 will include all levels):
 minlevel = 1
-maxlevel = 10
+maxlevel = 3
 print('Will show grids on levels %i to %i (with holes for finer grids)' \
         % (minlevel,maxlevel))
 
-verbose = False  # True plots info about every patch as it's plotted
+verbose = True  # True plots info about every patch as it's plotted
         
 def make_gridxyz(X_edges, Y_edges, q):
     """
@@ -87,15 +96,16 @@ def make_gridxyz(X_edges, Y_edges, q):
     if warpfactor is not None:
         # water surface eta:
         eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
-        eta_point = minimum(eta_point, 0.5)  # limit big values near coast
+        eta_point = minimum(eta_point, warpmax_eta)  # limit big values near coast
+        eta_point = maximum(eta_point, warpmin_eta)
         gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
 
-        # topography can be computed as eta - h (surface - depth)
-        #topo = q[-1,:,:] - q[0,:,:]
         topo_point = unpack_frame_2d.extend_cells_to_points(topo)
+        topo_point = minimum(topo_point, warpmax_topo)
+        topo_point = maximum(topo_point, warpmin_topo)
 
         # mask topo where we want to plot eta:
-        topo_point = where(isnan(eta_point), topo_point, nan)
+        #topo_point = where(isnan(eta_point), topo_point, nan)
         gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
         
     return gridxyz
@@ -111,7 +121,7 @@ def make_grid_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
         # flat 2d plot:
         topomesh = plotter.add_mesh(gridxyz, scalars='topo', color='g')
         etamesh = plotter.add_mesh(gridxyz, scalars='eta', cmap=tsunami_colormap,
-                         clim=clim,show_edges=show_edges)
+                         clim=clim, show_edges=show_edges)
 
     else:
         # warp surface based on eta (point_values needed):
@@ -119,16 +129,10 @@ def make_grid_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
         etamesh = plotter.add_mesh(etawarp, cmap=tsunami_colormap,
                          clim=clim,show_edges=show_edges)
 
-        # add warp of topo scaled down so it's nearly flat:
-        topowarp = gridxyz.warp_by_scalar('topo_point', factor=1e-5)
+        topowarp = gridxyz.warp_by_scalar('topo_point', factor=warpfactor_topo)
 
-        #plotter.add_mesh(topowarp, cmap='gist_earth',
-        #                 clim=(-500e-5,3000e-5),show_edges=False)
-
-        #plotter.add_mesh(gridxyz, scalars='topo', color='g',show_edges=False)
-                         
-        # this works ok to make it solid green:
-        topomesh = plotter.add_mesh(topowarp, color='g')
+        topomesh = plotter.add_mesh(topowarp, cmap='gist_earth',
+                                    clim=clim_topo, show_edges=False)
                                                    
     return [topomesh,etamesh]
     
