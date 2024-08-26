@@ -1,3 +1,10 @@
+"""
+Terminology:
+    patch - an AMR patch from a GeoClaw solution at one time frame
+    grid - gridxyz is a 3d numpy grid on which to define solution for plotting
+    mesh - a pyvista plot actor created with pv.add_mesh
+"""
+
 from pylab import *
 import os,sys,glob
 import pyvista as pv
@@ -13,10 +20,10 @@ sys.path.insert(0, VISCLAW)
 import dev_pyvista
 sys.path.pop(0)
 
-from dev_pyvista.amrclaw import unpack_frame_2d # to unpack grid patches
+from dev_pyvista.amrclaw import unpack_frame_2d # to unpack AMR patches
 from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
-global mesh_list
+global mesh_list  # pv meshes created at one frame to remove at the next
 
 # Things to set:
 outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
@@ -65,7 +72,7 @@ else:
 # which levels to plot (usually 1 to 10 will include all levels):
 minlevel = 1
 maxlevel = 3
-print('Will show grids on levels %i to %i (with holes for finer grids)' \
+print('Will show patches on levels %i to %i (with holes for finer patches)' \
         % (minlevel,maxlevel))
 
 verbose = True  # True plots info about every patch as it's plotted
@@ -110,7 +117,7 @@ def make_gridxyz(X_edges, Y_edges, q):
         
     return gridxyz
 
-def make_grid_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
+def make_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
     """
     Use add_mesh to add one or more plots for a single patch and return a
     list of handle(s), since these meshes will have to be removed when
@@ -179,14 +186,14 @@ def set_frameno(frameno):
         print('Could not read frameno %s' % frameno)
         pass
     
-    # a dictionary to keep track of all grid patches at each level:
+    # a dictionary to keep track of all AMR patches at each level:
     patches_on_level = {}
     for k in range(1,maxlevel+2):
         patches_on_level[k] = []
 
     for level,X_edges,Y_edges,q in patch_iterator:
 
-        # process each grid patch and put on lists by level
+        # process each AMR patch and put on lists by level
 
         if level < minlevel:
             # skip to next patch
@@ -229,10 +236,11 @@ def set_frameno(frameno):
                 patch[0] = gridxyz
 
             # now that it's got proper holes cut out, make plot, add to plotter:
-            gridmesh_list = make_grid_mesh_list(plotter, gridxyz, level,
+            patch_mesh_list = make_mesh_list(plotter, gridxyz, level,
                                                 X_edges, Y_edges, q)
-            for gridmesh in gridmesh_list:
-                mesh_list.append(gridmesh)
+            for mesh in patch_mesh_list:
+                # add mesh plots from this patch to list of all meshes for frame
+                mesh_list.append(mesh)
                                  
     if not make_animation:
 
