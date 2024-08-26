@@ -27,19 +27,21 @@ if warpfactor is None:
 else:
     camera_position =  [(1.127, -1.771, 1.517), (0.531, 0.346, 0.143), (-0.179, 0.5, 0.848)]
 
-make_animation = False  # if False, will open on screen with slider for frameno
+make_animation = True  # if False, will open on screen with slider for frameno
+
 if make_animation:
-    fname_mp4 = 'pyvista_animation.mp4'
+    fname_base = 'pyvista_sample'
+    fname_mp4 = fname_base + '.mp4'
     framedir = 'frame_plots'  # where to store png files
     os.system('mkdir -p %s' % framedir)
 
 # plotting parameters (or explicitly modify the plotting commands below)
 show_edges = True
 cmap = colormaps.yellow_red_blue
-clim = (0,1)
+clim = (-1,1)
 
 # which frames to include:
-if 1:
+if 0:
     # use all output files found:
     fortq_files = glob.glob(outdir + '/fort.q*')
     framenos = [int(f[-4:]) for f in fortq_files]
@@ -80,13 +82,24 @@ def make_gridxyz(X_edges, Y_edges, q):
         # need to convert cell averages to vertex values for warping:
         q_point = unpack_frame_2d.extend_cells_to_points(q_cell)
         gridxyz.point_data['q_point'] = q_point.flatten(order='F')
+
+    # set second value to plot:
+    q_celln = -q[0,:,:]
+    q_celln = where(q_celln > -0.9, q_celln, nan)
+    gridxyz.cell_data['q_celln'] = q_celln.flatten(order='F') 
+    
+    if warpfactor is not None:
+        # need to convert cell averages to vertex values for warping:
+        q_pointn = unpack_frame_2d.extend_cells_to_points(q_celln)
+        gridxyz.point_data['q_pointn'] = q_pointn.flatten(order='F')
         
     return gridxyz
 
-def plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q):
+def make_grid_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
     """
-    Use add_mesh to add a plot for a single patch and return handle
-    since this mesh will have to be removed when plotting new frameno.
+    Use add_mesh to add one or more plots for a single patch and return a
+    list of handle(s), since these meshes will have to be removed when
+    plotting new frameno.
     """
     
     if warpfactor is None:
@@ -97,9 +110,13 @@ def plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q):
     else:
         qwarp = gridxyz.warp_by_scalar('q_point', factor=warpfactor)
         gridmesh = plotter.add_mesh(qwarp, cmap=cmap,
+                                    clim=clim,show_edges=show_edges)
+        # plot second value:
+        qwarpn = gridxyz.warp_by_scalar('q_pointn', factor=warpfactor)
+        gridmeshn = plotter.add_mesh(qwarpn, scalars='q_celln', cmap=cmap,
                                     clim=clim,show_edges=show_edges) 
                                            
-    return gridmesh
+    return [gridmesh,gridmeshn]
     
 #----------------------
 # Set up plotter:
@@ -108,7 +125,7 @@ def plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q):
 plotter = pv.Plotter(off_screen=make_animation)
 plotter.window_size = (1500,1500)
 plotter.add_axes()
-mesh_list = []  # list of meshes to be removed for new frameno
+mesh_list = []  # list of pyvista meshes to be removed for new frameno
 
 plotter.camera_position = camera_position
 
@@ -194,8 +211,10 @@ def set_frameno(frameno):
                 patch[0] = gridxyz
 
             # now that it's got proper holes cut out, make plot, add to plotter:
-            gridmesh = plot_patch(plotter, gridxyz, level, X_edges, Y_edges, q)
-            mesh_list.append(gridmesh)
+            gridmesh_list = make_grid_mesh_list(plotter, gridxyz, level,
+                                                X_edges, Y_edges, q)
+            for gridmesh in gridmesh_list:
+                mesh_list.append(gridmesh)
                                  
     if not make_animation:
 
@@ -218,15 +237,15 @@ if make_animation:
     
     for frameno in framenos:
         set_frameno(frameno)
-        fname_png = '%s/PyVistaFrame%s.png' % (framedir, str(frameno).zfill(4))
+        fname_png = '%s/%s%s.png' % (framedir,fname_base,str(frameno).zfill(4))
         plotter.screenshot(fname_png)
         print('Created ',fname_png)
 
     plotter.close()
 
-    anim = animation_tools.make_anim(framedir, fname_pattern='PyVistaFrame*.png')
+    fname_pattern='%s*.png' % fname_base
+    anim = animation_tools.make_anim(framedir, fname_pattern=fname_pattern)
     animation_tools.make_mp4(anim, fname_mp4)
-    print('Created ',fname_mp4)
 
 else:
     # create slider bar for user to adjust:
