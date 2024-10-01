@@ -22,7 +22,7 @@ if 'matplotlib' not in sys.modules:
     #matplotlib.use('TkAgg')
     matplotlib.rc('text', usetex=False)
     matplotlib.interactive(True)
-
+from matplotlib import pyplot as plt
 from clawpack.visclaw import frametools
 from .iplot import Iplot
 
@@ -135,7 +135,7 @@ class Iplotclaw(Iplot):
             anim.save(fname)
             exit()
 
-        self.arrowkeys = dict(right=self.do_n, left=self.do_p, up=self.do_n, down=self.do_p)
+        self.mapped_keys = dict(right="n", left="p", up="n", down="p", q="quit")  # Corresponding do_ command
         self.frameno_input = ""
         self.frames = {}
 
@@ -144,6 +144,8 @@ class Iplotclaw(Iplot):
             if frameno not in list(self.frames.keys()):
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=True)
                 self.frames[str(frameno)] = ''
+                for fn in plt.get_fignums():
+                    plt.figure(fn).canvas.mpl_connect('key_press_event', self.on_key_press_event)
             else:
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=False)
         except IOError as e:
@@ -327,22 +329,28 @@ class Iplotclaw(Iplot):
                 else:
                     print("No makefig function specified for ",name)
 
-    def on_arrowkey_press(self, event):
-        """If pressed key is in arrowkeys, increment index and update plot."""
-        if event.key in self.arrowkeys:
-            self.arrowkeys[event.key](...)
-            print("\n"+self.prompt, end=" ")
+    def on_key_press_event(self, event):
+        k = event.key
 
-    def on_numeric_input(self, event):
-        "Collect next frameno's digits until `enter` is pressed."
-        if event.key.isnumeric():
-            self.frameno_input += event.key
-        elif event.key == "enter":
+        if k.isnumeric():
+            self.frameno_input += k
+            return None
+        elif k == "enter":
+            self.stdout.write("\n")
             self.frameno = min(int(self.frameno_input or self.frameno),
                                self.num_frames-1)
-            self.plot_and_cache(self.frameno)
+            self.onecmd(f"j {self.frameno} \n")
             self.frameno_input = ""
-            print("\n"+self.prompt, end=" ")
+        elif k in self.mapped_keys:
+            self.stdout.write("\n")
+            self.onecmd(self.mapped_keys[k])
+        else:
+            return None
+
+        self.stdout.write(self.prompt)
+        self.stdout.flush()
+        self.lastcmd = "n"
+        
 
 # end of Iplotclaw.
 #----------------------------------------------------------------------
