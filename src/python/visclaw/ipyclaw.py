@@ -6,15 +6,18 @@ sesssion.
 """
 
 from __future__ import absolute_import
-import sys
-import clawpack.visclaw.Iplotclaw as Iplotclaw
+from argparse import ArgumentParser
+from clawpack.visclaw.Iplotclaw import Iplotclaw
 
-def run_iplotclaw(setplot='setplot.py',outdir='./_output'):
-    ip = Iplotclaw.Iplotclaw(setplot=setplot,outdir=outdir)
+def run_iplotclaw(**kwargs):
+    ip = Iplotclaw(**kwargs)
     ip.plotloop()
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        run_iplotclaw(*sys.argv[1:])
-    else:
-        run_iplotclaw()
+    parser = ArgumentParser()
+    parser.add_argument("--setplot", default="setplot.py", type=str, required=False)
+    parser.add_argument("--outdir", default="./_output", type=str, required=False)
+    parser.add_argument("--fname", default=None, type=str, required=False)
+    parser.add_argument("--fps", default=None, type=float, required=False)
+    args = parser.parse_args()
+    run_iplotclaw(**args.__dict__)

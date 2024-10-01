@@ -11,6 +11,7 @@ For options during looping type:
 """
 
 import sys
+from pathlib import Path
 
 if 'matplotlib' not in sys.modules:
     import matplotlib
@@ -62,7 +63,7 @@ class Iplotclaw(Iplot):
 
     def __init__(self, setplot='setplot.py', outdir=None, \
                  completekey='tab', stdin=None, stdout=None, simple=False,
-                 controller=None):
+                 controller=None, fname=None, fps=None):
         """Instantiate a line-oriented interpreter framework.
 
 
@@ -120,7 +121,22 @@ class Iplotclaw(Iplot):
         self.prevplotdata = plotdata
         self.restart = False
         self.prevframeno = 0
+        self.num_frames = len(list(Path(plotdata.outdir).glob("fort.q*")))
 
+        if fps is not None or fname is not None:  # Write animation and exit
+            from matplotlib import pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            fname = fname or "movie.gif"
+            fps = fps or 2
+            def update(i):
+                frametools.plotframe(i, self.plotdata, simple=self.simple, refresh=True)
+            update(0)
+            anim = FuncAnimation(plt.gcf(), update, frames=self.num_frames, interval=1e3/fps)
+            anim.save(fname)
+            exit()
+
+        self.arrowkeys = dict(right=self.do_n, left=self.do_p, up=self.do_n, down=self.do_p)
+        self.frameno_input = ""
         self.frames = {}
 
     def plot_and_cache(self,frameno):
@@ -311,6 +327,22 @@ class Iplotclaw(Iplot):
                 else:
                     print("No makefig function specified for ",name)
 
+    def on_arrowkey_press(self, event):
+        """If pressed key is in arrowkeys, increment index and update plot."""
+        if event.key in self.arrowkeys:
+            self.arrowkeys[event.key](...)
+            print("\n"+self.prompt, end=" ")
+
+    def on_numeric_input(self, event):
+        "Collect next frameno's digits until `enter` is pressed."
+        if event.key.isnumeric():
+            self.frameno_input += event.key
+        elif event.key == "enter":
+            self.frameno = min(int(self.frameno_input or self.frameno),
+                               self.num_frames-1)
+            self.plot_and_cache(self.frameno)
+            self.frameno_input = ""
+            print("\n"+self.prompt, end=" ")
 
 # end of Iplotclaw.
 #----------------------------------------------------------------------
