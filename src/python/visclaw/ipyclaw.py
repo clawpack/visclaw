@@ -14,6 +14,8 @@ def run_iplotclaw(**kwargs):
     ip.plotloop()
 
 def parse_args():  # TODO: ipython cannot parse custom arguments
+    if 'get_ipython' in locals():
+        raise Exception(f"Using ipython, arguments cannot be parsed.")
     parser = ArgumentParser()
     parser.add_argument("--setplot", default="setplot.py", type=str, required=False)
     parser.add_argument("--outdir", default="./_output", type=str, required=False)
