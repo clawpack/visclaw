@@ -139,11 +139,6 @@ class Iplot(cmd.Cmd):
                                     % self.frameno)
                     if reload in ('y','yes','Y'):
                         self.frames.pop(str(self.frameno))
-        if makeplot:
-            self.plot_and_cache(self.frameno)
-            for fn in plt.get_fignums():
-                plt.figure(fn).canvas.mpl_connect('key_press_event', self.on_arrowkey_press)
-                plt.figure(fn).canvas.mpl_connect('key_press_event', self.on_numeric_input)
         else:
             try:
                 self.frameno = int(startframeno)
