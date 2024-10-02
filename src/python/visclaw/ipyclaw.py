@@ -6,15 +6,15 @@ sesssion.
 """
 
 from __future__ import absolute_import
-from argparse import ArgumentParser
-from clawpack.visclaw.Iplotclaw import Iplotclaw
+import argparse
+import clawpack.visclaw.Iplotclaw as Iplotclaw
 
 def run_iplotclaw(**kwargs):
-    ip = Iplotclaw(**kwargs)
+    ip = Iplotclaw.Iplotclaw(**kwargs)
     ip.plotloop()
 
 def parse_args():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
     parser.add_argument("setplot")
     parser.add_argument("--fname", default=None, type=str, required=False)
