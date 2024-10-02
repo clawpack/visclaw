@@ -13,16 +13,14 @@ def run_iplotclaw(**kwargs):
     ip = Iplotclaw(**kwargs)
     ip.plotloop()
 
-def parse_args():  # TODO: ipython cannot parse custom arguments
-    if 'get_ipython' in locals():
-        raise Exception(f"Using ipython, arguments cannot be parsed.")
+def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--setplot", default="setplot.py", type=str, required=False)
-    parser.add_argument("--outdir", default="./_output", type=str, required=False)
+    parser.add_argument("outdir")
+    parser.add_argument("setplot")
     parser.add_argument("--fname", default=None, type=str, required=False)
     parser.add_argument("--fps", default=None, type=float, required=False)
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
-    run_iplotclaw(setplot="setplot.py", outdir="./_output")
+    run_iplotclaw(**parse_args().__dict__)
