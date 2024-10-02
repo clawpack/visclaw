@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.rc('text', usetex=False)
 matplotlib.interactive(True)
 import matplotlib.pyplot as plt
-from clawpack.visclaw import frametools
+import clawpack.visclaw.frametools as frametools
 from .iplot import Iplot
 
 #------------------------
@@ -118,14 +118,13 @@ class Iplotclaw(Iplot):
         self.num_frames = len(list(Path(plotdata.outdir).glob("fort.q*")))
 
         if fps or fname:
-            from matplotlib import pyplot as plt
-            from matplotlib.animation import FuncAnimation
+            import matplotlib.animation as animation
             fname = fname or "movie.gif"
             fps = fps or 2
             def update(i):
                 frametools.plotframe(i, self.plotdata, simple=self.simple, refresh=True)
             update(0)
-            anim = FuncAnimation(plt.gcf(), update, frames=self.num_frames, interval=1e3/fps)
+            anim = animation.FuncAnimation(plt.gcf(), update, frames=self.num_frames, interval=1e3/fps)
             anim.save(fname)
             plt.close("all")
 
@@ -348,4 +347,3 @@ class Iplotclaw(Iplot):
 
 # end of Iplotclaw.
 #----------------------------------------------------------------------
-
