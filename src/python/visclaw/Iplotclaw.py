@@ -13,16 +13,10 @@ For options during looping type:
 import sys
 from pathlib import Path
 
-if 'matplotlib' not in sys.modules:
-    import matplotlib
-    # Override system defaults before importing pylab
-    # If you set the backend here, you must start ipython w/o pylab
-    # before importing this package.
-    #matplotlib.use('Agg')  # Use an image backend
-    #matplotlib.use('TkAgg')
-    matplotlib.rc('text', usetex=False)
-    matplotlib.interactive(True)
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.rc('text', usetex=False)
+matplotlib.interactive(True)
+import matplotlib.pyplot as plt
 from clawpack.visclaw import frametools
 from .iplot import Iplot
 
@@ -123,7 +117,7 @@ class Iplotclaw(Iplot):
         self.prevframeno = 0
         self.num_frames = len(list(Path(plotdata.outdir).glob("fort.q*")))
 
-        if fps is not None or fname is not None:  # Write animation and exit
+        if fps or fname:
             from matplotlib import pyplot as plt
             from matplotlib.animation import FuncAnimation
             fname = fname or "movie.gif"
@@ -133,7 +127,7 @@ class Iplotclaw(Iplot):
             update(0)
             anim = FuncAnimation(plt.gcf(), update, frames=self.num_frames, interval=1e3/fps)
             anim.save(fname)
-            exit()
+            plt.close("all")
 
         self.mapped_keys = dict(right="n", left="p", up="n", down="p", q="quit")  # Corresponding do_ command
         self.frameno_input = ""
