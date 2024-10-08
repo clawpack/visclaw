@@ -15,8 +15,8 @@ def run_iplotclaw(**kwargs):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("outdir")
-    parser.add_argument("setplot")
+    parser.add_argument("outdir", default="./_output", type=str, nargs="?")
+    parser.add_argument("setplot", default="setplot.py", type=str, nargs="?")
     parser.add_argument("--fname", default=None, type=str, required=False)
     parser.add_argument("--fps", default=None, type=float, required=False)
     args = parser.parse_args()
