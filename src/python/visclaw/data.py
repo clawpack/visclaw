@@ -27,7 +27,7 @@ class ClawPlotData(clawdata.ClawData):
     """
 
     # ========== Initialization routine ======================================
-    def __init__(self, controller=None):
+    def __init__(self, controller=None, file_format="ascii"):
         """Initialize a PlotData object
 
         """
@@ -50,8 +50,11 @@ class ClawPlotData(clawdata.ClawData):
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
-            self.add_attribute('format','ascii')
-            self.add_attribute('file_prefix','fort')
+            self.add_attribute('format',file_format)
+            if file_format == "petsc":
+                self.add_attribute('file_prefix','claw')
+            else:
+                self.add_attribute('file_prefix','fort')
 
         # This should eventually replace all need for recording the above
         # information
