@@ -36,7 +36,7 @@ sys.path.insert(0, VISCLAW)
 import dev_pyvista
 sys.path.pop(0)
 
-from dev_pyvista.amrclaw import unpack_frame_2d # to unpack AMR patches
+from dev_pyvista.amrclaw import unpack_frame_patches # to unpack AMR patches
 from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
 global mesh_list  # pv meshes created at one frame to remove at the next
@@ -111,12 +111,12 @@ def make_gridxyz(X_edges, Y_edges, q):
     
     # warped surfaces:
     
-    eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
+    eta_point = unpack_frame_patches.extend_cells_to_points(eta_wet)
     eta_point = minimum(eta_point, warpmax_eta)  # limit big values near coast
     eta_point = maximum(eta_point, warpmin_eta)
     gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
 
-    topo_point = unpack_frame_2d.extend_cells_to_points(topo)
+    topo_point = unpack_frame_patches.extend_cells_to_points(topo)
     topo_point = minimum(topo_point, warpmax_topo)
     topo_point = maximum(topo_point, warpmin_topo)
     gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
@@ -180,7 +180,7 @@ def set_frameno(frameno):
         
     try:
         # make an iterator for looping over all patches in this frame:
-        patch_iterator = unpack_frame_2d.PatchIterator(frameno,
+        patch_iterator = unpack_frame_patches.PatchIterator(frameno,
                                    outdir=outdir,
                                    file_format=file_format)
     except:
@@ -192,7 +192,7 @@ def set_frameno(frameno):
     for k in range(1,maxlevel+2):
         patches_on_level[k] = []
 
-    for level,X_edges,Y_edges,q in patch_iterator:
+    for level,patch_edges,q in patch_iterator:
 
         # process each AMR patch and put on lists by level
 
@@ -205,6 +205,7 @@ def set_frameno(frameno):
             print('breaking since level = %i > maxlevel+1' % level)
             break
 
+        X_edges,Y_edges = patch_edges[:2]
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 

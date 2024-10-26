@@ -8,7 +8,7 @@ sys.path.insert(0, VISCLAW)
 import dev_pyvista
 sys.path.pop(0)
 
-from dev_pyvista.amrclaw import unpack_frame_2d # to unpack grid patches
+from dev_pyvista.amrclaw import unpack_frame_patches # to unpack grid patches
 from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
 def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
@@ -24,9 +24,9 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
     from clawpack.visclaw.geoplot import tsunami_colormap
     figure(1)
     clf()
-    patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
+    patch_iterator = unpack_frame_patches.PatchIterator(frameno, outdir=outdir,
                                                    verbose=verbose)
-    for level,X,Y,q in patch_iterator:
+    for level,patch_edges,q in patch_iterator:
 
         if level < minlevel:
             # skip to next patch
@@ -37,11 +37,12 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
             print('Not showing patches with level > %i' % maxlevel)
             break
 
-        extent = [X.min(), X.max(), Y.min(), Y.max()]
+        X_edges,Y_edges = patch_edges[:2]
+        extent = [X_edges.min(), X_edges.max(), Y_edges.min(), Y_edges.max()]
         if verbose:
             print('    extent = ',extent)
         eta_wet = where(q[0,:,:] > 0.001, q[-1,:,:], nan)
-        pcolormesh(X,Y,eta_wet,cmap=tsunami_colormap, edgecolors='k')
+        pcolormesh(X_edges,Y_edges,eta_wet,cmap=tsunami_colormap, edgecolors='k')
         clim(-0.2, 0.2)
     colorbar()
 
@@ -79,7 +80,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
             % maxlevel)
 
     # make an iterator for looping over all patches in this frame:
-    patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
+    patch_iterator = unpack_frame_patches.PatchIterator(frameno, outdir=outdir,
                                                    file_format=None)
 
     # a dictionary to keep track of all grid patches at each level:
@@ -87,7 +88,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
     for k in range(1,maxlevel+2):
         patches_on_level[k] = []
 
-    for level,X_edges,Y_edges,q in patch_iterator:
+    for level,patch_edges,q in patch_iterator:
 
         # process each grid patch and put on lists by level
 
@@ -100,6 +101,7 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
             print('breaking since level = %i > maxlevel+1' % level)
             break
 
+        X_edges,Y_edges = patch_edges[:2]
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 
@@ -119,13 +121,13 @@ def geoclaw_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
 
         if warpfactor is not None:
             # water surface eta:
-            eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
+            eta_point = unpack_frame_patches.extend_cells_to_points(eta_wet)
             eta_point = minimum(eta_point, 0.5)  # limit big values near coast
             gridxyz.point_data['eta_point'] = eta_point.flatten(order='F')
 
             # topography can be computed as eta - h (surface - depth)
             #topo = q[-1,:,:] - q[0,:,:]
-            topo_point = unpack_frame_2d.extend_cells_to_points(topo)
+            topo_point = unpack_frame_patches.extend_cells_to_points(topo)
 
             # mask topo where we want to plot eta:
             topo_point = where(isnan(eta_point), topo_point, nan)
