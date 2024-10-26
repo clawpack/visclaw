@@ -1,3 +1,6 @@
+"""
+Fetch a background image for a specified extent.
+"""
 
 import sys
 

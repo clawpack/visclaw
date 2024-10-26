@@ -1,3 +1,11 @@
+"""
+Plot a topo DEM warped by some warpfactor with an image specified by bg_file
+drapped over it (or using a colormap based on elevation if bg_file == None).
+
+An image can be downloaded using Quillayute_bg_image.py, or
+you could take a screen shot of Google Earth, or use some other desired image.
+"""
+
 from pylab import *
 import pyvista as pv
 from clawpack.geoclaw import topotools
@@ -7,6 +15,8 @@ import os
 
 global etamesh
 
+# Load the topo DEM:
+
 topo_fname = 'Quillayute_13s.asc'
 if not os.path.isfile(topo_fname):
     # need to download it first...
@@ -15,6 +25,7 @@ if not os.path.isfile(topo_fname):
     
 topo = topotools.Topography(topo_fname)
 
+# Crop to the desired extent:
 extent = [-124.66, -124.57, 47.9, 47.93]
 topo = topo.crop(extent)
 
