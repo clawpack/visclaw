@@ -1,8 +1,24 @@
 """
+View time frames from GeoClaw output (the full AMR solution or selected levels).
+
+First run this script with `make_animation = False` to open a pyvista window
+with a slider bar to step through frames.  If you adjust the viewpoint and
+then move the slider bar it will print out the new camera_position, which
+could be copied into this script to have it open with that position in the
+future (e.g. when making the animation).
+
+Set `make_animation = True` to make a series of png files and then these
+are combined into an mp4 file using clawpack.visclaw.animation_tools
+(which requires ffmpeg).
+
+Adjust warpfactor_eta and/or warpfactor_topo to change the vertical exaggeration
+in the 3D plots.
+
 Terminology:
     patch - an AMR patch from a GeoClaw solution at one time frame
     grid - gridxyz is a 3d numpy grid on which to define solution for plotting
     mesh - a pyvista plot actor created with pv.add_mesh
+    
 """
 
 from pylab import *

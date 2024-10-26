@@ -24,6 +24,7 @@ amrclaw/
         This can be used to plot each patch on top of coarser ones, as done
         normally in visclaw when frametools.py is used via specifying a
         setplot.py script.
+        
         For PyVista plots, it is preferable to clip out rectanglar patches
         from the coarser grids anywhere a finer grid is available, particularly
         if the plot is warped into a 3D surface.
@@ -36,6 +37,7 @@ amrclaw/
         patches for this frame, going from coarsest to finest levels.    
         There are currently no matplotlib tools in visclaw for plotting such
         data, only some matlab code.
+        
         For PyVista, this new module can be used to clip out 3D regions from
         the coarser grids anywhere a finer grid is available.
         
