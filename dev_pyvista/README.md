@@ -64,3 +64,12 @@ geoclaw/sphere/
     test_geoclaw_sphere_plots.py - some sample code illustrating how to plot
         GeoClaw AMR output on the sphere.
         
+
+Other examples
+--------------
+
+See also the code:
+https://github.com/rjleveque/NuuRefugeTsunami/blob/main/geoclaw_run/pyvista_fgout_Nuu_debris.py
+
+used to create the animations found on this page:
+https://faculty.washington.edu/rjl/pubs/NuuRefugeTsunami/
