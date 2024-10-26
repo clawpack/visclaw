@@ -12,7 +12,7 @@ sys.path.insert(0, VISCLAW)
 import dev_pyvista
 sys.path.pop(0)
 
-from dev_pyvista.amrclaw import unpack_frame_2d # to unpack grid patches
+from dev_pyvista.amrclaw import unpack_frame_patches # to unpack grid patches
 from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
 global mesh_list
@@ -38,10 +38,10 @@ if make_animation:
 # plotting parameters (or explicitly modify the plotting commands below)
 show_edges = True
 cmap = colormaps.yellow_red_blue
-clim = (-1,1)
+clim = (0,1)
 
 # which frames to include:
-if 0:
+if 1:
     # use all output files found:
     fortq_files = glob.glob(outdir + '/fort.q*')
     framenos = [int(f[-4:]) for f in fortq_files]
@@ -80,7 +80,7 @@ def make_gridxyz(X_edges, Y_edges, q):
     
     if warpfactor is not None:
         # need to convert cell averages to vertex values for warping:
-        q_point = unpack_frame_2d.extend_cells_to_points(q_cell)
+        q_point = unpack_frame_patches.extend_cells_to_points(q_cell)
         gridxyz.point_data['q_point'] = q_point.flatten(order='F')
 
     # set second value to plot:
@@ -90,7 +90,7 @@ def make_gridxyz(X_edges, Y_edges, q):
     
     if warpfactor is not None:
         # need to convert cell averages to vertex values for warping:
-        q_pointn = unpack_frame_2d.extend_cells_to_points(q_celln)
+        q_pointn = unpack_frame_patches.extend_cells_to_points(q_celln)
         gridxyz.point_data['q_pointn'] = q_pointn.flatten(order='F')
         
     return gridxyz
@@ -112,11 +112,12 @@ def make_grid_mesh_list(plotter, gridxyz, level, X_edges, Y_edges, q):
         gridmesh = plotter.add_mesh(qwarp, cmap=cmap,
                                     clim=clim,show_edges=show_edges)
         # plot second value:
-        qwarpn = gridxyz.warp_by_scalar('q_pointn', factor=warpfactor)
-        gridmeshn = plotter.add_mesh(qwarpn, scalars='q_celln', cmap=cmap,
-                                    clim=clim,show_edges=show_edges) 
+        #qwarpn = gridxyz.warp_by_scalar('q_pointn', factor=warpfactor)
+        #gridmeshn = plotter.add_mesh(qwarpn, scalars='q_celln', cmap=cmap,
+        #                            clim=clim,show_edges=show_edges) 
                                            
-    return [gridmesh,gridmeshn]
+    #return [gridmesh,gridmeshn]
+    return [gridmesh]
     
 #----------------------
 # Set up plotter:
@@ -154,7 +155,7 @@ def set_frameno(frameno):
         
     try:
         # make an iterator for looping over all patches in this frame:
-        patch_iterator = unpack_frame_2d.PatchIterator(frameno,
+        patch_iterator = unpack_frame_patches.PatchIterator(frameno,
                                    outdir=outdir,
                                    file_format=file_format)
     except:
@@ -166,7 +167,7 @@ def set_frameno(frameno):
     for k in range(1,maxlevel+2):
         patches_on_level[k] = []
 
-    for level,X_edges,Y_edges,q in patch_iterator:
+    for level,patch_edges,q in patch_iterator:
 
         # process each grid patch and put on lists by level
 
@@ -179,6 +180,7 @@ def set_frameno(frameno):
             print('breaking since level = %i > maxlevel+1' % level)
             break
 
+        X_edges, Y_edges = patch_edges[:2]
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 

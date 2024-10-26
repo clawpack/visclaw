@@ -18,28 +18,28 @@ Contents:
 
 amrclaw/
 
-    unpack_frame_2d.py - module with code to read in a single frame of 2D AMR
+    unpack_frame_patches.py - module with code to read in a single frame of AMR
         data with an iterator class that can be used to iterate over all the AMR
         patches for this frame, going from coarsest to finest levels.
         This can be used to plot each patch on top of coarser ones, as done
-        normally in visclaw when frametools.py is used via specifying a
-        setplot.py script.
+        normally in visclaw in 2D, when frametools.py is used via specifying a
+        setplot.py script.  (There are currently no matplotlib tools in visclaw
+        for plotting AMR data, only some matlab code.)
         
-        For PyVista plots, it is preferable to clip out rectanglar patches
+        For PyVista plots in 2D, it is preferable to clip out rectanglar patches
         from the coarser grids anywhere a finer grid is available, particularly
-        if the plot is warped into a 3D surface.
+        if the plot is warped into a 3D surface.  In 3D it is necessary to
+        clip out patches in order to properly insert finer grid patches.
+        
+        This module defines a PatchIterator class that can be used to read
+        in a frame solution and yield one patch at a time.
         
     test_amrclaw_2d_plots.py - some sample code illustrating how to plot AMR
-        frame data in 2D.
+        frame data in 2D for a single frame.
         
-    unpack_frame_3d.py - module with code to read in a single frame of 3D AMR
-        data with an iterator class that can be used to iterate over all the AMR
-        patches for this frame, going from coarsest to finest levels.    
-        There are currently no matplotlib tools in visclaw for plotting such
-        data, only some matlab code.
-        
-        For PyVista, this new module can be used to clip out 3D regions from
-        the coarser grids anywhere a finer grid is available.
+    test_amrclaw_2d_animate.py - sample code to either provide a slider bar
+        to adjust the frame being viewed, or to loop over a set of frames and
+        create an animation of the plots at each frame.
         
 geoclaw/topo_plots/
 
@@ -47,6 +47,11 @@ geoclaw/topo_plots/
         for background image, or to use as texture when plotting warped topo
         
     test_bg_image.py - a couple tests of bg_image.py
+    
+geoclaw/topo_plots/Quillayute/
+
+    Quillayute_sealevel.py - Plot topography around La Push, WA and provide
+        a slider bar to adjust sea level.
     
 geoclaw/amr_frames/
 
