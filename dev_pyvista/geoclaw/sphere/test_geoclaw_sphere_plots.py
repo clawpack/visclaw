@@ -2,6 +2,11 @@
 Sample plot functions for AMR frames of a GeoClaw solution.
 This code creates the plot on the sphere using GeoVista, see
         https://geovista.readthedocs.io/en/latest/
+        
+Terminology:
+    patch - an AMR patch from a GeoClaw solution at one time frame
+    grid - gridxyz is a 3d numpy grid on which to define solution for plotting
+    mesh - a pyvista plot actor created with pv.add_mesh
 """
 
 from pylab import *
@@ -23,7 +28,8 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
                       outdir='_output',verbose=True):
     """
     Make a simple matplotlib plot with finer grids plotted on top
-    of coarser ones.  This is the way visclaw normally makes plots.
+    of coarser ones.  This is the way visclaw normally makes plots, but
+    here we use the new unpack_frame_2d iterator.
 
     For exploration and debugging purposes, plot grids only from level minlevel
     up to level maxlevel (or finest level present).
@@ -31,10 +37,6 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
 
     #from clawpack.pyclaw.fileio.ascii import read_t
 
-    if outdir == 'chile2010':
-        # shorthand for this standard example:
-        outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
-    
     figure(1)
     clf()
         
@@ -64,9 +66,11 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
 
 def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
                            warpfactor=None, clim=(-0.2,0.2),
-                           show_edges=True, verbose=True):
+                           show_edges=True, camera_position='xz', verbose=True):
 
     """
+    Create plot on the sphere for a single time frame determined by frameno.
+    
     Plot grids from level minlevel up to level maxlevel (or finest level).
     On each level, holes are first cut out for all grids at higher levels.
     If warpfactor is not None, warp grid by surface elevation.
@@ -183,59 +187,61 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
                 patch[2] = topowarp
 
             # now that it's got proper holes cut out, add to plotter:
-            
-            #plotter.add_mesh(topowarp, color='g')  # not working
-            
-            #plotter.add_mesh(gridxyz, scalars='topo', color='g')
+                
+            if gridxyz.n_points > 0:
+                # this reduces size of gridxyz based on nans in eta_wet
+                gridxyz = gridxyz.threshold()  # remove nan values
 
-            # this reduces size of gridxyz based on nans in eta_wet
-            gridxyz = gridxyz.threshold()  # remove nan values
-        
-            plotter.add_mesh(gridxyz, scalars='eta', 
-                             cmap=geoplot.tsunami_colormap,
-                             #cmap=geoplot.googleearth_transparent,
-                             clim=clim,show_edges=show_edges)
+            if gridxyz.n_points > 0:
+                plotter.add_mesh(gridxyz, scalars='eta', 
+                                 cmap=geoplot.tsunami_colormap,
+                                 #cmap=geoplot.googleearth_transparent,
+                                 clim=clim,show_edges=show_edges)
             
             #plotter.add_mesh(gridxyz, cmap=tsunami_colormap,
             #                 clim=(-0.2,0.2),show_edges=True)
 
             if verbose: print(' adding to plotter')
 
-    plotter.camera_position = 'xz'
+    plotter.camera_position = camera_position
     plotter.add_title('Time %s' % time_str(time))
     plotter.show(window_size=(1500,1500))
 
 
 def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10, 
-                       outdir='chile2010', warpfactor=None, clim=(-0.2,0.2),
+                       outdir='_output', warpfactor=None, clim=(-0.2,0.2),
                        show_edges=True, camera_position='xz', verbose=True):
 
+    """
+    Create plot on the sphere with a slider to adjust the frame number.
+    """
 
     import pyvista as pv
     import geovista as gv
+    import glob,os
 
     global mesh_list
     
     from clawpack.pyclaw.fileio.ascii import read_t
-
-    if outdir == 'chile2010':
-        # shorthand for this standard example:
-        outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
-        camera_position =  [(-0.064, -5.1, -2.13), (0.001, -0.001, 0.0),
-                            (-0.0, -0.385, 0.923)]
-                            
-    if outdir == 'tonga':
-        outdir = '/Users/rjl/git/tonga2022/globalLambWave/_output/'
-        camera_position =  [(-5.148, -0.721, -1.89), (-0.005, -0.167, 0.059),
-                            (-0.354, -0.001, 0.935)]
+    
+    # determine available frames
+    frame_files = glob.glob(os.path.join(outdir,'fort.q0*'))
+    framenos = [int(f[-4:]) for f in frame_files]
+    framenos.sort()
+    if len(framenos) > 0:
+        print('Found frames %i to %i' % (framenos[0],framenos[-1]))
+    else:
+        print('Aborting, did not find any time frames in outdir:\n    %s' \
+              % os.path.abspath(outdir))
+        return
         
     try:
-        frameno = 1
+        frameno = framenos[0]
         [time,num_eqn,nstates,num_aux,num_dim,num_ghost,file_format] = \
              read_t(frameno,outdir,file_prefix='fort')
     except:
         msg = '*** Could not read file_format from fort.t file in \n    %s' \
-                % outdir
+                % os.path.abspath(outdir)
         raise OSError(msg)
 
     print('Will show grids up to level %i (with holes for finer grids)' \
@@ -256,7 +262,7 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
             msg = '*** Could not read time from fort.t file in \n    %s' % outdir
             raise OSError(msg)
 
-        plotter.add_title('Time %s' % time_str(time))
+        plotter.add_title('Frame %i\nTime %s' % (frameno,time_str(time)))
             
         try:
             # make an iterator for looping over all patches in this frame:
@@ -301,13 +307,7 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
             #eta_wet = where(abs(eta_wet) > 0.01, eta_wet, nan) # omit flat ocean
             
             gridxyz = gv.Transform.from_1d(x,y,eta_wet.T)
-        
-            #xx = vstack((x[:-1],x[1:])).T
-            #yy = vstack((y[:-1],y[1:])).T
-            #gridxyz = gv.Transform.from_1d(xx,yy,eta_wet.T)
             
-
-            #import pdb; pdb.set_trace()
             gridxyz.cell_data['eta'] = eta_wet.flatten(order='F')
 
             # topography can be computed as eta - h (surface - depth)
@@ -345,12 +345,17 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
 
                 # now that it's got proper holes cut out, add to plotter:
 
-                gridmesh = plotter.add_mesh(gridxyz, scalars='eta',
+                if gridxyz.n_points > 0:
+                    # this reduces size of gridxyz based on nans in eta_wet
+                    gridxyz = gridxyz.threshold()  # remove nan values
+            
+                if gridxyz.n_points > 0:
+                    gridmesh = plotter.add_mesh(gridxyz, scalars='eta',
                                             cmap=geoplot.tsunami_colormap,
                                             #cmap=geoplot.googleearth_transparent,
                                             clim=clim,
                                             show_edges=show_edges)
-                mesh_list.append(gridmesh)                 
+                    mesh_list.append(gridmesh)                 
         if 1:
             # round off entries in p.camera_position and print out, so user
             # can copy and paste into this script once good position is found:
@@ -369,7 +374,8 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
     plotter.add_axes()
     mesh_list = []  # to keep track of list of mesh to be removed
 
-    plotter.add_slider_widget(set_frameno, [0,20], value=0, title='frameno',
+    plotter.add_slider_widget(set_frameno, [framenos[0],framenos[-1]],
+                              value=framenos[0], title='frameno',
                               pointa=(0.6,0.85), pointb=(0.9,0.85))
     plotter.camera_position =  camera_position
     plotter.show(window_size=(1500,1500))
@@ -380,8 +386,21 @@ if __name__ == '__main__':
     # Note: You first need to run the code in 
     #     $CLAW/geoclaw/examples/tsunami/chile2010
     # to create the test data used by this sample command...
-                          
-    geoclaw_sphere_pv_clip(frameno=4, minlevel = 1, maxlevel=10, 
-                           outdir='chile2010', warpfactor=None,
-                           show_edges=True, verbose=True)
-                           
+    
+    outdir = CLAW + '/geoclaw/examples/tsunami/chile2010/_output'
+    camera_position =  [(-0.064, -5.1, -2.13), (0.001, -0.001, 0.0),
+                        (-0.0, -0.385, 0.923)]
+    
+    
+    if 0:                  
+        # plot a single frame:
+        geoclaw_sphere_pv_clip(frameno=4, minlevel = 1, maxlevel=10, 
+                               outdir=outdir, warpfactor=None, clim=(-0.2,0.2),
+                               show_edges=True, camera_position=camera_position,
+                               verbose=False)
+    else:        
+        # plot with a slider bar for frameno
+        geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10, 
+                               outdir=outdir, warpfactor=None, clim=(-0.2,0.2),
+                               show_edges=True, camera_position=camera_position,
+                               verbose=False)        
