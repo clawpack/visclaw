@@ -11,18 +11,13 @@ For options during looping type:
 """
 
 import sys
+from pathlib import Path
 
-if 'matplotlib' not in sys.modules:
-    import matplotlib
-    # Override system defaults before importing pylab
-    # If you set the backend here, you must start ipython w/o pylab
-    # before importing this package.
-    #matplotlib.use('Agg')  # Use an image backend
-    #matplotlib.use('TkAgg')
-    matplotlib.rc('text', usetex=False)
-    matplotlib.interactive(True)
-
-from clawpack.visclaw import frametools
+import matplotlib
+matplotlib.rc('text', usetex=False)
+matplotlib.interactive(True)
+import matplotlib.pyplot as plt
+import clawpack.visclaw.frametools as frametools
 from .iplot import Iplot
 
 #------------------------
@@ -62,7 +57,7 @@ class Iplotclaw(Iplot):
 
     def __init__(self, setplot='setplot.py', outdir=None, \
                  completekey='tab', stdin=None, stdout=None, simple=False,
-                 controller=None):
+                 controller=None, fname=None, fps=None):
         """Instantiate a line-oriented interpreter framework.
 
 
@@ -120,7 +115,21 @@ class Iplotclaw(Iplot):
         self.prevplotdata = plotdata
         self.restart = False
         self.prevframeno = 0
+        self.num_frames = len(list(Path(plotdata.outdir).glob("fort.q*")))
 
+        if fps or fname:
+            import matplotlib.animation as animation
+            fname = fname or "movie.gif"
+            fps = fps or 2
+            def update(i):
+                frametools.plotframe(i, self.plotdata, simple=self.simple, refresh=True)
+            update(0)
+            anim = animation.FuncAnimation(plt.gcf(), update, frames=self.num_frames, interval=1e3/fps)
+            anim.save(fname)
+            plt.close("all")
+
+        self.mapped_keys = dict(right="n", left="p", up="n", down="p", q="quit")  # Corresponding do_ command
+        self.frameno_input = ""
         self.frames = {}
 
     def plot_and_cache(self,frameno):
@@ -128,6 +137,8 @@ class Iplotclaw(Iplot):
             if frameno not in list(self.frames.keys()):
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=True)
                 self.frames[str(frameno)] = ''
+                for fn in plt.get_fignums():
+                    plt.figure(fn).canvas.mpl_connect('key_press_event', self.on_key_press_event)
             else:
                 frametools.plotframe(self.frameno, self.plotdata, simple=self.simple, refresh=False)
         except IOError as e:
@@ -311,7 +322,28 @@ class Iplotclaw(Iplot):
                 else:
                     print("No makefig function specified for ",name)
 
+    def on_key_press_event(self, event):
+        k = event.key
+
+        if k.isnumeric():
+            self.frameno_input += k
+            return None
+        elif k == "enter":
+            self.stdout.write("\n")
+            self.frameno = min(int(self.frameno_input or self.frameno),
+                               self.num_frames-1)
+            self.onecmd(f"j {self.frameno} \n")
+            self.frameno_input = ""
+        elif k in self.mapped_keys:
+            self.stdout.write("\n")
+            self.onecmd(self.mapped_keys[k])
+        else:
+            return None
+
+        self.stdout.write(self.prompt)
+        self.stdout.flush()
+        self.lastcmd = "n"
+        
 
 # end of Iplotclaw.
 #----------------------------------------------------------------------
-
