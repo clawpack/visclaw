@@ -28,7 +28,10 @@ It seems to work fine to just do:
 - geoclaw/sphere/ - displaying global-scale simulations on the sphere.
 
 **See amrclaw/README.txt and geoclaw/README.txt for more info.**
-        
+    
+### Sample plots:
+
+See https://depts.washington.edu/clawpack/dev_pyvista/ 
 
 ### Other examples:
 

@@ -20,7 +20,7 @@ sys.path.insert(0, VISCLAW)
 import dev_pyvista
 sys.path.pop(0)
 
-from dev_pyvista.amrclaw import unpack_frame_2d # to unpack grid patches
+from dev_pyvista.amrclaw import unpack_frame_patches # to unpack grid patches
 from dev_pyvista.geoclaw.util import time_str   # to convert time to HH:MM:SS
 
 
@@ -29,7 +29,7 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
     """
     Make a simple matplotlib plot with finer grids plotted on top
     of coarser ones.  This is the way visclaw normally makes plots, but
-    here we use the new unpack_frame_2d iterator.
+    here we use the new unpack_frame_patches iterator.
 
     For exploration and debugging purposes, plot grids only from level minlevel
     up to level maxlevel (or finest level present).
@@ -40,7 +40,7 @@ def geoclaw_matplotlib_plot(frameno, minlevel=1, maxlevel=10,
     figure(1)
     clf()
         
-    patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
+    patch_iterator = unpack_frame_patches.PatchIterator(frameno, outdir=outdir,
                                                    verbose=verbose)
     for level,X,Y,q in patch_iterator:
 
@@ -107,7 +107,7 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
 
 
     # make an iterator for looping over all patches in this frame:
-    patch_iterator = unpack_frame_2d.PatchIterator(frameno, outdir=outdir,
+    patch_iterator = unpack_frame_patches.PatchIterator(frameno, outdir=outdir,
                                    file_format=file_format)
 
     # a dictionary to keep track of all grid patches at each level:
@@ -115,7 +115,7 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
     for k in range(1,maxlevel+2):
         patches_on_level[k] = []
 
-    for level,X_edges,Y_edges,q in patch_iterator:
+    for level,patch_edges,q in patch_iterator:
 
         # process each grid patch and put on lists by level
 
@@ -128,6 +128,7 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
             print('breaking since level = %i > maxlevel+1' % level)
             break
 
+        X_edges, Y_edges = patch_edges[:2]
         bounds = [X_edges.min(), X_edges.max(),
                   Y_edges.min(), Y_edges.max(), -1, 1]
 
@@ -147,9 +148,9 @@ def geoclaw_sphere_pv_clip(frameno, minlevel = 1, maxlevel=10, outdir='_output',
         gridxyz.cell_data['topo'] = topo.flatten(order='F')
         
         # topowarp isn't being used since it's not coming out properly
-        topo_point = unpack_frame_2d.extend_cells_to_points(topo)
+        topo_point = unpack_frame_patches.extend_cells_to_points(topo)
         # mask topo where we want to plot eta:
-        #eta_point = unpack_frame_2d.extend_cells_to_points(eta_wet)
+        #eta_point = unpack_frame_patches.extend_cells_to_points(eta_wet)
         #topo_point = where(isnan(eta_point), topo_point, nan)
         #topo_point = ma.masked_where(eta_point, topo_point)
         gridxyz.point_data['topo_point'] = topo_point.flatten(order='F')
@@ -266,7 +267,7 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
             
         try:
             # make an iterator for looping over all patches in this frame:
-            patch_iterator = unpack_frame_2d.PatchIterator(frameno,
+            patch_iterator = unpack_frame_patches.PatchIterator(frameno,
                                        outdir=outdir,
                                        file_format=file_format)
         except:
@@ -278,7 +279,7 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
         for k in range(1,maxlevel+2):
             patches_on_level[k] = []
 
-        for level,X_edges,Y_edges,q in patch_iterator:
+        for level,patch_edges,q in patch_iterator:
 
             # process each grid patch and put on lists by level
 
@@ -291,6 +292,7 @@ def geoclaw_sphere_frameslider(minlevel = 1, maxlevel=10,
                 print('breaking since level = %i > maxlevel+1' % level)
                 break
 
+            X_edges, Y_edges = patch_edges[:2]
             bounds = [X_edges.min(), X_edges.max(),
                       Y_edges.min(), Y_edges.max(), -1, 1]
 
