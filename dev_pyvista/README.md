@@ -19,9 +19,7 @@ It seems to work fine to just do:
 - amrclaw/unpack_frame_patches.py - module with code to read in a single frame
   of AMR data with an iterator class that can be used to iterate over all the
   AMR patches for this frame.
-  
-- test scripts - See amrclaw/README.txt for more info.
-        
+          
 - geoclaw/topo_plots/ - various modules and scripts to display topo data and
   water elevation on warped grids, with satellite images or maps draped on them.
 
@@ -29,7 +27,7 @@ It seems to work fine to just do:
 
 - geoclaw/sphere/ - displaying global-scale simulations on the sphere.
 
-See amrclaw/README.txt and geoclaw/README.txt for more info.
+**See amrclaw/README.txt and geoclaw/README.txt for more info.**
         
 
 ### Other examples:
