@@ -23,3 +23,6 @@ Contents of dev_pyvista/amrclaw:
     test_amrclaw_2d_animate.py - sample code to either provide a slider bar
         to adjust the frame being viewed, or to loop over a set of frames and
         create an animation of the plots at each frame.
+        
+    test_amrclaw_3d_plots.py - some sample code illustrating how to plot AMR
+        frame data in 3D for a single frame.
