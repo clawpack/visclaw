@@ -46,7 +46,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import plotpages
 
-    plotdata = ClawPlotData()
+    plotdata = ClawPlotData(file_format=format)
     plotdata.outdir = outdir
     plotdata.plotdir = plotdir
     plotdata.setplot = setplot

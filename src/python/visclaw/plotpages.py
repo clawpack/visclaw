@@ -2792,6 +2792,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     plotdata.save_frames = False
 
+    if format == "petsc":
+        plotdata.file_prefix = "claw"
+        file_extension = "ptc"
+    else:
+        file_extension = "q"
     if plotdata.file_prefix is None:
         plotdata.file_prefix = 'fort'
 
@@ -2921,21 +2926,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     pngfile = {}
     frametimes = {}
 
-    #import pdb; pdb.set_trace()
-    for file in glob.glob(plotdata.file_prefix + '.q*'):
+    for file in glob.glob(plotdata.file_prefix + '.'+file_extension+r'\d{4}'):
         frameno = int(file[-4:])
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-
-    #DK: In PetClaw, we don't output fort.q* files.  Instead count the
-    #claw.pkl* files.
-    if len(fortfile) == 0:
-        for file in glob.glob('claw.pkl*'):
-            frameno = int(file[9:12])
-            fortfile[frameno] = file
-            for figno in fignos_each_frame:
-                pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
 
     if len(fortfile) == 0:
         print('*** Warning: No fort.q or claw.pkl files found in directory ', os.getcwd())
