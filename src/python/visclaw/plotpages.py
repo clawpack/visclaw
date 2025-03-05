@@ -2866,17 +2866,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     rootdir = os.getcwd()
 
-    # annoying fix needed when EPD is used for plotting under cygwin:
-    if rootdir[0:9] == 'C:\cygwin' and outdir[0:9] != 'C:\cygwin':
-        outdir = 'C:\cygwin' + outdir
-        plotdata.outdir = outdir
-    if rootdir[0:9] == 'C:\cygwin' and rundir[0:9] != 'C:\cygwin':
-        rundir = 'C:\cygwin' + rundir
-        plotdata.rundir = rundir
-    if rootdir[0:9] == 'C:\cygwin' and plotdir[0:9] != 'C:\cygwin':
-        plotdir = 'C:\cygwin' + plotdir
-        plotdata.plotdir = plotdir
-
     try:
         os.chdir(rundir)
     except:

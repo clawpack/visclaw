@@ -27,10 +27,6 @@ import subprocess
 
 import clawpack.visclaw.frametools as frametools
 
-if sys.platform in ['win32','cygwin']:
-    pypath = 'C:/cygwin' + os.environ['CLAW'] + '/python'
-    sys.path.append(pypath)
-
 
 def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
              format='ascii', msgfile='', frames=None, verbose=False):

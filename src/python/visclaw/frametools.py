@@ -1349,18 +1349,6 @@ def printframes(plotdata=None, verbose=True):
 
     rootdir = os.getcwd()
 
-    # annoying fix needed when EPD is used for plotting under cygwin:
-    cw_path = r'C:\cygwin'
-    if rootdir[0:9] == cw_path and outdir[0:9] != cw_path:
-        outdir = cw_path + outdir
-        plotdata.outdir = outdir
-    if rootdir[0:9] == cw_path and rundir[0:9] != cw_path:
-        rundir = cw_path + rundir
-        plotdata.rundir = rundir
-    if rootdir[0:9] == cw_path and plotdir[0:9] != cw_path:
-        plotdir = cw_path + plotdir
-        plotdata.plotdir = plotdir
-
     try:
         os.chdir(rundir)
     except OSError:
