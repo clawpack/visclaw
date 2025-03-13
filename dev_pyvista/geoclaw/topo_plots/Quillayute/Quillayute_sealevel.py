@@ -16,6 +16,9 @@ import os
 global etamesh
 
 make_snapshots = False  # True to capture a few frames, False for slider bar
+make_html = False  # True to make html version of each snapshot (requires trame)
+
+use_texture = False  # drape an image on the topo?  If False, color by elevation
 
 
 # Load the topo DEM:
@@ -35,7 +38,6 @@ topo = topo.crop(extent)
 # matplotlib topo plot:
 #topo.plot(limits=(-25,25))
 
-use_texture = True  # drape an image on the topo?  If False, color by elevation
 
 if use_texture:
     # background image to use a texture on warped topo:
@@ -135,6 +137,12 @@ else:
         set_sea_level(slr)
         p.add_title('MHW after %i m subsidence (or sea level rise)' % slr)
         fname_png = 'Quillayute_mhw%im.png' % slr
+        p.camera_position = camera_position
         p.screenshot(fname_png)
         print('Created ',fname_png)
+
+        if make_html:
+            fname_html = 'Quillayute_mhw%im.html' % slr
+            p.export_html(fname_html)
+            print('Created ',fname_html)
     p.close()
