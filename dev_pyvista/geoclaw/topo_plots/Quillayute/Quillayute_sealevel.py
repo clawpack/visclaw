@@ -15,6 +15,9 @@ import os
 
 global etamesh
 
+make_snapshots = False  # True to capture a few frames, False for slider bar
+
+
 # Load the topo DEM:
 
 topo_fname = 'Quillayute_13s.asc'
@@ -22,7 +25,7 @@ if not os.path.isfile(topo_fname):
     # need to download it first...
     url = 'http://depts.washington.edu/clawpack/geoclaw/topo/WA/' + topo_fname
     get_remote_file(url, output_dir='.', file_name=topo_fname, verbose=True)
-    
+
 topo = topotools.Topography(topo_fname)
 
 # Crop to the desired extent:
@@ -32,15 +35,31 @@ topo = topo.crop(extent)
 # matplotlib topo plot:
 #topo.plot(limits=(-25,25))
 
-# background image to use a texture on warped topo:
-bg_file ='Quillayute_img.jpg'
+use_texture = True  # drape an image on the topo?  If False, color by elevation
 
-if not os.path.isfile(bg_file):
-    print('First run Quillayute_bg_image.py or provide other bg image file')
-    print('Settting bg_file to None')
-    bg_file = None
+if use_texture:
+    # background image to use a texture on warped topo:
+    bg_file ='Quillayute_img.jpg'
 
-#bg_file = None  # for no background image, topo colored by elevation instead
+    if not os.path.isfile(bg_file):
+        print('First run Quillayute_bg_image.py or provide other bg image file')
+        print('Settting bg_file to None')
+        bg_file = None
+
+def round_and_print(camera_position):
+    # round off entries in camera_position and print out, so user
+    # can copy and paste into this script once good position is found:
+    camera_position = list(camera_position)
+    for i,a in enumerate(camera_position):
+        b = []
+        for j in range(len(a)):
+            b.append(round(a[j],3))
+        camera_position[i] = tuple(b)
+    print('camera_position = ', camera_position)
+
+
+camera_position =  [(4168.867, -7291.297, 5584.997), (3480.581, -2112.37, -4.258), (-0.032, 0.731, 0.681)]
+
 
 z = array([0.])
 x = (topo.x - topo.x[0]) * 111e3 * cos(topo.y.mean()*pi/180)
@@ -50,19 +69,21 @@ X,Y,Z = meshgrid(x, y, z, indexing='ij')
 topoxyz = pv.StructuredGrid(X,Y,Z)
 
 B = flipud(topo.Z)
-Bmax = 50.
-B = minimum(B, Bmax)
+if 0:
+    Bmax = 200.  # truncate topo above this value (not needed here)
+    B = minimum(B, Bmax)
 topoxyz.point_data['B'] = B.flatten(order='C')
+
+clim_B = (-100,100)  # colormap limits for topo (if not use_texture)
 
 warpfactor = 3   # amplification of elevations
 
 topowarp = topoxyz.warp_by_scalar('B', factor=warpfactor)
 
-make_snapshots = False  # True to capture a few frames, False for slider bar
 
 p = pv.Plotter(off_screen=make_snapshots)
 
-if bg_file:
+if use_texture:
     # Add bg image as texture:
     bg_extent = extent
     texture = pv.read_texture(bg_file)
@@ -78,7 +99,7 @@ if bg_file:
     p.add_mesh(mapped_surf,texture=texture)
 
 else:
-    p.add_mesh(topowarp,cmap='gist_earth',clim=(-10,10))
+    p.add_mesh(topowarp,cmap='gist_earth',clim=clim_B)
 
 
 sea_level = 0.
@@ -88,8 +109,7 @@ etawarp = topoxyz.warp_by_scalar('eta', factor=warpfactor)
 etamesh = p.add_mesh(etawarp,color='c')
 
 
-p.camera_position =  [(4168.867, -7291.297, 5584.997), (3480.581, -2112.37, -4.258), (-0.032, 0.731, 0.681)]
- 
+
 def set_sea_level(sea_level):
     global etamesh
     eta = where(B < sea_level, sea_level, nan)
@@ -99,21 +119,16 @@ def set_sea_level(sea_level):
     etamesh = p.add_mesh(etawarp,color='c')
 
     if not make_snapshots:
-        # round off entries in p.camera_position and print out, so user
-        # can copy and paste into this script once good position is found:
-        camera_position = list(p.camera_position)
-        for i,a in enumerate(camera_position):
-            b = []
-            for j in range(len(a)):
-                b.append(round(a[j],3))
-            camera_position[i] = tuple(b)
-        print('p.camera_position = ', camera_position)
-    
+        #round_and_print(camera_position)
+        pass
+
+
 if not make_snapshots:
     p.add_title('MHW after sea level rise / subsidence')
     p.add_slider_widget(set_sea_level, [-5,5], value=0, title='Sea Level',
                         pointa=(0.1,0.1), pointb=(0.4,0.1),)
-    p.show(window_size=(2500,1500))
+    cpos = p.show(window_size=(2500,1500), cpos=camera_position, return_cpos=True)
+    round_and_print(cpos)
 else:
     p.window_size = (2500,1500)
     for slr in [0,1,2,3]:
