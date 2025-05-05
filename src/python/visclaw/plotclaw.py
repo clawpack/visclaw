@@ -18,7 +18,7 @@ will call the plotclaw function from this module.
 """
 
 import matplotlib
-matplotlib.use('Agg') 
+matplotlib.use('Agg')
 
 import sys
 import os
@@ -28,7 +28,7 @@ import subprocess
 import clawpack.visclaw.frametools as frametools
 
 
-def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
+def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py', plotdata=None,
              format='ascii', msgfile='', frames=None, verbose=False):
     """
     Create html and/or latex versions of plots.
@@ -42,31 +42,32 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
     from clawpack.visclaw.data import ClawPlotData
     from clawpack.visclaw import plotpages
 
-    plotdata = ClawPlotData(file_format=format)
-    plotdata.outdir = outdir
-    plotdata.plotdir = plotdir
-    plotdata.setplot = setplot
-    plotdata.format = format
-    plotdata.msgfile = msgfile
 
-
-    frametools.call_setplot(plotdata.setplot, plotdata)
+    if plotdata is None:
+        plotdata = ClawPlotData(file_format=format)
+        plotdata.outdir = outdir
+        plotdata.plotdir = plotdir
+        plotdata.setplot = setplot
+        plotdata.format = format
+        plotdata.msgfile = msgfile
+        plotdata = frametools.call_setplot(plotdata.setplot, plotdata)
 
 
     if plotdata.num_procs is None:
         plotdata.num_procs = int(os.environ.get("OMP_NUM_THREADS", 1))
 
+
     # Make sure plotdata.parallel is False in some cases:
 
-
-    if plotdata.parallel:
-        assert type(setplot) in [str, bool, type(None)], \
-                "*** Parallel plotting is not supported when ClawPlotData " \
-                + "attribute setplot is a function."
+    if plotdata.parallel and (type(setplot) not in [str, bool, type(None)]):
+        print("*** Parallel plotting is not supported when ClawPlotData " \
+                + "attribute setplot is a function, \n" \
+                + "*** Setting plotdata.parallel to False")
+        plotdata.parallel = False
 
     if plotdata.parallel and (plotdata.num_procs > 1):
 
-        # If this is the original call then we need to split up the work and 
+        # If this is the original call then we need to split up the work and
         # call this function again
 
         # First set up plotdir:
@@ -93,9 +94,9 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
             plotclaw_cmd = "python %s" % __file__
             process_queue = []
             for n in range(num_procs):
-                plot_cmd = "%s %s %s %s" % (plotclaw_cmd, 
+                plot_cmd = "%s %s %s %s" % (plotclaw_cmd,
                                             outdir,
-                                            plotdir, 
+                                            plotdir,
                                             setplot)
                 plot_cmd = plot_cmd + " " + " ".join([str(i) for i in frames[n]])
 
@@ -110,8 +111,8 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                             process_queue.remove(process)
                     if verbose:
                         print("Number of processes currently:",len(process_queue))
-            
-            # Stop child processes if interrupt was caught or something went 
+
+            # Stop child processes if interrupt was caught or something went
             # wrong
             except KeyboardInterrupt:
                 print("ABORTING: A keyboard interrupt was caught.  All " + \
@@ -126,7 +127,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py',
                       "child processes.")
                 for process in process_queue:
                     process.terminate()
-                raise 
+                raise
 
             # After all frames have been plotted via recursive calls,
             # make index and gauge plots only:
