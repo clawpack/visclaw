@@ -1028,10 +1028,9 @@ def plotclaw2kml(plotdata):
         # Loop over all gauges
         for gnum,gauge in enumerate(gauges):
             gaugeno = int(gauge[0])
-            if plotdata.print_gaugenos != 'all':
-                if gaugeno not in plotdata.print_gaugenos:
-                    #print('+++ skipping gauge %i, not in print_gaugenos' % gaugeno)
-                    continue # to next gauge
+            if (plotdata.print_gaugenos.lower() != 'all' or 
+                                    gaugeno not in plotdata.print_gaugenos):
+                continue
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
             if plotdata.kml_map_topo_to_latlong is not None:
@@ -1053,7 +1052,7 @@ def plotclaw2kml(plotdata):
             # there is only one figure number figno for all gauges
             # If user has set 'gaugeno=[]', gauge files will not be added to the KMLfile. 
             
-            if plotdata.gauges_fignos is not None:
+            if not plotdata.gauges_fignos:
                 figno = plotdata.gauges_fignos[0] # use just the first
                 
             figname = gauge_pngfile[gaugeno,figno]
@@ -2618,6 +2617,7 @@ def plotclaw2html(plotdata):
                 html.write('<html><meta http-equiv="expires" content="0">\n')
                 html.write('<title>Plots</title>')
                 html.write('<body><center>\n')
+                breakpoint()
                 html.write('\n<h3>Gauge %i ' % gaugeno)
                 if numfigs > 1:
                     html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
@@ -2960,6 +2960,8 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Gauges:
     # -------
     if os.path.exists(os.path.join(plotdata.outdir,"gauges.data")):
+        if plotdata.print_gaugenos.lower() == 'none':
+            plotdata.print_gaugenos = []
         gaugenos = plotdata.print_gaugenos
         if gaugenos == 'all':
             # Read gauge numbers from setgauges.data if it exists:
