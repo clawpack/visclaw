@@ -2617,7 +2617,6 @@ def plotclaw2html(plotdata):
                 html.write('<html><meta http-equiv="expires" content="0">\n')
                 html.write('<title>Plots</title>')
                 html.write('<body><center>\n')
-                breakpoint()
                 html.write('\n<h3>Gauge %i ' % gaugeno)
                 if numfigs > 1:
                     html.write(' &nbsp;---&nbsp; %s' % fignames[figno] )
@@ -2960,13 +2959,20 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Gauges:
     # -------
     if os.path.exists(os.path.join(plotdata.outdir,"gauges.data")):
-        if plotdata.print_gaugenos.lower() == 'none':
+        if isinstance(plotdata.print_gaugenos, str):
+            if plotdata.print_gaugenos.lower() == 'all':
+                setgauges = gaugetools.read_setgauges(plotdata.outdir)
+                gaugenos = setgauges.gauge_numbers
+            elif plotdata.print_gaugenos.lower() == 'none':
+                plotdata.print_gaugenos = []
+                gaugenos = []
+            else:
+                raise ValueError(f"Unknown option {plotdata.print_gaguenos}" +
+                                  "given for print_gaugenos.")
+        elif not plotdata.print_gaugenos:
+            # Handle None, also handles False, but not True
             plotdata.print_gaugenos = []
-        gaugenos = plotdata.print_gaugenos
-        if gaugenos == 'all':
-            # Read gauge numbers from setgauges.data if it exists:
-            setgauges = gaugetools.read_setgauges(plotdata.outdir)
-            gaugenos = setgauges.gauge_numbers
+            gaugenos = []
 
         plotdata.gauges_gaugenos = gaugenos
         plotdata.gauges_fignos = fignos_each_gauge
