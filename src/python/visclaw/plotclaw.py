@@ -102,7 +102,7 @@ def plotclaw(outdir='.', plotdir='_plots', setplot = 'setplot.py', plotdata=None
 
                 process_queue.append(subprocess.Popen(plot_cmd, shell=True))
 
-            poll_interval = 5
+            poll_interval = 0.5
             try:
                 while len(process_queue) > 0:
                     time.sleep(poll_interval)
