@@ -269,6 +269,7 @@ def read_images(plotdir, fname_pattern='*.png'):
     import glob, os
     images = []
     files = glob.glob(os.path.join(plotdir, fname_pattern))
+    files.sort() # so they are in the right order when names include frameno
     for file in files:
         im = plt.imread(file)
         images.append(im)
