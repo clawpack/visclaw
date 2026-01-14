@@ -818,6 +818,20 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('map_2d_to_1d',None)
                 self.add_attribute('amr_plotstyle',[])
 
+                self.add_attribute('color_var', None)
+                self.add_attribute('size', 1)
+                self.add_attribute('alpha', 1)
+                self.add_attribute('plot_cmap', None)
+                self.add_attribute('plot_norm', None)
+                self.add_attribute('add_colorbar',False)
+                self.add_attribute('colorbar_shrink',None)
+                self.add_attribute('colorbar_label',None)
+                self.add_attribute('colorbar_ticks', None)
+                self.add_attribute('colorbar_tick_labels',None)
+                self.add_attribute('colorbar_extend',None)
+                self.add_attribute('colorbar_kwargs',{})
+
+
         elif num_dim == 2:
 
             # default values specifying this single plot:

@@ -197,6 +197,45 @@ Special attributes for plot_type = '1d_from_2d_data'
   See :ref:`current_data` for a description of the *current_data* argument.
 
 
+.. attribute:: color_var : function
+
+  Function that takes `current_data` and returns a scalar value. This
+  value will be mapped to color using `plot_cmap` and `plot_norm`.
+
+  See :ref:`current_data` for a description of the *current_data* argument.
+
+
+The following attributes are used only if `color_var` is not `None`
+
+
+.. attribute:: size : float
+
+  The size value passed to the matplotlib `scatter` function.
+
+.. attribute:: plot_cmap : str or colormap
+
+  The colormap value passed to the matplotlib `scatter` function.
+
+.. attribute:: plot_norm : Normalize instance
+
+  The normalize value passed to the matplotlib `scatter` function.
+
+.. attribute:: add_colorbar : bool
+
+  Whether to include a colorbar
+
+The following attributes are used only if `color_var` is not `None`
+and `add_colorbar` is `True`. They control the location and attributes
+of the colorbar.
+
+.. attribute:: colorbar_shrink : float
+.. attribute:: colorbar_label : str
+.. attribute:: colorbar_ticks : list
+.. attribute:: colorbar_tick_labels : list
+.. attribute:: colorbar_extend : bool
+.. attribute:: colorbar_kwargs : dict
+
+
 Special attributes for all 2d plots,  plot_type = '2d...'
 ------------------------------------------------------------
 
