@@ -197,15 +197,13 @@ Special attributes for plot_type = '1d_from_2d_data'
   See :ref:`current_data` for a description of the *current_data* argument.
 
 
-.. attribute:: color_var : function
+.. attribute:: color_var : bool
 
-  Function that takes `current_data` and returns a scalar value. This
-  value will be mapped to color using `plot_cmap` and `plot_norm`.
-
-  See :ref:`current_data` for a description of the *current_data* argument.
+  If set to ``True``, the function ``map_2d_to_1d`` returns three variables.
+  The final variable will be mapped to color using `plot_cmap` and `plot_norm`.
 
 
-The following attributes are used only if `color_var` is not `None`
+The following attributes are used only if `color_var` is `True`
 
 
 .. attribute:: size : float

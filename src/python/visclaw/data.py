@@ -818,7 +818,7 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('map_2d_to_1d',None)
                 self.add_attribute('amr_plotstyle',[])
 
-                self.add_attribute('color_var', None)
+                self.add_attribute('color_var', False)
                 self.add_attribute('size', 1)
                 self.add_attribute('alpha', 1)
                 self.add_attribute('plot_cmap', None)

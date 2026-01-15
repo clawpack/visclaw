@@ -705,8 +705,11 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
                 print('*** plotitem attribute')
                 raise
                 return
+            p_centers, var, color_var = pp['map_2d_to_1d'](current_data)
+            color_var = color_var.flatten()
+        else:
+            p_centers, var = pp['map_2d_to_1d'](current_data)
 
-        p_centers, var = pp['map_2d_to_1d'](current_data)
         p_centers = p_centers.flatten()  # convert to 1d
         var = var.flatten()  # convert to 1d
 
@@ -720,10 +723,6 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
             if pp['plot_type'] == '1d_from_2d_data' and pp['color_var']:
                 # use plt.scatter instead.
-
-                # get color variable
-                color_var = pp['color_var'](current_data)
-
                 pobj=plt.scatter(
                     p_centers,var,
                     s=pp['size'],
