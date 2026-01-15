@@ -197,33 +197,32 @@ Special attributes for plot_type = '1d_from_2d_data'
   See :ref:`current_data` for a description of the *current_data* argument.
 
 
-.. attribute:: color_var : bool
+.. attribute:: map_color : bool
 
   If set to ``True``, the function ``map_2d_to_1d`` returns three variables.
   The final variable will be mapped to color using `plot_cmap` and `plot_norm`.
 
-
-The following attributes are used only if `color_var` is `True`
-
-
-.. attribute:: size : float
-
-  The size value passed to the matplotlib `scatter` function.
+The following attributes are used only if ``map_color`` is ``True``:
 
 .. attribute:: plot_cmap : str or colormap
 
-  The colormap value passed to the matplotlib `scatter` function.
+  The colormap value passed to the matplotlib ``scatter`` function.
 
 .. attribute:: plot_norm : Normalize instance
 
-  The normalize value passed to the matplotlib `scatter` function.
+  The normalize value passed to the matplotlib ``scatter`` function.
 
 .. attribute:: add_colorbar : bool
 
   Whether to include a colorbar
 
-The following attributes are used only if `color_var` is not `None`
-and `add_colorbar` is `True`. They control the location and attributes
+If it is important to adjust the size or transparency of the plotted points
+use the attribute ``plotitem.kwargs={}``. The size used by ``scatter``
+function may be set using ``plotitem.kwargs={'markersize':2}`` (default value
+of 1). All other dictionary elements are passed as named to ``scatter``.
+
+The following attributes are used only if ``map_color`` is not ``None``
+and ``add_colorbar`` is ``True``. They control the location and attributes
 of the colorbar.
 
 .. attribute:: colorbar_shrink : float
