@@ -27,7 +27,7 @@ class ClawPlotData(clawdata.ClawData):
     """
 
     # ========== Initialization routine ======================================
-    def __init__(self, controller=None):
+    def __init__(self, controller=None, file_format="ascii"):
         """Initialize a PlotData object
 
         """
@@ -50,8 +50,11 @@ class ClawPlotData(clawdata.ClawData):
         else:
             self.add_attribute('rundir',os.getcwd())     # uses *.data from rundir
             self.add_attribute('outdir',os.getcwd())     # where to find fort.* files
-            self.add_attribute('format','ascii')
-            self.add_attribute('file_prefix','fort')
+            self.add_attribute('format',file_format)
+            if file_format == "petsc":
+                self.add_attribute('file_prefix','claw')
+            else:
+                self.add_attribute('file_prefix','fort')
 
         # This should eventually replace all need for recording the above
         # information
@@ -89,7 +92,9 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_index_title','Plot Index')   # title at top of index page
         self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
         self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
-        self.add_attribute('html_movie_width', 500)    # width of movie
+        self.add_attribute('html_movie_width', 500)    # width of movie (not used?)
+        self.add_attribute('html_movie_dpi', 100)      # dpi of movie
+
         self.add_attribute('html_eagle',False)         # use EagleClaw titles on html pages?
 
         self.add_attribute('kml',False)                # make kml plots and a kml file for figures
@@ -104,6 +109,8 @@ class ClawPlotData(clawdata.ClawData):
 
         self.add_attribute('gif_movie',False)          # make animated gif movie of frames
 
+        self.add_attribute('mp4_movie',False)         # make animated mp4 movie of frames
+        self.add_attribute('movie_name_prefix', 'movie_')
         self.add_attribute('setplot',False)            # Execute setplot.py in plot routine
 
         self.add_attribute('mapc2p',None)              # function to map computational
@@ -689,9 +696,9 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('title_fontsize', None)
         self.add_attribute('title_kwargs', {}) # e.g. to set color
         self.add_attribute('title_t_format', None) # format for t in title
-        self.add_attribute('xticks_fontsize', None) 
+        self.add_attribute('xticks_fontsize', None)
         self.add_attribute('xticks_kwargs', {}) # e.g. to set ticks,rotation
-        self.add_attribute('yticks_fontsize', None) 
+        self.add_attribute('yticks_fontsize', None)
         self.add_attribute('yticks_kwargs', {}) # e.g. to set ticks
         self.add_attribute('xlabel', None) # label for x-axis
         self.add_attribute('ylabel', None) # label for y-axis
@@ -811,15 +818,29 @@ class ClawPlotItem(clawdata.ClawData):
                 self.add_attribute('map_2d_to_1d',None)
                 self.add_attribute('amr_plotstyle',[])
 
+                self.add_attribute('map_color', False)
+                self.add_attribute('plot_cmap', None)
+                self.add_attribute('plot_norm', None)
+                self.add_attribute('add_colorbar',False)
+                self.add_attribute('colorbar_shrink',None)
+                self.add_attribute('colorbar_label',None)
+                self.add_attribute('colorbar_ticks', None)
+                self.add_attribute('colorbar_tick_labels',None)
+                self.add_attribute('colorbar_extend',None)
+                self.add_attribute('colorbar_kwargs',{})
+
+
         elif num_dim == 2:
 
             # default values specifying this single plot:
             self.add_attribute('plot_type',plot_type)
             self.add_attribute('celledges_show',0)
             self.add_attribute('celledges_color','k')
+            self.add_attribute('celledges_linewidth',0.5)
             self.add_attribute('patch_bgcolor','w')
             self.add_attribute('patchedges_show',0)
             self.add_attribute('patchedges_color','k')
+            self.add_attribute('patchedges_linewidth',0.8)
             self.add_attribute('add_colorbar',False)
             self.add_attribute('colorbar_shrink',None)
             self.add_attribute('colorbar_label',None)
@@ -828,8 +849,9 @@ class ClawPlotItem(clawdata.ClawData):
             self.add_attribute('colorbar_extend',None)
             self.add_attribute('colorbar_kwargs',{})
             self.add_attribute('kwargs',{})
-            amr_attributes = """celledges_show celledges_color data_show
-              patch_bgcolor patchedges_show patchedges_color kwargs""".split()
+            amr_attributes = """celledges_show celledges_color 
+              celledges_linewidth data_show patch_bgcolor patchedges_show 
+              patchedges_color kwargs""".split()
             for a in amr_attributes:
                 self.add_attribute('amr_%s' % a, [])
 

@@ -636,7 +636,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
 
     # Note: not all of these are initialized in data.py - need to clean up
     level_params = ['plot_var','afterpatch','plotstyle','color','kwargs',\
-             'plot_var2','fill_where','map_2d_to_1d','data_show']
+             'plot_var2','fill_where','map_2d_to_1d','data_show', 'map_color',\
+             'plot_cmap', 'plot_norm', 'add_colorbar', 'colorbar_kwargs',\
+             'colorbar_label']
 
     pp = params_dict(plotitem, base_params, level_params, patch.level)
 
@@ -685,18 +687,64 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
             print('*** map_2d_to_1d function as plotitem attribute')
             raise
             return
-        p_centers, var = pp['map_2d_to_1d'](current_data)
+
+        if pp['map_color']: # if color is mapped with a variable.
+            # set color to None so it is not used below
+            pp['color'] = None
+
+            if not pp['plot_cmap']:
+                print('*** Error, plot_type = 1d_from_2d_data requires ')
+                print('*** plot_cmap if color_var is provided as a ')
+                print('*** plotitem attribute')
+                raise
+                return
+
+            if not pp['plot_norm']:
+                print('*** Error, plot_type = 1d_from_2d_data requires ')
+                print('*** plot_norm if color_var is provided as a ')
+                print('*** plotitem attribute')
+                raise
+                return
+            p_centers, var, color_var = pp['map_2d_to_1d'](current_data)
+            color_var = color_var.flatten()
+        else:
+            p_centers, var = pp['map_2d_to_1d'](current_data)
+
         p_centers = p_centers.flatten()  # convert to 1d
         var = var.flatten()  # convert to 1d
 
     # The plot commands using matplotlib:
-
     if pp['color']:
         pp['kwargs']['color'] = pp['color']
 
     if pp['data_show']:
         if (pp['plot_type'] in ['1d_plot','1d_from_2d_data']):
-            pobj=plt.plot(p_centers,var,pp['plotstyle'],**pp['kwargs'])
+
+            if pp['plot_type'] == '1d_from_2d_data' and pp['map_color']:
+
+                #size is a required value for scatter, but may not be provided
+                # use pp['kwargs']['markersize'] if provided, or a
+                # default value of 1.
+
+                # need to pop 'markersize' from pp['kwargs'] so **pp['kwargs']
+                # does not yield an unused keyword arugment error.
+
+                if 'markersize' in pp['kwargs']:
+                    size = pp['kwargs'].pop('markersize')
+                else:
+                    size = 1
+
+                # use plt.scatter instead.
+                pobj=plt.scatter(
+                    p_centers,var,
+                    s=size,
+                    c=color_var,
+                    marker=pp['plotstyle'],
+                    cmap=pp['plot_cmap'],
+                    norm=pp['plot_norm'],
+                    **pp['kwargs'])
+            else:
+                pobj=plt.plot(p_centers,var,pp['plotstyle'],**pp['kwargs'])
 
         elif pp['plot_type'] == '1d_semilogy':
             pobj=plt.semilogy(p_centers,var,pp['plotstyle'], **pp['kwargs'])
@@ -812,9 +860,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
     base_params = ['plot_type','afteritem','mapc2p','MappedGrid']
 
     level_params = ['plot_var','afterpatch','kwargs',
-             'celledges_show','celledges_color','patch_bgcolor',
-             'patchedges_show','patchedges_color','add_colorbar',
-             'pcolor_cmap','pcolor_cmin','pcolor_cmax',
+             'celledges_show','celledges_color','celledges_linewidth', 
+             'patch_bgcolor',
+             'patchedges_show','patchedges_color', 'patchedges_linewidth', 
+             'add_colorbar', 'pcolor_cmap','pcolor_cmin','pcolor_cmax',
              'imshow_cmap','imshow_cmin','imshow_cmax',
              'imshow_norm', 'imshow_alpha',
              'contour_levels','contour_nlevels','contour_min','contour_max',
@@ -828,7 +877,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
              'hillshade_azimuth_degree','hillshade_altitude_degree',
              'hillshade_latlon']
 
-    pp = params_dict(plotitem, base_params, level_params,patch.level)
+    pp = params_dict(plotitem, base_params, level_params, patch.level)
 
     if pp['mapc2p'] is None:
         # if this item does not have a mapping, check for a global mapping:
@@ -881,6 +930,7 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pcolor_cmd += ", edgecolors=pp['celledges_color']"
+            pcolor_cmd += ", linewidths=pp['celledges_linewidth']"
         else:
             pcolor_cmd += ", shading='flat'"
         
@@ -926,8 +976,10 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
                 # for finer levels, so imshow doesn't look as good as pcolor
                 # when you only want to show celledges on coarse levels.
                 # There doesn't seem to be an easy way to fix this.
-                pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'])
-                pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'])
+                pobj = plt.plot(X_edge, Y_edge, color=pp['celledges_color'], 
+                                           linewidth=pp['celledges_linewidth'])
+                pobj = plt.plot(X_edge.T, Y_edge.T, color=pp['celledges_color'], 
+                                           linewidth=pp['celledges_linewidth'])
 
         else:
             #print '*** Not doing imshow on totally masked array'
@@ -953,7 +1005,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
 
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
+                    cmap=pp['patch_bgcolormap'], 
+                    edgecolors=pp['celledges_color'],
+                    linewidths=pp['celledges_linewidth'])
         elif pp['patch_bgcolor'] != 'w':
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], edgecolors='None')
@@ -1017,7 +1071,9 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         # plot only the patches, no data:
         if pp['celledges_show']:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
-                    cmap=pp['patch_bgcolormap'], edgecolors=pp['celledges_color'])
+                    cmap=pp['patch_bgcolormap'], 
+                    edgecolors=pp['celledges_color'],
+                    linewidths=pp['celledges_linewidth'])
         else:
             pobj = pc_mth(X_edge, Y_edge, np.zeros(var.shape), \
                     cmap=pp['patch_bgcolormap'], shading='flat')
@@ -1138,11 +1194,11 @@ def plotitem2(framesoln, plotitem, current_data, stateno):
         for i in [0, X_edge.shape[0]-1]:
             X1 = X_edge[i,:]
             Y1 = Y_edge[i,:]
-            plt.plot(X1, Y1, pp['patchedges_color'])
+            plt.plot(X1, Y1, color=pp['patchedges_color'], linewidth=pp['patchedges_linewidth'])
         for i in [0, X_edge.shape[1]-1]:
             X1 = X_edge[:,i]
             Y1 = Y_edge[:,i]
-            plt.plot(X1, Y1, pp['patchedges_color'])
+            plt.plot(X1, Y1, color=pp['patchedges_color'], linewidth=pp['patchedges_linewidth'])
 
 
     if pp['afterpatch']:
@@ -1340,18 +1396,6 @@ def printframes(plotdata=None, verbose=True):
 
 
     rootdir = os.getcwd()
-
-    # annoying fix needed when EPD is used for plotting under cygwin:
-    cw_path = r'C:\cygwin'
-    if rootdir[0:9] == cw_path and outdir[0:9] != cw_path:
-        outdir = cw_path + outdir
-        plotdata.outdir = outdir
-    if rootdir[0:9] == cw_path and rundir[0:9] != cw_path:
-        rundir = cw_path + rundir
-        plotdata.rundir = rundir
-    if rootdir[0:9] == cw_path and plotdir[0:9] != cw_path:
-        plotdir = cw_path + plotdir
-        plotdata.plotdir = plotdir
 
     try:
         os.chdir(rundir)

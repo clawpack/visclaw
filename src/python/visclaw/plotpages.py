@@ -602,7 +602,7 @@ def plotclaw2kml(plotdata):
     from copy import deepcopy
     from clawpack.geoclaw import kmltools
 
-    if plotdata.format is 'forestclaw':
+    if plotdata.format == 'forestclaw':
         level_base = 0
     else:
         level_base = 1
@@ -960,6 +960,7 @@ def plotclaw2kml(plotdata):
             zip.write(dirname)
             for filename in files:
                 zip.write(os.path.join(dirname, filename))
+                #print('++++ writing %s' % os.path.join(dirname, filename))
 
         shutil.rmtree(fig_dir)
 
@@ -1027,10 +1028,9 @@ def plotclaw2kml(plotdata):
         # Loop over all gauges
         for gnum,gauge in enumerate(gauges):
             gaugeno = int(gauge[0])
-            if plotdata.print_gaugenos != 'all':
-                if gaugeno not in plotdata.print_gaugenos:
-                    #print('+++ skipping gauge %i, not in print_gaugenos' % gaugeno)
-                    continue # to next gauge
+            if (plotdata.print_gaugenos.lower() != 'all' or 
+                                    gaugeno not in plotdata.print_gaugenos):
+                continue
             t1,t2 = gauge[3:5]
             x1,y1 = gauge[1:3]
             if plotdata.kml_map_topo_to_latlong is not None:
@@ -1052,7 +1052,7 @@ def plotclaw2kml(plotdata):
             # there is only one figure number figno for all gauges
             # If user has set 'gaugeno=[]', gauge files will not be added to the KMLfile. 
             
-            if plotdata.gauges_fignos is not None:
+            if not plotdata.gauges_fignos:
                 figno = plotdata.gauges_fignos[0] # use just the first
                 
             figname = gauge_pngfile[gaugeno,figno]
@@ -1417,29 +1417,15 @@ def plotclaw2kml(plotdata):
     print("KML ===> Creating file %s" % level_kml_file)
 
     try:
-        f = open(os.path.join(plotdata.outdir,"amr.data"),'r')
+        # set maxlevels by reading amr_levels_max from amr.data
+        from clawpack.clawutil.data import ClawData
+        amrdata = ClawData()
+        amrdata.read(os.path.join(plotdata.outdir, "amr.data"), force=True)
+        maxlevels = amrdata.amr_levels_max
     except:
+        print('*** failed to read amrdata for maxlevels')
         # Nothing terrible happens;  we just set maxlevels to some large value
         maxlevels = 20
-        for figname in plotdata._fignames:
-            plotfigure = plotdata.plotfigure_dict[figname]
-            if not plotfigure.use_for_kml:
-                continue
-            else:
-                maxlevels = plotfigure.kml_maxlevel        
-    else:
-        # read past comments - last line is blank
-        a = f.readline()
-        while (a.startswith('#')):
-            a = f.readline()
-
-        # read line max1d
-        f.readline()
-
-        # read line containing max number of levels
-        a = f.readline()
-        ainfo = np.fromstring(a.strip(),sep=' ')
-        maxlevels = int(ainfo[0])  # This is assumed to be correct for either AMRClaw or ForestClaw
 
 
     # set _outdirs attribute to be list of all outdirs for all items
@@ -1806,7 +1792,7 @@ def massage_frames_data(plot_pages_data):
         fignos = ppd.timeframes_fignos
         fignames = ppd.timeframes_fignames
         prefix = getattr(ppd, 'file_prefix', 'fort')
-        if prefix is 'fort':
+        if prefix == 'fort':
             prefix = getattr(ppd, 'timeframes_prefix', 'frame')
         if prefix != 'frame':
             prefix = prefix + 'frame'
@@ -1836,12 +1822,10 @@ def massage_frames_data(plot_pages_data):
             fignos.sort()
 
     allframesfile = {}
-    moviefile = {}
     for figno in fignos:
         if figno not in fignames:
             fignames[figno] = 'Solution'
         allframesfile[figno] = 'allframes_fig%s.html'  % figno
-        moviefile[figno] = 'movie_fig%s.html'  % figno
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -1884,7 +1868,6 @@ def massage_frames_data(plot_pages_data):
     ppd._frametimef = frametimef
     ppd._allfigsfile = allfigsfile
     ppd._allframesfile = allframesfile
-    ppd._moviefile = moviefile
     return ppd
 
 
@@ -2165,7 +2148,6 @@ def plotclaw2html(plotdata):
     frametimef = plotdata._frametimef
     allfigsfile = plotdata._allfigsfile
     allframesfile = plotdata._allframesfile
-    moviefile = plotdata._moviefile
 
     numframes = len(framenos)
     numfigs = len(fignos)
@@ -2234,14 +2216,20 @@ def plotclaw2html(plotdata):
     if plotdata.html_movie:
         html.write('<p><tr><td><b>js Movies:</b></td>')
         for figno in fignos:
-            html.write('\n   <td><a href="%s">%s</a></td>' \
-                           % (moviefile[figno],fignames[figno]))
+            html.write('\n   <td><a href="%sfig%s.html">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
         html.write('</tr>\n')
     if plotdata.gif_movie:
         html.write('<p><tr><td><b>gif Movies:</b></td>')
-        for ifig in range(len(fignos)):
-            html.write('\n   <td><a href="moviefig%s.gif">%s</a></td>' \
-                           % (fignos[ifig],fignames[fignos[ifig]]))
+        for figno in fignos:
+            html.write('\n   <td><a href="%sfig%s.gif">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
+        html.write('</tr>\n')
+    if plotdata.mp4_movie:
+        html.write('<p><tr><td><b>mp4 Movies:</b></td>')
+        for figno in fignos:
+            html.write('\n   <td><a href="%sfig%s.mp4">%s</a></td>' \
+                         % (plotdata.movie_name_prefix,figno,fignames[figno]))
         html.write('</tr>\n')
     html.write('<p>\n<tr><td><b>All Frames:</b></td> ')
     for ifig in range(len(fignos)):
@@ -2789,7 +2777,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     import glob, sys, os
     from clawpack.visclaw.data import ClawPlotData
-    from clawpack.visclaw import frametools, gaugetools, plotpages
+    from clawpack.visclaw import frametools, gaugetools
 
     # doing plots in parallel?
     _parallel = plotdata.parallel and (plotdata.num_procs > 1)
@@ -2803,6 +2791,11 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     plotdata.save_frames = False
 
+    if format == "petsc":
+        plotdata.file_prefix = "claw"
+        file_extension = "ptc"
+    else:
+        file_extension = "q"
     if plotdata.file_prefix is None:
         plotdata.file_prefix = 'fort'
 
@@ -2872,17 +2865,6 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
     rootdir = os.getcwd()
 
-    # annoying fix needed when EPD is used for plotting under cygwin:
-    if rootdir[0:9] == 'C:\cygwin' and outdir[0:9] != 'C:\cygwin':
-        outdir = 'C:\cygwin' + outdir
-        plotdata.outdir = outdir
-    if rootdir[0:9] == 'C:\cygwin' and rundir[0:9] != 'C:\cygwin':
-        rundir = 'C:\cygwin' + rundir
-        plotdata.rundir = rundir
-    if rootdir[0:9] == 'C:\cygwin' and plotdir[0:9] != 'C:\cygwin':
-        plotdir = 'C:\cygwin' + plotdir
-        plotdata.plotdir = plotdir
-
     try:
         os.chdir(rundir)
     except:
@@ -2897,7 +2879,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     try:
-        plotpages.cd_plotdir(plotdata.plotdir, plotdata.overwrite)
+        cd_plotdir(plotdata.plotdir, plotdata.overwrite)
     except:
         print("*** Error, aborting plotframes")
         return plotdata
@@ -2932,25 +2914,15 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     pngfile = {}
     frametimes = {}
 
-    #import pdb; pdb.set_trace()
-    for file in glob.glob(plotdata.file_prefix + '.q*'):
+    for file in glob.glob(plotdata.file_prefix + '.'+file_extension+r'\d{4}'):
         frameno = int(file[-4:])
         fortfile[frameno] = file
         for figno in fignos_each_frame:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
 
-    #DK: In PetClaw, we don't output fort.q* files.  Instead count the
-    #claw.pkl* files.
     if len(fortfile) == 0:
-        for file in glob.glob('claw.pkl*'):
-            frameno = int(file[9:12])
-            fortfile[frameno] = file
-            for figno in fignos_each_frame:
-                pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-
-    if len(fortfile) == 0:
-        print('*** No fort.q or claw.pkl files found in directory ', os.getcwd())
-        return plotdata
+        print('*** Warning: No fort.q or claw.pkl files found in directory ', os.getcwd())
+        #return plotdata
 
     # Discard frames that are not from latest run, based on
     # file modification time:
@@ -2987,11 +2959,20 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Gauges:
     # -------
     if os.path.exists(os.path.join(plotdata.outdir,"gauges.data")):
-        gaugenos = plotdata.print_gaugenos
-        if gaugenos == 'all':
-            # Read gauge numbers from setgauges.data if it exists:
-            setgauges = gaugetools.read_setgauges(plotdata.outdir)
-            gaugenos = setgauges.gauge_numbers
+        if isinstance(plotdata.print_gaugenos, str):
+            if plotdata.print_gaugenos.lower() == 'all':
+                setgauges = gaugetools.read_setgauges(plotdata.outdir)
+                gaugenos = setgauges.gauge_numbers
+            elif plotdata.print_gaugenos.lower() == 'none':
+                plotdata.print_gaugenos = []
+                gaugenos = []
+            else:
+                raise ValueError(f"Unknown option {plotdata.print_gaguenos}" +
+                                  "given for print_gaugenos.")
+        elif not plotdata.print_gaugenos:
+            # Handle None, also handles False, but not True
+            plotdata.print_gaugenos = []
+            gaugenos = []
 
         plotdata.gauges_gaugenos = gaugenos
         plotdata.gauges_fignos = fignos_each_gauge
@@ -3014,8 +2995,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     os.chdir(plotdir)
 
     if plotdata.html:
-        #plotpages.timeframes2html(plotdata)
-        plotpages.plotclaw2html(plotdata)
+        plotclaw2html(plotdata)
         pass
 
     # Make png files for all frames and gauges:
@@ -3046,13 +3026,12 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
 
 
     if plotdata.latex:
-        plotpages.timeframes2latex(plotdata)
+        timeframes2latex(plotdata)
 
-#
     if plotdata.kml:
-        plotpages.plotclaw2kml(plotdata)
+        plotclaw2kml(plotdata)
 
-    if (plotdata.html_movie == "JSAnimation") and (len(framenos) > 0):
+    if ((plotdata.html_movie == "JSAnimation") or plotdata.mp4_movie) and (len(framenos) > 0):
 
         # Create Animations
     
@@ -3070,16 +3049,47 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                 png_prefix = ''
             else:
                 png_prefix = plotdata.file_prefix
-            animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
-                            #file_name_prefix='movieframe_allframes',
-                            file_name_prefix='movie_',
-                            png_prefix=png_prefix,
-                            figsize=None,
-                            fignos=[figno], outputs=['html'], raw_html=raw_html)
+
+            # get original fig shape
+            figname = plotdata._figname_from_num[figno]
+            plotfigure = plotdata.plotfigure_dict[figname]
+            figkwargs = getattr(plotfigure, 'kwargs', {})
+            figsize = getattr(plotfigure, 'figsize', None)
+            if figsize is None:
+                figsize = figkwargs.get('figsize', None)
+            if figsize is None:
+                figsize = (8,6)  # reasonable for browser?
+
+            # make animations
+            if plotdata.mp4_movie:
+                # use default dpi or get from plotdata
+                # this ensures that if it was set, dpi of mp4 is same as frames.
+                dpi = figkwargs.get('dpi', html_movie_dpi)
+                animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
+                                #file_name_prefix='movieframe_allframes',
+                                file_name_prefix=plotdata.movie_name_prefix,
+                                png_prefix=png_prefix,
+                                figsize=figsize,
+                                dpi=dpi,
+                                fignos=[figno], outputs=['mp4'],
+                                raw_html=raw_html)
+
+            if plotdata.html_movie == "JSAnimation":
+                # use different dpi so that plots do not take over browser width.
+                animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
+                                #file_name_prefix='movieframe_allframes',
+                                file_name_prefix=plotdata.movie_name_prefix,
+                                png_prefix=png_prefix,
+                                figsize=figsize,
+                                dpi=plotdata.html_movie_dpi,
+                                fignos=[figno], outputs=['html'],
+                                raw_html=raw_html)
 
             # Note: setting figsize=None above chooses figsize with aspect
             # ratio based on .png files read in, may fit better on page
-                
+            # 3/21/24 - For MP4 size and dpi are taken from plotdata for
+            # each figure.
+
 
     #-----------
     # gif movie:
@@ -3088,12 +3098,14 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.gif_movie and (len(framenos) > 0):
         print('Making gif movies.  This may take some time....')
         for figno in fignos_each_frame:
+            fname_gif = '%sfig%s.gif' \
+                        % (plotdata.movie_name_prefix, figno)
             try:
-                os.system('convert -delay 20 frame*fig%s.png moviefig%s.gif' \
-                   % (figno,figno))
-                print('    Created moviefig%s.gif' % figno)
+                os.system('convert -delay 20 frame*fig%s.png %s' \
+                   % (figno,fname_gif))
+                print('    Created %s' % fname_gif)
             except:
-                print('*** Error creating moviefig%s.gif' % figno)
+                print('*** Error creating %s' % fname_gif)
 
     os.chdir(rootdir)
 
