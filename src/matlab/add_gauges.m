@@ -15,7 +15,7 @@ function ghout = add_gauges(format)
 % See also add_regions, plot_gauges.
 
 
-if (nargin < 1)
+if nargin < 1
     format = 'ForestClaw';
 end
 
@@ -48,13 +48,13 @@ gauge_handles = zeros(num_gauges,1);
 for n = 1:num_gauges
     g = gauges(n);
     zp = zmax;
-    hg = plot3(g.longitude,g.latitude,zp,'m.','linewidth',3,'markersize',95);
+    hg = plot3(g.x,g.y,zp,'m.','linewidth',3,'markersize',75);
     set(gca,'zlim',zl);
     view(2);
     % set(gca,'zlimmode','auto');
     set(hg,'Tag','gauge');
     set(hg,'userdata',g);
-    h = text(g.longitude,g.latitude,zp,sprintf('%d',g.id),'fontsize',11,'color','k');
+    h = text(g.x,g.y,zp,sprintf('%d',g.id),'fontsize',11,'color','k','fontweight','bold');
     set(h,'HorizontalAlignment','center');
     % set(h,'backgroundcolor','none');
     gauge_handles(n) = hg;
@@ -92,9 +92,11 @@ for i = 1:5
     fgetl(fid);
 end
 
-gtype = struct('id',[],'longitude',[],'latitude',[],'t0',[],'t1',[]);
+gtype = struct('id',[],'x',[],'y',[],'t0',[],'t1',[]);
 
 fgetl(fid);  % blank line
+l = fgetl(fid);  % Dimension
+dim = sscanf(l,'%d',1);
 l = fgetl(fid);  % Get number of gauges
 num_gauges = sscanf(l,'%d',1);
 gauges(1:num_gauges) = gtype;
@@ -103,10 +105,17 @@ for n = 1:num_gauges
     data = sscanf(l,'%d %e %e %e %d',Inf);
     g = gtype;
     g.id = data(1);
-    g.longitude = data(2);
-    g.latitude = data(3);
-    g.t0 = data(4);
-    g.t1 = data(5);
+    g.x = data(2);
+    g.y = data(3);
+    if dim == 2
+        g.t0 = data(4);
+        g.t1 = data(5);
+    else
+        g.z = data(4);
+        g.t0 = data(5);
+        g.t1 = data(6);
+    end
+
     gauges(n) = g;
 end
 
