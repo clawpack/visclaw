@@ -318,7 +318,7 @@ for ng = 1:ngrids
         
         if (usermap1d == 1)
             % Users should call mapc2p from inside of map1d.
-            [rvec,qvec] = map1d(xcm,ycm,qmesh);
+            [rvec,qvec] = map1d(xcm,ycm,qmesh,t);
             [rs,cs] = size(rvec);
             [rq,cq] = size(qvec);
             if (cs > 1 || cq > 1)
