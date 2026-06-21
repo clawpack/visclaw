@@ -3,7 +3,7 @@ function [cm,sout] = ppcolors(N,s)
 %
 % CM = PPCOLORS(N) creates a colormap of length N of N distinct colors.
 %
-% CM = PPCOLORS(N,S) creates a colormap based on rand seed N
+% CM = PPCOLORS(N,S) selects a colors based on rand seed S
 %
 % [CM,S] = PPCOLORS(N) returns the random seed used to generate colormap.
 %
@@ -62,13 +62,20 @@ chex = {...
 '#000000','#000000','#000000','#000000','#000000','#000000','#000000','#000000'};
 
 
-% Colors to kick out
+% Colors to kick out;choose colors by "group", above. 
+% Group 1 : Colors 1:64 in chex. 
+% Group 2 : Colors 65:128 in chex
+% ...
+% For convenience, each group has indices 1-64.   We increment indices to
+% construct list of colors to kick. 
+
 I1 = [1,7,8,10,11,14,17,18,20,23,25,26,27,34,35,37,39,41,48,49,50,53,55,57,62,64];
 I2 = [1,4,5,9,16,21,22,27,28,31,32,33,35,36,39,40,42,44,47,48,49,51,52,55,56,58,64];
 I3 = [3,6,7,8,12,13,14,19,20,21,22,29,30,33,35,36,39,40,44,47,48,49,51,52,55,57,64];
 I4 = [1,2,6,10,13,14,15,27,28,33,37,38,40,41,42,52,53,54,55,56,57,60,63];
 I5 = [1,2,4,6,8,9,11,14:64];
 
+% Indices are incremented according to group. 
 I = [I1, I2+64, I3+2*64, I4+3*64, I5+4*64];
 
 % Remove darker colors

@@ -57,6 +57,7 @@ for n = 1:num_gauges
     h = text(g.x,g.y,zp,sprintf('%d',g.id),'fontsize',11,'color','k','fontweight','bold');
     set(h,'HorizontalAlignment','center');
     % set(h,'backgroundcolor','none');
+    set(hg,'userdata',h);
     gauge_handles(n) = hg;
 end
 
