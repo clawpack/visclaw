@@ -161,8 +161,8 @@ switch  colormapping
             else
                 qmin = pp.qmin;
                 qmax = pp.qmax;
-                m_proc_color = qmin <= qm & qm <= qmax;
-                m_q = qm < qmin | qm > qmax;
+                m_q = qmin <= qm & qm <= qmax;
+                m_proc_color = qm < qmin | qm > qmax;
             end
 
             % Indices that should use proc colormap

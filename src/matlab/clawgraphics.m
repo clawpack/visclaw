@@ -1,3 +1,9 @@
+%
+% CLAWGRAPHICS is no longer being maintained as part of Visclaw. 
+%
+%    As of June 1016, CLAWGRAPHICS will be maintained at a new repository. 
+%
+%
 % Routines for plotting data output from Clawpack package
 %
 % Basic Clawpack plotting routines and options.
@@ -112,6 +118,16 @@
 %      Misc
 %      ----
 %      setviews               - sets pre-defined viewing angles
-%
+% 
 % Type 'help' on any one of the individual topics above for more help.
 %
+% NOTE
+% ----
+% 
+% As of June 2026, CLAWGRAPHICS will be maintained at a new repository
+% 
+%          http://www.github.com/ForestClaw/ClawGraphics
+% 
+% Clone this repository and update your MATLABPATH to stay up-to-date with 
+% latest CLAWGRAPHICS plotting routines.  
+% 

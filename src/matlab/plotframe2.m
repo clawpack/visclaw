@@ -254,7 +254,8 @@ for ng = 1:ngrids
     if (UserVariable == 1)
         % User has supplied a function to convert original q variables to
         % the variable which is to be plotted, e.g. Mach number, entropy.
-        qdata = feval(UserVariableFile,data);
+        
+        qdata = feval(UserVariableFile,data,x,y);
         q = reshape(qdata,mx,my);
     else
         q = reshape(data(:,mq),mx,my);
@@ -317,7 +318,7 @@ for ng = 1:ngrids
         
         if (usermap1d == 1)
             % Users should call mapc2p from inside of map1d.
-            [rvec,qvec] = map1d(xcm,ycm,qmesh);
+            [rvec,qvec] = map1d(xcm,ycm,qmesh,t);
             [rs,cs] = size(rvec);
             [rq,cq] = size(qvec);
             if (cs > 1 || cq > 1)

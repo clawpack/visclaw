@@ -86,10 +86,8 @@ switch outflag
         [amr,t] = readamrdata_binary(dim,Frame,dir,readblocknumber);
     case 'forestclaw'
         [amr,t] = readamrdata_forestclaw(dim,Frame,dir);
-    case 'hdf'
-        [amr,t] = readamrdata_hdf(dim,Frame,dir);
-    case 'chombo'
-        [amr,t] = readamrdata_chombo(dim,Frame,dir,outputprefix);
+    case 'forestclaw_vtu'
+        [amr,t] = readamrdata_forestclaw_vtu(dim,Frame,dir);  
     otherwise
         error('readamrdata : ''%s'' is not a valid OutputFlag\n',flag);   
 end

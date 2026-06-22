@@ -1,4 +1,4 @@
-function rhout = add_regions(t,format)
+function rhout = add_regions(t,read_dim,format)
 %
 % add_regions plots regions from file 'regions.data'
 %
@@ -15,8 +15,11 @@ function rhout = add_regions(t,format)
 % See also add_gauges, plot_gauges.
 
 
-if (nargin < 2)
+if (nargin < 3)
     format = 'ForestClaw';    
+    if (nargin < 2)
+        read_dim = true;
+    end
 end
 
 use_forestclaw = strcmpi(format,'forestclaw');
@@ -40,7 +43,15 @@ for i = 1:5
     fgetl(fid);
 end
 fgetl(fid);  % blank line
-l = fgetl(fid);  % Get number of gauges
+if read_dim
+    l = fgetl(fid);  % Get dimension of region
+    dim = sscanf(l,'%d',1);
+    if (dim ~= 2)
+        error('afterframe : Region file must be a 2d file')
+    end
+end
+
+l = fgetl(fid);  % Get number of regions
 num_regions = sscanf(l,'%d',1);
 
 c = {'w','w','w','w','w','w','w'};   % Colors for each region
@@ -58,8 +69,8 @@ region_handles = zeros(num_regions,1);
 for n = 1:num_regions
     l = fgetl(fid);
     data = sscanf(l,'%d %d %e %e %e %e %e %e',Inf);
-    minlevel = data(1);
-    maxlevel = data(2);
+    % minlevel = data(1);
+    % maxlevel = data(2);
     t0 = data(3);
     t1 = data(4);
     x0 = data(5);
@@ -79,6 +90,7 @@ for n = 1:num_regions
     else
         set(gca,'zlim',[0,max(zl)]);
     end
+    region_handles(n) = hg;
     hold on;
 end
 
