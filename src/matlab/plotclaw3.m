@@ -24,6 +24,16 @@
 
 clawdim = 3;
 
+fprintf('\n');
+fprintf('***********************************************************\n')
+fprintf('NOTE:\n')
+fprintf(['As of June, 2026, ClawGraphics will no longer be maintained\n',...
+        'as part of Visclaw.  Type \n\n', ...
+        '              >> help clawgraphics\n\n',...
+        'for more information.\n'])
+fprintf('***********************************************************\n')
+fprintf('\n');
+
 disp(' ')
 disp('plotclaw3  plots 3d results from clawpack or amrclaw')
 

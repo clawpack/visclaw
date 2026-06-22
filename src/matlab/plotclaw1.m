@@ -27,6 +27,16 @@
 
 clawdim = 1;
 
+fprintf('\n');
+fprintf('***********************************************************\n')
+fprintf('NOTE:\n')
+fprintf(['As of June, 2026, ClawGraphics will no longer be maintained\n',...
+        'as part of Visclaw.  Type \n\n', ...
+        '              >> help clawgraphics\n\n',...
+        'for more information.\n'])
+fprintf('***********************************************************\n')
+fprintf('\n');
+
 fprintf('\n')
 fprintf('plotclaw1  plots 1d results from clawpack\n')
 
