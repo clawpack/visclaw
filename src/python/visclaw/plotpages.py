@@ -59,7 +59,7 @@ class PlotPagesData(object):
         self.html_homelink = None       # link to here from top of index file
         self.html_itemsperline = 2      # number of items on each line
         self.html_preplots = None       # html to for top of page before plots
-        self.html_movie = "JSAnimation" # make html with java script for movie
+        self.html_movie = True          # make html with java script for movie
         self.html_eagle = False         # use EagleClaw titles on html pages?
 
         self.gif_movie = False          # make animated gif movie of frames
@@ -2496,19 +2496,6 @@ def plotclaw2html(plotdata):
             html.close()
 
 
-    # moviefigJ.html
-    #-------------------
-
-    if (plotdata.html_movie in [True, "4.x"]) and (len(framenos) > 0):
-
-        # original style still used if plotdata.html_movie == "4.x":
-        for figno in fignos:
-            html = open('movie%s' % allframesfile[figno], 'w')
-            text = htmlmovie(plotdata.html_index_fname,pngfile,framenos,figno)
-            html.write(text)
-            html.close()
-
-
 
     #----------------------------------------------------------------------
     fignos = plotdata.gauges_fignos
@@ -2983,14 +2970,13 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     # Make html files for time frame figures:
     # ---------------------------------------
 
-    if plotdata.html_movie == "JSAnimation":
+    if plotdata.html_movie:
         # Only import if we need it:
         try:
             from matplotlib import animation
         except:
+            # this should now only happen with very old versions!
             print("*** Warning: Your version of matplotlib may not support JSAnimation")
-            print("    Switching to 4.x style animation")
-            plotdata.html_movie = "4.x"
 
     os.chdir(plotdir)
 
@@ -3031,7 +3017,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
     if plotdata.kml:
         plotclaw2kml(plotdata)
 
-    if ((plotdata.html_movie == "JSAnimation") or plotdata.mp4_movie) and (len(framenos) > 0):
+    if (plotdata.html_movie or plotdata.mp4_movie) and (len(framenos) > 0):
 
         # Create Animations
     
@@ -3074,7 +3060,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                                 fignos=[figno], outputs=['mp4'],
                                 raw_html=raw_html)
 
-            if plotdata.html_movie == "JSAnimation":
+            if plotdata.html_movie:
                 # use different dpi so that plots do not take over browser width.
                 animation_tools.make_anim_outputs_from_plotdir(plotdir=plotdir,
                                 #file_name_prefix='movieframe_allframes',
@@ -3084,6 +3070,7 @@ def plotclaw_driver(plotdata, verbose=False, format='ascii'):
                                 dpi=plotdata.html_movie_dpi,
                                 fignos=[figno], outputs=['html'],
                                 raw_html=raw_html)
+
 
             # Note: setting figsize=None above chooses figsize with aspect
             # ratio based on .png files read in, may fit better on page

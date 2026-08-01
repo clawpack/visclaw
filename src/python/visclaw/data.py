@@ -91,7 +91,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('html_index_fname','_PlotIndex.html')   # name of html index file
         self.add_attribute('html_index_title','Plot Index')   # title at top of index page
         self.add_attribute('html_homelink',None)       # link to here from top of _PlotIndex.html
-        self.add_attribute('html_movie','JSAnimation') # make html with java script for movie
+        self.add_attribute('html_movie',True) # make html with java script for movie
         self.add_attribute('html_movie_width', 500)    # width of movie (not used?)
         self.add_attribute('html_movie_dpi', 100)      # dpi of movie
 
