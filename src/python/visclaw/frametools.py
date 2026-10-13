@@ -203,17 +203,28 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             
             if skip_patches_outside_xylimits is None:
                 # User didn't set.  Set to True unless there's a mapped grid
-                
-                mapc2p_exists = (plotdata.mapc2p is not None)
-                if not mapc2p_exists:
-                    # check every item in case there's a mapc2p:
-                    for itemname in plotaxes._itemnames:
-                        plotitem = plotaxes.plotitem_dict[itemname]
-                        mapc2p_exists = mapc2p_exists or \
-                                           (plotitem.mapc2p is not None)
-                                           
-                skip_patches_outside_xylimits = not mapc2p_exists
-                
+                # if plotitem.num_dim = 1, set to False.
+
+                is_1d = []
+                for itemname in plotaxes._itemnames:
+                    plotitem = plotaxes.plotitem_dict[itemname]
+                    if plotitem.num_dim == 1:
+                        is_1d.append(True)
+                    else:
+                        is_1d.append(False)
+
+                if np.any(is_1d):
+                    skip_patches_outside_xylimits = False
+                else:
+                    mapc2p_exists = (plotdata.mapc2p is not None)
+                    if not mapc2p_exists:
+                        # check every item in case there's a mapc2p:
+                        for itemname in plotaxes._itemnames:
+                            plotitem = plotaxes.plotitem_dict[itemname]
+                            mapc2p_exists = mapc2p_exists or \
+                                               (plotitem.mapc2p is not None)
+
+                    skip_patches_outside_xylimits = not mapc2p_exists
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
